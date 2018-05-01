@@ -8,13 +8,13 @@ CXXFLAGS= -Wall `pkg-config --cflags opencv` -std=c++0x -lstdc++
 
 DEPS = *.h *.hpp
 
-OBJ = fhog.o kcftracker.o runtracker.o
+OBJ = fhog.o kcftracker.o runkcftracker.o
 
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< 
 
-runtracker.bin: $(OBJ)
+runkcftracker.bin: $(OBJ)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 

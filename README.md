@@ -1,9 +1,18 @@
+
+# Run Opencv trackers
+Change the path of your test images in **kcf/runtracker.cpp**.
+```
+cd opencvtrackers
+make 
+./opencvtrackers.bin
+```
+
 # Run KCF
 Change the path of your test images in **kcf/runtracker.cpp**.
 ```
 cd kcf
 make -j12
-./runtracker.bin
+./runkcftracker.bin
 ```
 
 # Run GOTURN
@@ -16,7 +25,7 @@ You can download a pretrained [[tracker model (434 MB)](https://drive.google.com
 ```
 cd goturn
 make -j12
-./runtracker.bin
+./rungoturntracker.bin
 ```
 
 ## Run caffe classification for simple test:
