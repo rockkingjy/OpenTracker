@@ -19,7 +19,7 @@ make -j12
 Change the path of your test images in **goturn/runtracker.cpp**.
 
 Need to install [[caffe](https://github.com/rockkingjy/caffe)], and change the goturn/makefile according to your installation.
-## Pretrained model
+### Pretrained model
 You can download a pretrained [[tracker model (434 MB)](https://drive.google.com/file/d/1uc9k8sTqug_EY9kv1v_QnrDxjkrTJejR/view?usp=sharing)], put it into folder: **goturn/nets**
 
 ```
@@ -28,12 +28,12 @@ make -j12
 ./rungoturntracker.bin
 ```
 
-## Run caffe classification for simple test:
+### Run caffe classification for simple test
 ```
 ./classification.bin   /media/elab/sdd/caffe/models/bvlc_reference_caffenet/deploy.prototxt   /media/elab/sdd/caffe/models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel   /media/elab/sdd/caffe/data/ilsvrc12/imagenet_mean.binaryproto   /media/elab/sdd/caffe/data/ilsvrc12/synset_words.txt   /media/elab/sdd/caffe/examples/images/cat.jpg
 ```
 
-# Run to compare all the trackers:
+# Run to compare all the trackers
 ```
 make all
 ./trackercompare.bin
