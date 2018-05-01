@@ -1,6 +1,6 @@
 
 # Run Opencv trackers
-Change the path of your test images in **kcf/runtracker.cpp**.
+Change the path of your test images in **kcf/opencvtrackers.cpp**.
 ```
 cd opencvtrackers
 make 
@@ -8,7 +8,7 @@ make
 ```
 
 # Run KCF
-Change the path of your test images in **kcf/runtracker.cpp**.
+Change the path of your test images in **kcf/runkcftracker.cpp**.
 ```
 cd kcf
 make -j12
@@ -16,7 +16,7 @@ make -j12
 ```
 
 # Run GOTURN
-Change the path of your test images in **goturn/runtracker.cpp**.
+Change the path of your test images in **goturn/rungoturntracker.cpp**.
 
 Need to install [[caffe](https://github.com/rockkingjy/caffe)], and change the goturn/makefile according to your installation.
 ### Pretrained model
@@ -36,7 +36,7 @@ make -j12
 # Run to compare all the trackers
 ```
 make all
-./trackercompare.bin
+./trackerscompare.bin
 ```
 
 --------------------------------
