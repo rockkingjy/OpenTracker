@@ -33,13 +33,14 @@ make -j12
 ./classification.bin   /media/elab/sdd/caffe/models/bvlc_reference_caffenet/deploy.prototxt   /media/elab/sdd/caffe/models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel   /media/elab/sdd/caffe/data/ilsvrc12/imagenet_mean.binaryproto   /media/elab/sdd/caffe/data/ilsvrc12/synset_words.txt   /media/elab/sdd/caffe/examples/images/cat.jpg
 ```
 
-## Run to compare all the trackers;
+# Run to compare all the trackers:
 ```
 make all
 ./trackercompare.bin
 ```
+
 --------------------------------
-# KCF Tracker
+## KCF Tracker
 
 [1] J. F. Henriques, R. Caseiro, P. Martins, J. Batista,   
 "High-Speed Tracking with Kernelized Correlation Filters", TPAMI 2015.
@@ -51,7 +52,7 @@ Authors: Joao Faro, Christian Bailer, Joao F. Henriques
 Contacts: joaopfaro@gmail.com, Christian.Bailer@dfki.de, henriques@isr.uc.pt   
 Institute of Systems and Robotics - University of Coimbra / Department of Augmented Vision DFKI   
 
-# GOTURN Tracker
+## GOTURN Tracker
 
 **[Learning to Track at 100 FPS with Deep Regression Networks](http://davheld.github.io/GOTURN/GOTURN.html)**,
 <br>
