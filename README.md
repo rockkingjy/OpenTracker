@@ -1,3 +1,4 @@
+**Why most of the trackers are written in matlab? I hate that! Cpp is fast and clear! Especially for actural and embedded system use! So I will re-implement those trackers by cpp, hope you like it!**
 
 # Run Opencv trackers
 Change the path of your test images in **kcf/opencvtrackers.cpp**.
