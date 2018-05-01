@@ -38,4 +38,4 @@ CMakeFiles/
 CMakeCache.txt
 Trackers
 build/
-
+*.caffemodel

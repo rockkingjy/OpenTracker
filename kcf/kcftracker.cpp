@@ -4,7 +4,18 @@ Tracker based on Kernelized Correlation Filter (KCF) [1] and Circulant Structure
 CSK is implemented by using raw gray level features, since it is a single-channel filter.
 KCF is implemented by using HOG features (the default), since it extends CSK to multiple channels.
 
-Constructor parameters, all boolean:
+[1] J. F. Henriques, R. Caseiro, P. Martins, J. Batista,
+"High-Speed Tracking with Kernelized Correlation Filters", TPAMI 2015.
+
+[2] J. F. Henriques, R. Caseiro, P. Martins, J. Batista,
+"Exploiting the Circulant Structure of Tracking-by-detection with Kernels", ECCV 2012.
+
+Authors: Joao Faro, Christian Bailer, Joao F. Henriques
+Contacts: joaopfaro@gmail.com, Christian.Bailer@dfki.de, henriques@isr.uc.pt
+Institute of Systems and Robotics - University of Coimbra / Department Augmented Vision DFKI
+
+
+Constructor parameters, al l boolean:
     hog: use HOG features (default), otherwise use raw pixels
     fixed_window: fix window size (default), otherwise use ROI size (slower but more accurate)
     multiscale: use multi-scale tracking (default; cannot be used with fixed_window = true)
@@ -33,7 +44,41 @@ Inputs to update():
 Outputs of update():
    cv::Rect with target positions for the current frame
 
-*/
+
+By downloading, copying, installing or using the software you agree to this license.
+If you do not agree to this license, do not download, install,
+copy or use the software.
+
+
+                          License Agreement
+               For Open Source Computer Vision Library
+                       (3-clause BSD License)
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+  * Redistributions of source code must retain the above copyright notice,
+    this list of conditions and the following disclaimer.
+
+  * Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+
+  * Neither the names of the copyright holders nor the names of the contributors
+    may be used to endorse or promote products derived from this software
+    without specific prior written permission.
+
+This software is provided by the copyright holders and contributors "as is" and
+any express or implied warranties, including, but not limited to, the implied
+warranties of merchantability and fitness for a particular purpose are disclaimed.
+In no event shall copyright holders or contributors be liable for any direct,
+indirect, incidental, special, exemplary, or consequential damages
+(including, but not limited to, procurement of substitute goods or services;
+loss of use, data, or profits; or business interruption) however caused
+and on any theory of liability, whether in contract, strict liability,
+or tort (including negligence or otherwise) arising in any way out of
+the use of this software, even if advised of the possibility of such damage.
+ */
 
 #ifndef _KCFTRACKER_HEADERS
 #include "kcftracker.hpp"
@@ -46,11 +91,15 @@ Outputs of update():
 // Constructor
 KCFTracker::KCFTracker(bool hog, bool fixed_window, bool multiscale, bool lab)
 {
+
     // Parameters equal in all cases
     lambda = 0.0001;
-    padding = 2.5; 
+    //start para
+    //padding = 2.5;
+    padding = 2.0;
     //output_sigma_factor = 0.1;
     output_sigma_factor = 0.125;
+
 
     if (hog) {    // HOG
         // VOT
@@ -64,7 +113,7 @@ KCFTracker::KCFTracker(bool hog, bool fixed_window, bool multiscale, bool lab)
 
         if (lab) {
             interp_factor = 0.005;
-            sigma = 0.4; 
+            sigma = 0.4;
             //output_sigma_factor = 0.025;
             output_sigma_factor = 0.1;
 
@@ -75,9 +124,10 @@ KCFTracker::KCFTracker(bool hog, bool fixed_window, bool multiscale, bool lab)
         else{
             _labfeatures = false;
         }
-    } else {   // RAW
+    }
+    else {   // RAW
         interp_factor = 0.075;
-        sigma = 0.2; 
+        sigma = 0.2;
         cell_size = 1;
         _hogfeatures = false;
 
@@ -87,28 +137,35 @@ KCFTracker::KCFTracker(bool hog, bool fixed_window, bool multiscale, bool lab)
         }
     }
 
+
     if (multiscale) { // multiscale
         template_size = 96;
+        //template_size = 100;
         scale_step = 1.05;
         scale_weight = 0.95;
         if (!fixed_window) {
             //printf("Multiscale does not support non-fixed window.\n");
             fixed_window = true;
         }
-    } else if (fixed_window) {  // fit correction without multiscale
+    }
+    else if (fixed_window) {  // fit correction without multiscale
         template_size = 96;
+        //template_size = 100;
         scale_step = 1;
-    } else {
+    }
+    else {
         template_size = 1;
         scale_step = 1;
     }
 }
+
 // Initialize tracker 
 void KCFTracker::init(const cv::Rect &roi, cv::Mat image)
 {
     _roi = roi;
     assert(roi.width >= 0 && roi.height >= 0);
     _tmpl = getFeatures(image, 1);
+
     _prob = createGaussianPeak(size_patch[0], size_patch[1]);
     _alphaf = cv::Mat(size_patch[0], size_patch[1], CV_32FC2, float(0));
     //_num = cv::Mat(size_patch[0], size_patch[1], CV_32FC2, float(0));
@@ -213,6 +270,18 @@ void KCFTracker::train(cv::Mat x, float train_interp_factor)
     
     _tmpl = (1 - train_interp_factor) * _tmpl + (train_interp_factor) * x;
     _alphaf = (1 - train_interp_factor) * _alphaf + (train_interp_factor) * alphaf;
+
+
+    /*cv::Mat kf = fftd(gaussianCorrelation(x, x));
+    cv::Mat num = complexMultiplication(kf, _prob);
+    cv::Mat den = complexMultiplication(kf, kf + lambda);
+    
+    _tmpl = (1 - train_interp_factor) * _tmpl + (train_interp_factor) * x;
+    _num = (1 - train_interp_factor) * _num + (train_interp_factor) * num;
+    _den = (1 - train_interp_factor) * _den + (train_interp_factor) * den;
+
+    _alphaf = complexDivision(_num, _den);*/
+
 }
 
 // Evaluates a Gaussian kernel with bandwidth SIGMA for all relative shifts between input images X and Y, which must both be MxN. They must    also be periodic (ie., pre-processed with a cosine window).
@@ -258,6 +327,24 @@ cv::Mat KCFTracker::createGaussianPeak(int sizey, int sizex)
 
     int syh = (sizey) / 2;
     int sxh = (sizex) / 2;
+
+//    printf("sizex:%d, sizey:%d\n",sizex,sizey);
+//    float output_sigma = std::sqrt((float) sizex * sizey) / padding * output_sigma_factor;
+//    float mult = -(float)0.5/ (output_sigma * output_sigma);
+//
+//    output_sigma_factor = 0.1;
+//    float sigmax2 = -0.5*padding*padding/output_sigma_factor/output_sigma_factor/(sizex);
+//    float sigmay2 = -0.5*padding*padding/output_sigma_factor/output_sigma_factor/(sizey);
+//
+//
+//    for (int i = 0; i < sizey; i++)
+//        for (int j = 0; j < sizex; j++)
+//        {
+//            int ih = i - syh;
+//            int jh = j - sxh;
+//            res(i, j) = std::exp( sigmay2*ih * ih + sigmax2*jh * jh);
+//        }
+
 
     float output_sigma = std::sqrt((float) sizex * sizey) / padding * output_sigma_factor;
     float mult = -0.5 / (output_sigma * output_sigma);
@@ -314,7 +401,8 @@ cv::Mat KCFTracker::getFeatures(const cv::Mat & image, bool inithann, float scal
             // Round to cell size and also make it even
             _tmpl_sz.width = ( ( (int)(_tmpl_sz.width / (2 * cell_size)) ) * 2 * cell_size ) + cell_size*2;
             _tmpl_sz.height = ( ( (int)(_tmpl_sz.height / (2 * cell_size)) ) * 2 * cell_size ) + cell_size*2;
-        } else {  //Make number of pixels even (helps with some logic involving half-dimensions)
+        }
+        else {  //Make number of pixels even (helps with some logic involving half-dimensions)
             _tmpl_sz.width = (_tmpl_sz.width / 2) * 2;
             _tmpl_sz.height = (_tmpl_sz.height / 2) * 2;
         }
@@ -370,7 +458,7 @@ cv::Mat KCFTracker::getFeatures(const cv::Mat & image, bool inithann, float scal
                             float a = (float)input[(z.cols * y + x) * 3 + 1];
                             float b = (float)input[(z.cols * y + x) * 3 + 2];
 
-                            // Iterate through each centroid
+                            // Iterate trough each centroid
                             float minDist = FLT_MAX;
                             int minIdx = 0;
                             float *inputCentroid = (float*)(_labCentroids.data);
@@ -395,7 +483,8 @@ cv::Mat KCFTracker::getFeatures(const cv::Mat & image, bool inithann, float scal
             size_patch[2] += _labCentroids.rows;
             FeaturesMap.push_back(outputLab);
         }
-    } else {
+    }
+    else {
         FeaturesMap = RectTools::getGrayImage(z);
         FeaturesMap -= (float) 0.5; // In Paper;
         size_patch[0] = z.rows;
@@ -409,6 +498,7 @@ cv::Mat KCFTracker::getFeatures(const cv::Mat & image, bool inithann, float scal
     FeaturesMap = hann.mul(FeaturesMap);
     return FeaturesMap;
 }
+    
 // Initialize Hanning window. Function called only in the first frame.
 void KCFTracker::createHanningMats()
 {   
@@ -431,14 +521,20 @@ void KCFTracker::createHanningMats()
                 hann.at<float>(i,j) = hann1d.at<float>(0,j);
             }
         }
-    } else { // Gray features
+    }
+    // Gray features
+    else {
         hann = hann2d;
     }
 }
+
 // Calculate sub-pixel peak for one dimension
 float KCFTracker::subPixelPeak(float left, float center, float right)
 {   
     float divisor = 2 * center - right - left;
-    if (divisor == 0)   return 0;
+
+    if (divisor == 0)
+        return 0;
+    
     return 0.5 * (right - left) / divisor;
 }

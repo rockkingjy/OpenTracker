@@ -81,24 +81,23 @@ the use of this software, even if advised of the possibility of such damage.
  */
 
 #pragma once
-
-#include "tracker.h"
-
+#include <opencv2/opencv.hpp>
+#include <string>
 #ifndef _OPENCV_KCFTRACKER_HPP_
 #define _OPENCV_KCFTRACKER_HPP_
 #endif
 
-class KCFTracker : public Tracker
+class KCFTracker
 {
 public:
     // Constructor
     KCFTracker(bool hog = true, bool fixed_window = true, bool multiscale = true, bool lab = true);
 
     // Initialize tracker 
-    virtual void init(const cv::Rect &roi, cv::Mat image);
+     void init(const cv::Rect &roi, cv::Mat image);
     
     // Update position based on the new frame
-    virtual cv::Rect update(cv::Mat image);
+     cv::Rect update(cv::Mat image);
 
     float interp_factor; // linear interpolation factor for adaptation
     float sigma; // gaussian kernel bandwidth
@@ -140,6 +139,7 @@ protected:
     cv::Mat _den;
     cv::Mat _labCentroids;
 
+    cv::Rect_<float> _roi;
 private:
     int size_patch[3];
     cv::Mat hann;

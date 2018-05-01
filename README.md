@@ -1,56 +1,72 @@
-# C++ KCF Tracker
-This package includes a C++ class with several tracking methods based on the Kernelized Correlation Filter (KCF) [1, 2].   
-It also includes an executable to interface with the VOT benchmark.
+# Concise GOTURN
 
-[1] J. F. Henriques, R. Caseiro, P. Martins, J. Batista,   
-"High-Speed Tracking with Kernelized Correlation Filters", TPAMI 2015.
+**This is a concise implementation for GOTURN: Generic Object Tracking Using Regression Networks.**
 
-[2] J. F. Henriques, R. Caseiro, P. Martins, J. Batista,   
-"Exploiting the Circulant Structure of Tracking-by-detection with Kernels", ECCV 2012.
+**This project is based on project  [GOTURN](http://davheld.github.io/GOTURN/GOTURN.html), I just remake GOTURN and delete some redundant files so that I can test my video Conveniently.**
+
+**I appreciate that David Held opened his code and trained caffemodel. According to his code and help document, we can easily re-run this project and test this algorithm. But this complete project [GOTURN](http://davheld.github.io/GOTURN/GOTURN.html) have some redundant files, which will add difficults for our testers,for example folder "train","test" and "visualizer". So I implement this concise project, so that we can test this algorithm by our own video more easily.**
 
 
-Authors: Joao Faro, Christian Bailer, Joao F. Henriques   
-Contacts: joaopfaro@gmail.com, Christian.Bailer@dfki.de, henriques@isr.uc.pt   
-Institute of Systems and Robotics - University of Coimbra / Department of Augmented Vision DFKI   
+GOTURN appeared in this paper:
 
-### Algorithms (in this folder) ###
+**[Learning to Track at 100 FPS with Deep Regression Networks](http://davheld.github.io/GOTURN/GOTURN.html)**,
+<br>
+[David Held](http://davheld.github.io/),
+[Sebastian Thrun](http://robots.stanford.edu/),
+[Silvio Savarese](http://cvgl.stanford.edu/silvio/),
+<br>
+European Conference on Computer Vision (ECCV), 2016 (In press)
 
-"KCFC++", command: ./KCF   
-Description: KCF on HOG features, ported to C++ OpenCV. The original Matlab tracker placed 3rd in VOT 2014.
 
-"KCFLabC++", command: ./KCF lab   
-Description: KCF on HOG and Lab features, ported to C++ OpenCV. The Lab features are computed by quantizing CIE-Lab colors into 15 centroids, obtained from natural images by k-means.   
 
-The CSK tracker [2] is also implemented as a bonus, simply by using raw grayscale as features (the filter becomes single-channel).   
+## Installation
 
-### Compilation instructions ###
-There are no external dependencies other than OpenCV 3.0.0. Tested on a freshly installed Ubuntu 14.04.   
+### Install dependencies:
 
-1) cmake CMakeLists.txt   
-2) make   
+* Install CMake:
+```
+sudo apt-get install cmake
+```
 
-### Running instructions ###
+* Install Caffe and compile using the CMake build instructions:
+http://caffe.berkeleyvision.org/installation.html
+You must compile caffe by cmake. If you do not use cmake to compile caffe , this project can not find required caffe.
 
-The runtracker.cpp is prepared to be used with the VOT toolkit. The executable "KCF" should be called as:   
+* Install OpenCV
+```
+sudo apt-get install libopencv-dev
+```
+If you installed opencv, do not execute it.
 
-./KCF [OPTION_1] [OPTION_2] [...]
 
-Options available:   
+### Compile
 
-gray - Use raw gray level features as in [1].   
-hog - Use HOG features as in [2].   
-lab - Use Lab colorspace features. This option will also enable HOG features by default.   
-singlescale - Performs single-scale detection, using a variable-size window.   
-fixed_window - Keep the window size fixed when in single-scale mode (multi-scale always used a fixed window).   
-show - Show the results in a window.   
+From the main directory, type:
 
-To include it in your project, without the VOT toolkit you just need to:
-	
-	// Create the KCFTracker object with one of the available options
-	KCFTracker tracker(HOG, FIXEDWINDOW, MULTISCALE, LAB);
+open CMakeLists.txt,and change `set(Caffe_DIR your_caffe_folder)`,for example, mine is `set(Caffe_DIR ~/tracking/GOTURN/caffe)`
 
-	// Give the first frame and the position of the object to the tracker
-	tracker.init( Rect(xMin, yMin, width, height), frame );
+then
+```
+mkdir build
+cd build
+cmake ..
+make
+```
 
-	// Get the position of the object for the new frame
-	result = tracker.update(frame);
+## Pretrained model
+You can download a pretrained tracker model (434 MB) by running the following script from the main directory:
+
+```
+bash scripts/download_trained_model.sh
+```
+
+## Test your own video
+```
+bash scripts/runTracker.sh
+```
+
+
+## Run classification:
+```
+./classification.bin   /media/elab/sdd/caffe/models/bvlc_reference_caffenet/deploy.prototxt   /media/elab/sdd/caffe/models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel   /media/elab/sdd/caffe/data/ilsvrc12/imagenet_mean.binaryproto   /media/elab/sdd/caffe/data/ilsvrc12/synset_words.txt   /media/elab/sdd/caffe/examples/images/cat.jpg
+```
