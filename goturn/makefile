@@ -15,11 +15,11 @@ DEPS = $(wildcard */*.h) $(wildcard /media/elab/sdd/caffe/build/install/include/
 
 OBJS = helper/bounding_box.o helper/helper.o helper/high_res_timer.o helper/image_proc.o \
 		loader/loader_base.o network/regressor_base.o network/regressor.o \
-		tracker/tracker.o runTracker.o
+		tracker/tracker.o runtracker.o
 
-all: runTracker.bin classification.bin
+all: runtracker.bin classification.bin
 
-runTracker.bin: $(OBJS) 
+runtracker.bin: $(OBJS) 
 	$(CC) -o $@ $^ $(LDFLAGS) $(CXXFLAGS) 
 
 %.o: %.c $(DEPS) 

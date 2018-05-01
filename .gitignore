@@ -39,3 +39,4 @@ CMakeCache.txt
 Trackers
 build/
 *.caffemodel
+*.bin

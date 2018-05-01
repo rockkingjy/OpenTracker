@@ -21,7 +21,7 @@ int main(int argc, char *argv[]){
 
 
     const string model_file = "nets/deploy.prototxt";
-    const string pretrain_file = "nets/tracker.caffemodel";
+    const string pretrain_file = "nets/goturun_tracker.caffemodel";
     const string video_folder = "/media/elab/sdd/data/VOT/vot2014";
     int gpu_id = 0;
 
