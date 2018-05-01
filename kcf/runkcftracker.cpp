@@ -94,7 +94,7 @@ int main(int argc, char **argv)
         putText(frame, "FPS : " + SSTR(int(fps)), Point(100,50), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(50,170,50), 2);
 
         // Display frame.        
-        cvNamedWindow("Tracking", CV_WINDOW_NORMAL); 
+        //cvNamedWindow("Tracking", CV_WINDOW_NORMAL); 
         //cvShowImage("Tracking", frame);
         imshow("Tracking", frame);
         int c = cvWaitKey(1);

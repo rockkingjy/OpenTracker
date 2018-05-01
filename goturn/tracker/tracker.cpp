@@ -1,5 +1,6 @@
 #include "tracker.h"
 
+using namespace goturn;
 
 Tracker::Tracker(const bool show_tracking) :
   show_tracking_(show_tracking)

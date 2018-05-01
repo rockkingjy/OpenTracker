@@ -1,5 +1,4 @@
 
-
 CC=gcc
 
 LDFLAGS= `pkg-config --libs opencv` -lstdc++ -lm
@@ -16,7 +15,6 @@ OBJ = fhog.o kcftracker.o runkcftracker.o
 
 runkcftracker.bin: $(OBJ)
 	$(CC) -o $@ $^ $(LDFLAGS)
-
 
 .PHONY: clean
 

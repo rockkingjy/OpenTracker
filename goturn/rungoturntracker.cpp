@@ -7,6 +7,7 @@
 //#include "../kcf/kcftracker.hpp"
 
 using std::string;
+using namespace goturn;
 
 int main(int argc, char *argv[]){
 

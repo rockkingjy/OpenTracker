@@ -12,6 +12,9 @@
 #include "../helper/image_proc.h"
 #include "../network/regressor.h"
 
+namespace goturn{
+
+
 class Tracker
 {
 public:
@@ -50,4 +53,5 @@ private:
   bool show_tracking_;
 };
 
+}
 #endif // TRACKER_H
