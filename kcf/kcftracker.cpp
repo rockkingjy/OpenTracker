@@ -91,8 +91,15 @@ the use of this software, even if advised of the possibility of such damage.
 // Constructor
 KCFTracker::KCFTracker(bool hog, bool fixed_window, bool multiscale, bool lab)
 {
-
+/* In Opencv:
+      detect_thresh = 0.5f;
+      lambda=0.0001f;
+      interp_factor=0.075f;
+      sigma=0.2f;
+      output_sigma_factor=1.0f / 16.0f;
+*/
     // Parameters equal in all cases
+    detect_thresh = 0.5;
     lambda = 0.0001;
     //start para
     //padding = 2.5;
@@ -103,7 +110,7 @@ KCFTracker::KCFTracker(bool hog, bool fixed_window, bool multiscale, bool lab)
 
     if (hog) {    // HOG
         // VOT
-        interp_factor = 0.012;
+        interp_factor = 0.012;//0.075;
         sigma = 0.6; 
         // TPAMI
         //interp_factor = 0.02;
@@ -120,12 +127,10 @@ KCFTracker::KCFTracker(bool hog, bool fixed_window, bool multiscale, bool lab)
             _labfeatures = true;
             _labCentroids = cv::Mat(nClusters, 3, CV_32FC1, &data);
             cell_sizeQ = cell_size*cell_size;
-        }
-        else{
+        } else {
             _labfeatures = false;
         }
-    }
-    else {   // RAW
+    } else {   // RAW
         interp_factor = 0.075;
         sigma = 0.2;
         cell_size = 1;
@@ -137,7 +142,6 @@ KCFTracker::KCFTracker(bool hog, bool fixed_window, bool multiscale, bool lab)
         }
     }
 
-
     if (multiscale) { // multiscale
         template_size = 96;
         //template_size = 100;
@@ -147,24 +151,21 @@ KCFTracker::KCFTracker(bool hog, bool fixed_window, bool multiscale, bool lab)
             //printf("Multiscale does not support non-fixed window.\n");
             fixed_window = true;
         }
-    }
-    else if (fixed_window) {  // fit correction without multiscale
+    } else if (fixed_window) {  // fit correction without multiscale
         template_size = 96;
         //template_size = 100;
         scale_step = 1;
-    }
-    else {
+    } else {
         template_size = 1;
         scale_step = 1;
     }
 }
-
 // Initialize tracker 
-void KCFTracker::init(const cv::Rect &roi, cv::Mat image)
+void KCFTracker::init(cv::Mat image, const cv::Rect &roi)
 {
     _roi = roi;
     assert(roi.width >= 0 && roi.height >= 0);
-    _tmpl = getFeatures(image, 1);
+    _tmpl = getFeatures(image, 1); //inithann=1;
 
     _prob = createGaussianPeak(size_patch[0], size_patch[1]);
     _alphaf = cv::Mat(size_patch[0], size_patch[1], CV_32FC2, float(0));
@@ -173,7 +174,7 @@ void KCFTracker::init(const cv::Rect &roi, cv::Mat image)
     train(_tmpl, 1.0); // train with initial frame
  }
 // Update position based on the new frame
-cv::Rect KCFTracker::update(cv::Mat image)
+bool KCFTracker::update(cv::Mat image, cv::Rect roi)
 {
     if (_roi.x + _roi.width <= 0) _roi.x = -_roi.width + 1;
     if (_roi.y + _roi.height <= 0) _roi.y = -_roi.height + 1;
@@ -182,7 +183,6 @@ cv::Rect KCFTracker::update(cv::Mat image)
 
     float cx = _roi.x + _roi.width / 2.0f;
     float cy = _roi.y + _roi.height / 2.0f;
-
 
     float peak_value;
     cv::Point2f res = detect(_tmpl, getFeatures(image, 0, 1.0f), peak_value);
@@ -199,7 +199,6 @@ cv::Rect KCFTracker::update(cv::Mat image)
             _roi.width /= scale_step;
             _roi.height /= scale_step;
         }
-
         // Test at a bigger _scale
         new_res = detect(_tmpl, getFeatures(image, 0, scale_step), new_peak_value);
 
@@ -225,17 +224,22 @@ cv::Rect KCFTracker::update(cv::Mat image)
     cv::Mat x = getFeatures(image, 0);
     train(x, interp_factor);
 
-    return _roi;
+    roi = _roi;
+    if(peak_value >= detect_thresh) {
+        return true;
+    } else {
+        return false;
+    }
+//    return _roi;
 }
 
-
 // Detect object in the current frame.
-cv::Point2f KCFTracker::detect(cv::Mat z, cv::Mat x, float &peak_value)
+cv::Point2f KCFTracker::detect(cv::Mat z, cv::Mat x, float &peak_value) // paper Algorithm 1 , _alpha updated in train();
 {
     using namespace FFTTools;
 
     cv::Mat k = gaussianCorrelation(x, z);
-    cv::Mat res = (real(fftd(complexMultiplication(_alphaf, fftd(k)), true)));
+    cv::Mat res = (real(fftd(complexMultiplication(_alphaf, fftd(k)), true)));// paper (22)
 
     //minMaxLoc only accepts doubles for the peak, and integer points for the coordinates
     cv::Point2i pi;
@@ -260,13 +264,13 @@ cv::Point2f KCFTracker::detect(cv::Mat z, cv::Mat x, float &peak_value)
     return p;
 }
 
-// train tracker with a single image
+// train tracker with a single image, to update _alphaf;
 void KCFTracker::train(cv::Mat x, float train_interp_factor)
 {
     using namespace FFTTools;
 
     cv::Mat k = gaussianCorrelation(x, x);
-    cv::Mat alphaf = complexDivision(_prob, (fftd(k) + lambda));
+    cv::Mat alphaf = complexDivision(_prob, (fftd(k) + lambda)); // paper (17)
     
     _tmpl = (1 - train_interp_factor) * _tmpl + (train_interp_factor) * x;
     _alphaf = (1 - train_interp_factor) * _alphaf + (train_interp_factor) * alphaf;
@@ -284,8 +288,9 @@ void KCFTracker::train(cv::Mat x, float train_interp_factor)
 
 }
 
-// Evaluates a Gaussian kernel with bandwidth SIGMA for all relative shifts between input images X and Y, which must both be MxN. They must    also be periodic (ie., pre-processed with a cosine window).
-cv::Mat KCFTracker::gaussianCorrelation(cv::Mat x1, cv::Mat x2)
+// Evaluates a Gaussian kernel with bandwidth SIGMA for all relative shifts between input images X and Y, 
+// which must both be MxN. They must also be periodic (ie., pre-processed with a cosine window).
+cv::Mat KCFTracker::gaussianCorrelation(cv::Mat x1, cv::Mat x2) // paper (30)
 {
     using namespace FFTTools;
     cv::Mat c = cv::Mat( cv::Size(size_patch[1], size_patch[0]), CV_32F, cv::Scalar(0) );
@@ -483,8 +488,7 @@ cv::Mat KCFTracker::getFeatures(const cv::Mat & image, bool inithann, float scal
             size_patch[2] += _labCentroids.rows;
             FeaturesMap.push_back(outputLab);
         }
-    }
-    else {
+    } else {
         FeaturesMap = RectTools::getGrayImage(z);
         FeaturesMap -= (float) 0.5; // In Paper;
         size_patch[0] = z.rows;

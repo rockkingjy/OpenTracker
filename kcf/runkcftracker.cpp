@@ -21,13 +21,10 @@ int main(int argc, char **argv)
 {
     string trackerType = "Native KCF";
 	// Create KCFTracker object 
-	bool HOG = true;
-	bool FIXEDWINDOW = false;
-	bool MULTISCALE = true;
-	bool LAB = false; //LAB color space features
+	bool HOG = true,FIXEDWINDOW = false,MULTISCALE = true,LAB = false; //LAB color space features
 	KCFTracker tracker(HOG, FIXEDWINDOW, MULTISCALE, LAB);//--------------------------trakcer
 
-    string path = "/media/elab/sdd/data/TLP/Bike";
+    string path = "/media/elab/sdd/data/TLP/Sam";
 	// Read the groundtruth bbox
 	ifstream groundtruth(path + "/groundtruth_rect.txt");
 	int f,x,y,w,h,isLost;
@@ -59,7 +56,7 @@ int main(int argc, char **argv)
     }
 
 	// Init the tracker---------------------------tracker
-    tracker.init(bbox, frame);
+    tracker.init(frame, bbox);
 
     while(frame.data)
     {   
@@ -70,19 +67,15 @@ int main(int argc, char **argv)
         double timer = (double)getTickCount();
          
         // Update the tracking result--------------------------tracker
-        bbox = tracker.update(frame);
+        bool ok = tracker.update(frame, bbox);
          
         // Calculate Frames per second (FPS)
         float fps = getTickFrequency() / ((double)getTickCount() - timer);
 
-        bool ok = 1;
-        if (ok)
-        {
+        if (ok) {
             // Tracking success : Draw the tracked object
             rectangle(frame, bbox, Scalar( 255, 0, 0 ), 2, 1 );
-        }
-        else
-        {
+        } else {
             // Tracking failure detected.
             putText(frame, "Tracking failure detected", Point(100,80), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,0,255),2);
         }

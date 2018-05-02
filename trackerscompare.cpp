@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 	bool FIXEDWINDOW = false;
 	bool MULTISCALE = true;
 	bool LAB = false; //LAB color space features
-	KCFTracker tracker(HOG, FIXEDWINDOW, MULTISCALE, LAB);
+	KCFTracker kcftracker(HOG, FIXEDWINDOW, MULTISCALE, LAB);
 
 // Create Opencv tracker:
     string trackerTypes[6] = {"BOOSTING", "MIL", "KCF", "TLD","MEDIANFLOW", "GOTURN"};
@@ -58,7 +58,7 @@ int main(int argc, char **argv)
     goturn::Tracker goturntracker(false);
 
 // Read from the images ====================================================
-    string path = "/media/elab/sdd/data/TLP/Bike";
+    string path = "/media/elab/sdd/data/TLP/Sam";
 	// Read the groundtruth bbox
 	ifstream groundtruth(path + "/groundtruth_rect.txt");
 	int f,x,y,w,h,isLost;
@@ -91,7 +91,7 @@ int main(int argc, char **argv)
 
 	// Init the trackers
     Rect2d kcfbbox(x,y,w,h);
-    tracker.init(kcfbbox, frame);
+    kcftracker.init(frame, kcfbbox);
 
     Rect2d opencvbbox(x,y,w,h);
     opencvtracker->init(frame, opencvbbox);
@@ -111,23 +111,26 @@ int main(int argc, char **argv)
         double timer = (double)getTickCount();
          
         // Update the KCF tracking result-----------------------------
-        kcfbbox = tracker.update(frame);
+        bool okkcf = kcftracker.update(frame, kcfbbox);
+        // draw kcf bbox
+        if (okkcf) {
+            rectangle(frame, kcfbbox, Scalar( 225, 0, 0 ), 2, 1); //blue
+        } else {
+            putText(frame, "Kcf tracking failure detected", Point(100,80), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(255,0,0),2);
+        }
 
         // Update the Opencv tracking result----------------------------
-        bool ok = opencvtracker->update(frame, opencvbbox);
+        bool okopencv = opencvtracker->update(frame, opencvbbox);
+        // draw opencv bbox
+        if (okopencv) {
+            rectangle(frame, opencvbbox, Scalar( 0, 225, 0 ), 2, 1); //green
+        } else {
+            putText(frame, "Opencv tracking failure detected", Point(100,110), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,225,0),2);
+        }
 
         // Update the GOTURN tracking result--------------------------
         goturntracker.Track(frame, &regressor, &bbox_estimate_uncentered);
         bbox_estimate_uncentered.putRect(goturnbbox);
-
-        // draw kcf bbox
-        rectangle(frame, kcfbbox, Scalar( 225, 0, 0 ), 2, 1); //blue
-        // draw opencv bbox
-        if (ok) {
-            rectangle(frame, opencvbbox, Scalar( 0, 225, 0 ), 2, 1); //green
-        } else {
-            putText(frame, "Tracking failure detected", Point(100,80), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,225,0),2);
-        }
         // draw goturn bbox
         rectangle(frame, goturnbbox, Scalar(0, 0, 255), 2, 1); //red
     

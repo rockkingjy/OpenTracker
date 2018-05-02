@@ -94,14 +94,16 @@ public:
     KCFTracker(bool hog = true, bool fixed_window = true, bool multiscale = true, bool lab = true);
 
     // Initialize tracker 
-     void init(const cv::Rect &roi, cv::Mat image);
+    void init(cv::Mat image, const cv::Rect &roi);
     
     // Update position based on the new frame
-     cv::Rect update(cv::Mat image);
+    //cv::Rect update(cv::Mat image);
+    bool update(cv::Mat image, cv::Rect roi);
 
-    float interp_factor; // linear interpolation factor for adaptation
+    float detect_thresh; // thresh hold for tracking error or not
     float sigma; // gaussian kernel bandwidth
     float lambda; // regularization
+    float interp_factor; // linear interpolation factor for adaptation
     int cell_size; // HOG cell size
     int cell_sizeQ; // cell size^2, to avoid repeated operations
     float padding; // extra area surrounding the target
@@ -112,13 +114,13 @@ public:
 
 protected:
     // Detect object in the current frame.
-    cv::Point2f detect(cv::Mat z, cv::Mat x, float &peak_value);
+    cv::Point2f detect(cv::Mat z, cv::Mat x, float &peak_value); // paper Algorithm 1 , _alpha updated in train();
 
-    // train tracker with a single image
+    // train tracker with a single image, to update _alphaf;
     void train(cv::Mat x, float train_interp_factor);
 
     // Evaluates a Gaussian kernel with bandwidth SIGMA for all relative shifts between input images X and Y, which must both be MxN. They must    also be periodic (ie., pre-processed with a cosine window).
-    cv::Mat gaussianCorrelation(cv::Mat x1, cv::Mat x2);
+    cv::Mat gaussianCorrelation(cv::Mat x1, cv::Mat x2); // paper (30)
 
     // Create Gaussian Peak. Function called only in the first frame.
     cv::Mat createGaussianPeak(int sizey, int sizex);
@@ -132,16 +134,16 @@ protected:
     // Calculate sub-pixel peak for one dimension
     float subPixelPeak(float left, float center, float right);
 
-    cv::Mat _alphaf;
-    cv::Mat _prob;
-    cv::Mat _tmpl;
+    cv::Mat _alphaf;//alpha in paper, use this to calculate the detect result, changed in train();
+    cv::Mat _prob; //Gaussian Peak(training outputs);
+    cv::Mat _tmpl; //features of image (or the normalized gray image itself when raw), changed in train();
     cv::Mat _num;
     cv::Mat _den;
     cv::Mat _labCentroids;
 
     cv::Rect_<float> _roi;
 private:
-    int size_patch[3];
+    int size_patch[3];//0:rows;1:cols;2:numFeatures;
     cv::Mat hann;
     cv::Size _tmpl_sz;
     float _scale;
