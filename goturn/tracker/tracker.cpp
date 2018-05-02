@@ -7,7 +7,6 @@ Tracker::Tracker(const bool show_tracking) :
 {
 }
 
-
 void Tracker::Init(const cv::Mat& image, const BoundingBox& bbox_gt,
                    RegressorBase* regressor) {
   image_prev_ = image;
@@ -21,8 +20,6 @@ void Tracker::Init(const cv::Mat& image, const BoundingBox& bbox_gt,
   // Initialize the neural network.
   regressor->Init();
 }
-
-
 
 void Tracker::Track(const cv::Mat& image_curr, RegressorBase* regressor,
                     BoundingBox* bbox_estimate_uncentered) {

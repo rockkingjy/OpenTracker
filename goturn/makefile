@@ -3,8 +3,9 @@ CC=gcc
 
 VPATH=./helper:./loader:./network:./tracker:/media/elab/sdd/caffe/build/install
 
-LDFLAGS= `pkg-config --libs opencv` -L/media/elab/sdd/caffe/build/install/lib -lcaffe-nv -lproto \
-	-lboost_system -lboost_filesystem -lboost_regex -lglog
+LDFLAGS= `pkg-config --libs opencv` -L/media/elab/sdd/caffe/build/install/lib -lcaffe-nv -lproto  \
+	-L/usr/local/cuda/lib64 -lcuda -lcudart -lcublas -lcurand -lcudnn \
+	-lboost_system -lboost_filesystem -lboost_regex -lglog 
 
 CXXFLAGS= -Wall `pkg-config --cflags opencv` -lstdc++ -lm -std=c++0x -I/media/elab/sdd/caffe/build/install/include/ \
 	-I/usr/local/cuda/include/
@@ -26,7 +27,7 @@ rungoturntracker.bin: $(OBJS)
 	$(CC) -c -o $@ $< 
 
 classification.bin: classification.o
-	$(CC) -o $@ $^ $(LDFLAGS) $(CXXFLAGS)
+	$(CC) -o $@ $^ $(LDFLAGS) $(CXXFLAGS) 
 
 .PHONY: clean
 

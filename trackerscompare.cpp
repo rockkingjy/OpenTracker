@@ -134,7 +134,7 @@ int main(int argc, char **argv)
         // draw goturn bbox
         rectangle(frame, goturnbbox, Scalar(0, 0, 255), 2, 1); //red
     
-        // Calculate Frames per second (FPS)
+        // Calculate Frames per second (FPS)-------------------------------
         float fps = getTickFrequency() / ((double)getTickCount() - timer);
         // Display FPS on frame
         putText(frame, "FPS in total: " + SSTR(long(fps)), Point(100,50), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,0,0), 2);

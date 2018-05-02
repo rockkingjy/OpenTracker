@@ -1,10 +1,8 @@
 #include <caffe/caffe.hpp>
 
-
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-
 
 #include <algorithm>
 #include <iosfwd>
@@ -52,9 +50,14 @@ Classifier::Classifier(const string& model_file,
                        const string& mean_file,
                        const string& label_file) {
 #ifdef CPU_ONLY
+  printf("Setting up Caffe in CPU mode.\n");
   Caffe::set_mode(Caffe::CPU);
 #else
+  printf("Setting up Caffe in GPU mode.\n"); //Problem: cannot run GPU when compile outside caffe
   Caffe::set_mode(Caffe::GPU);
+  Caffe::SetDevice(0);
+  Caffe::DeviceQuery();
+  Caffe::CheckDevice(0);
 #endif
 
   /* Load the network. */
@@ -251,7 +254,12 @@ int main(int argc, char** argv) {
 
   cv::Mat img = cv::imread(file, -1);
   CHECK(!img.empty()) << "Unable to decode image " << file;
+
+
+  double timer = (double)cv::getTickCount();
   std::vector<Prediction> predictions = classifier.Classify(img);
+  float fps = cv::getTickFrequency() / ((double)cv::getTickCount() - timer);
+  printf("fps goturn: %f\n", fps);
 
   // Print the top N predictions. 
   for (size_t i = 0; i < predictions.size(); ++i) {
