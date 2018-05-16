@@ -153,14 +153,14 @@ protected:
     float subPixelPeak(float left, float center, float right);
 
 //=====dsst====
-    // Compute the FFT Guassian Peak for scaling
-    cv::Mat computeYsf();
-
-    // Compute the hanning window for scaling
-    cv::Mat createHanningMatsForScale();
-
     // Initialization for scales
     void dsstInit(const cv::Rect &roi, cv::Mat image);
+
+    // Detect the new scaling rate
+    cv::Point2i detect_scale(cv::Mat image);
+
+    // Train method for scaling
+    void train_scale(cv::Mat image, bool ini = false);
 
     // Compute the F^l in the paper
     cv::Mat get_scale_sample(const cv::Mat & image);
@@ -168,11 +168,12 @@ protected:
     // Update the ROI size after training
     void update_roi();
 
-    // Train method for scaling
-    void train_scale(cv::Mat image, bool ini = false);
+    // Compute the FFT Guassian Peak for scaling
+    cv::Mat computeYsf();
 
-    // Detect the new scaling rate
-    cv::Point2i detect_scale(cv::Mat image);
+    // Compute the hanning window for scaling
+    cv::Mat createHanningMatsForScale();
+
 //===========
     cv::Mat _alphaf;//alpha in paper, use this to calculate the detect result, changed in train();
     cv::Mat _prob; //Gaussian Peak(training outputs);

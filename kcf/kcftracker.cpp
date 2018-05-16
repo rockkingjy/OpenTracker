@@ -636,28 +636,7 @@ float KCFTracker::subPixelPeak(float left, float center, float right)
 
     return 0.5 * (right - left) / divisor;
 }
-//=========================================================================================
-// Detect the new scaling rate
-cv::Point2i KCFTracker::detect_scale(cv::Mat image)
-{
-  cv::Mat xsf = KCFTracker::get_scale_sample(image);
-
-  // Compute AZ in the paper
-  cv::Mat add_temp;
-  cv::reduce(FFTTools::complexMultiplication(sf_num, xsf), add_temp, 0, CV_REDUCE_SUM);
-
-  // compute the final y
-  cv::Mat scale_response;
-  cv::idft(FFTTools::complexDivisionReal(add_temp, (sf_den + scale_lambda)), scale_response, cv::DFT_REAL_OUTPUT);
-
-  // Get the max point as the final scaling rate
-  cv::Point2i pi;
-  double pv;
-  cv::minMaxLoc(scale_response, NULL, &pv, NULL, &pi);
-
-  return pi;
-}
-
+//DSST=========================================================================================
 // Initialization for scales
 void KCFTracker::dsstInit(const cv::Rect &roi, cv::Mat image)
 {
@@ -696,6 +675,27 @@ void KCFTracker::dsstInit(const cv::Rect &roi, cv::Mat image)
 
 }
 
+// Detect the new scaling rate
+cv::Point2i KCFTracker::detect_scale(cv::Mat image)
+{
+  cv::Mat xsf = KCFTracker::get_scale_sample(image);
+
+  // Compute AZ in the paper
+  cv::Mat add_temp;
+  cv::reduce(FFTTools::complexMultiplication(sf_num, xsf), add_temp, 0, CV_REDUCE_SUM);
+
+  // compute the final y
+  cv::Mat scale_response;
+  cv::idft(FFTTools::complexDivisionReal(add_temp, (sf_den + scale_lambda)), scale_response, cv::DFT_REAL_OUTPUT);
+
+  // Get the max point as the final scaling rate
+  cv::Point2i pi; //max
+  double pv; //min
+  cv::minMaxLoc(scale_response, NULL, &pv, NULL, &pi);
+
+  return pi;
+}
+
 // Train method for scaling
 void KCFTracker::train_scale(cv::Mat image, bool ini)
 {
@@ -729,24 +729,6 @@ void KCFTracker::train_scale(cv::Mat image, bool ini)
   }
 
   update_roi();
-
-}
-
-// Update the ROI size after training
-void KCFTracker::update_roi()
-{
-  // Compute new center
-  float cx = _roi.x + _roi.width / 2.0f;
-  float cy = _roi.y + _roi.height / 2.0f;
-
-  // printf("%f\n", currentScaleFactor);
-
-  // Recompute the ROI left-upper point and size
-  _roi.width = base_width * currentScaleFactor;
-  _roi.height = base_height * currentScaleFactor;
-
-  _roi.x = cx - _roi.width / 2.0f;
-  _roi.y = cy - _roi.height / 2.0f;
 
 }
 
@@ -804,6 +786,24 @@ cv::Mat KCFTracker::get_scale_sample(const cv::Mat & image)
   xsf = FFTTools::fftd(xsf, 0, 1);
 
   return xsf;
+}
+
+// Update the ROI size after training
+void KCFTracker::update_roi()
+{
+  // Compute new center
+  float cx = _roi.x + _roi.width / 2.0f;
+  float cy = _roi.y + _roi.height / 2.0f;
+
+  // printf("%f\n", currentScaleFactor);
+
+  // Recompute the ROI left-upper point and size
+  _roi.width = base_width * currentScaleFactor;
+  _roi.height = base_height * currentScaleFactor;
+
+  _roi.x = cx - _roi.width / 2.0f;
+  _roi.y = cy - _roi.height / 2.0f;
+
 }
 
 // Compute the FFT Guassian Peak for scaling
