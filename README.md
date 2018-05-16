@@ -14,7 +14,7 @@ make
 ./opencvtrackers.bin
 ```
 
-## Run KCF
+## Run KCF / DSST
 Change the path of your test images in **kcf/runkcftracker.cpp**.
 ```
 cd kcf
@@ -39,8 +39,6 @@ make -j12
 ```
 ./classification.bin   /media/elab/sdd/caffe/models/bvlc_reference_caffenet/deploy.prototxt   /media/elab/sdd/caffe/models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel   /media/elab/sdd/caffe/data/ilsvrc12/imagenet_mean.binaryproto   /media/elab/sdd/caffe/data/ilsvrc12/synset_words.txt   /media/elab/sdd/caffe/examples/images/cat.jpg
 ```
-
-
 --------------------------------
 ## KCF Tracker
 
