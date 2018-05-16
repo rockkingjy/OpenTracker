@@ -53,6 +53,9 @@ Authors: Joao Faro, Christian Bailer, Joao F. Henriques
 Contacts: joaopfaro@gmail.com, Christian.Bailer@dfki.de, henriques@isr.uc.pt   
 Institute of Systems and Robotics - University of Coimbra / Department of Augmented Vision DFKI   
 
+## DSST Tracker
+[3] M. Danelljan, G. Häger, F. Shahbaz Khan, and M. Felsberg. Discriminative Scale Space Tracking, 2016
+
 ## GOTURN Tracker
 
 **[Learning to Track at 100 FPS with Deep Regression Networks](http://davheld.github.io/GOTURN/GOTURN.html)**,
