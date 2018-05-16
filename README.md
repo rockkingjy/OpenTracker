@@ -1,6 +1,12 @@
 **Why most of the trackers are written by matlab? I hate that! Cpp is fast and clear! I even doubt that the FPS measured by using matlab is not really meaningful, especially for actual and embedded system use! So I will re-implement those trackers by cpp day by day, hope you like it!**
 
-# Run Opencv trackers
+## Run to compare all the trackers
+```
+make all
+./trackerscompare.bin
+```
+
+## Run Opencv trackers
 Change the path of your test images in **kcf/opencvtrackers.cpp**.
 ```
 cd opencvtrackers
@@ -8,7 +14,7 @@ make
 ./opencvtrackers.bin
 ```
 
-# Run KCF
+## Run KCF
 Change the path of your test images in **kcf/runkcftracker.cpp**.
 ```
 cd kcf
@@ -16,7 +22,7 @@ make -j12
 ./runkcftracker.bin
 ```
 
-# Run GOTURN
+## Run GOTURN
 Change the path of your test images in **goturn/rungoturntracker.cpp**.
 
 Need to install [[caffe](https://github.com/rockkingjy/caffe)], and change the goturn/makefile according to your installation.
@@ -34,11 +40,6 @@ make -j12
 ./classification.bin   /media/elab/sdd/caffe/models/bvlc_reference_caffenet/deploy.prototxt   /media/elab/sdd/caffe/models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel   /media/elab/sdd/caffe/data/ilsvrc12/imagenet_mean.binaryproto   /media/elab/sdd/caffe/data/ilsvrc12/synset_words.txt   /media/elab/sdd/caffe/examples/images/cat.jpg
 ```
 
-# Run to compare all the trackers
-```
-make all
-./trackerscompare.bin
-```
 
 --------------------------------
 ## KCF Tracker
