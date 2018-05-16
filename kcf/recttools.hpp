@@ -134,6 +134,33 @@ inline cv::Mat getGrayImage(cv::Mat img)
     return img;
 }
 
+inline void cutOutsize(float &num, int limit)
+{
+  if(num < 0)
+    num = 0;
+  else if(num > limit - 1)
+    num = limit - 1;
+}
+
+inline cv::Mat extractImage(const cv::Mat &in, float cx, float cy, float patch_width, float patch_height)
+{
+
+    float xs_s = floor(cx) - floor(patch_width / 2);
+    RectTools::cutOutsize(xs_s, in.cols);
+
+    float xs_e = floor(cx + patch_width - 1) - floor(patch_width / 2);
+    RectTools::cutOutsize(xs_e, in.cols);
+
+    float ys_s = floor(cy) - floor(patch_height / 2);
+    RectTools::cutOutsize(ys_s, in.rows);
+
+    float ys_e = floor(cy + patch_height - 1) - floor(patch_height / 2);
+    RectTools::cutOutsize(ys_e, in.rows);
+
+
+    return in(cv::Rect(xs_s, ys_s, xs_e - xs_s, ys_e - ys_s));
+}
+
 }
 
 

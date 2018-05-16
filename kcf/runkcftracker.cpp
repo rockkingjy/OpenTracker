@@ -19,6 +19,7 @@ using namespace std;
 int main(int argc, char **argv)
 //int runtracker()
 {
+/*
     string trackerType = "Native KCF";
 	// Create KCFTracker object 
 	bool HOG = true,FIXEDWINDOW = false,MULTISCALE = true,LAB = false; //LAB color space features
@@ -123,4 +124,5 @@ int main(int argc, char **argv)
 		bboxGroundtruth.height = h;
     }
     return 0;
+*/
 }

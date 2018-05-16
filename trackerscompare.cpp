@@ -25,11 +25,12 @@ int main(int argc, char **argv)
 //int trackercompare()
 {
 // Create KCFTracker: 
-    bool HOG = true;
-	bool FIXEDWINDOW = false;
-	bool MULTISCALE = true;
-	bool LAB = false; //LAB color space features
-	KCFTracker kcftracker(HOG, FIXEDWINDOW, MULTISCALE, LAB);
+    bool HOG = true, FIXEDWINDOW = true, MULTISCALE = true, LAB = true, DSST = false; //LAB color space features
+	KCFTracker kcftracker(HOG, FIXEDWINDOW, MULTISCALE, LAB, DSST);
+
+// Create DSSTTracker: 
+    DSST = true; 
+	KCFTracker dssttracker(HOG, FIXEDWINDOW, MULTISCALE, LAB, DSST);
 
 // Create Opencv tracker:
     string trackerTypes[6] = {"BOOSTING", "MIL", "KCF", "TLD","MEDIANFLOW", "GOTURN"};
@@ -48,7 +49,7 @@ int main(int argc, char **argv)
         opencvtracker = cv::TrackerMedianFlow::create();
     if (trackerType == "GOTURN")
         opencvtracker = cv::TrackerGOTURN::create();
-
+/*
 // Create GOTURN tracker:
     const string model_file = "goturn/nets/deploy.prototxt";
     const string pretrain_file = "goturn/nets/goturun_tracker.caffemodel";
@@ -56,9 +57,9 @@ int main(int argc, char **argv)
 
     Regressor regressor(model_file,pretrain_file,gpu_id, false);
     goturn::Tracker goturntracker(false);
-
+*/
 // Read from the images ====================================================
-    string path = "/media/elab/sdd/data/TLP/Sam";
+    string path = "/media/elab/sdd/data/TLP/Bike";//Alladin";//IceSkating";//Sam";
 	// Read the groundtruth bbox
 	ifstream groundtruth(path + "/groundtruth_rect.txt");
 	int f,x,y,w,h,isLost;
@@ -89,19 +90,22 @@ int main(int argc, char **argv)
         return -1;
     }
 
-	// Init the trackers
+	// Init the trackers=================================================
     Rect2d kcfbbox(x,y,w,h);
     kcftracker.init(frame, kcfbbox);
 
+    Rect2d dsstbbox(x,y,w,h);
+    dssttracker.init(frame, dsstbbox);
+
     Rect2d opencvbbox(x,y,w,h);
     opencvtracker->init(frame, opencvbbox);
-
+/*
     cv::Rect goturnbbox(x,y,w,h);
     BoundingBox bbox_gt;
     BoundingBox bbox_estimate_uncentered;
     bbox_gt.getRect(goturnbbox);
     goturntracker.Init(frame,bbox_gt,&regressor);
-
+*/
 
     while(frame.data) {
         // Draw ground truth box
@@ -112,35 +116,48 @@ int main(int argc, char **argv)
          
         // Update the KCF tracking result-----------------------------
         bool okkcf = kcftracker.update(frame, kcfbbox);
+        
+        bool okdsst = dssttracker.update(frame, dsstbbox);
+//        cout << kcfbbox.x << ", " << kcfbbox.y << ", " <<kcfbbox.width << ", " << kcfbbox.height << std::endl;
+        // Calculate Frames per second (FPS)-------------------------------
+        float fps = getTickFrequency() / ((double)getTickCount() - timer);
+        // Update the Opencv tracking result----------------------------
+        bool okopencv = opencvtracker->update(frame, opencvbbox);
+        // Update the GOTURN tracking result--------------------------
+/*        goturntracker.Track(frame, &regressor, &bbox_estimate_uncentered);
+        bbox_estimate_uncentered.putRect(goturnbbox);
+*/
+        //============================================================
         // draw kcf bbox
         if (okkcf) {
             rectangle(frame, kcfbbox, Scalar( 225, 0, 0 ), 2, 1); //blue
         } else {
-            putText(frame, "Kcf tracking failure detected", Point(100,80), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(255,0,0),2);
+            putText(frame, "Kcf tracking failure detected", Point(100,80), FONT_HERSHEY_SIMPLEX,
+                     0.75, Scalar(255,0,0),2);
         }
-
-        // Update the Opencv tracking result----------------------------
-        bool okopencv = opencvtracker->update(frame, opencvbbox);
+        if (okdsst) {
+            rectangle(frame, dsstbbox, Scalar( 0, 0, 255 ), 2, 1); //blue
+        } else {
+            putText(frame, "DSST tracking failure detected", Point(100,80), FONT_HERSHEY_SIMPLEX,
+                     0.75, Scalar(0,0,255),2);
+        }
         // draw opencv bbox
         if (okopencv) {
             rectangle(frame, opencvbbox, Scalar( 0, 225, 0 ), 2, 1); //green
         } else {
-            putText(frame, "Opencv tracking failure detected", Point(100,110), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,225,0),2);
+            putText(frame, "Opencv tracking failure detected", Point(100,110), FONT_HERSHEY_SIMPLEX,
+                     0.75, Scalar(0,225,0),2);
         }
-
-        // Update the GOTURN tracking result--------------------------
-        goturntracker.Track(frame, &regressor, &bbox_estimate_uncentered);
-        bbox_estimate_uncentered.putRect(goturnbbox);
         // draw goturn bbox
-        rectangle(frame, goturnbbox, Scalar(0, 0, 255), 2, 1); //red
-    
-        // Calculate Frames per second (FPS)-------------------------------
-        float fps = getTickFrequency() / ((double)getTickCount() - timer);
-        // Display FPS on frame
-        putText(frame, "FPS in total: " + SSTR(long(fps)), Point(100,50), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,0,0), 2);
-        // Display tracker type on frame
-        putText(frame, "Blue is KCF; Red is GOTURN; Green is opencv " + trackerType + ";", Point(100,20), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,0,0),2);
+        // rectangle(frame, goturnbbox, Scalar(0, 0, 255), 2, 1); //red
 
+        // Display FPS on frame
+        putText(frame, "FPS in total: " + SSTR(long(fps)), Point(100,50), FONT_HERSHEY_SIMPLEX,
+                     0.75, Scalar(0,0,0), 2);
+        // Display tracker type on frame
+        putText(frame, "Black:GT; Blue: KCF; Red: DSST; Green: opencv " + trackerType + ";",
+                 Point(100,20), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,0,0),2);
+        //=============================================================================
         // Display frame.        
         //cvNamedWindow("Tracking", CV_WINDOW_NORMAL); 
         imshow("Tracking", frame);
@@ -171,7 +188,7 @@ int main(int argc, char **argv)
 		h = atoi(s.c_str());
 		getline(groundtruth, s);
 		isLost = atoi(s.c_str());
-		cout << f <<" " << x <<" " << y <<" " << w <<" " << h <<" " << isLost << endl;
+		//cout << f <<" " << x <<" " << y <<" " << w <<" " << h <<" " << isLost << endl;
 		bboxGroundtruth.x = x;
 		bboxGroundtruth.y = y;
 		bboxGroundtruth.width = w;
