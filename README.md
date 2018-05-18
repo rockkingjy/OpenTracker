@@ -13,8 +13,8 @@ Included                                   | Tracker
 
 Included                                   | Dataset    | Reference
 -------------------------------------------|--------------|-----------
-:ballot_box_with_check:                    | TLP          | [Ref.](https://amoudgl.github.io/tlp/)
-:ballot_box_with_check:                    | UAV123          | [Ref.](https://ivul.kaust.edu.sa/Pages/Dataset-UAV123.aspx)
+:ballot_box_with_check:                    | TLP          | [Web](https://amoudgl.github.io/tlp/)
+:ballot_box_with_check:                    | UAV123       | [Web](https://ivul.kaust.edu.sa/Pages/Dataset-UAV123.aspx)
 
 
 
@@ -78,8 +78,6 @@ The code is changed from [[joaofaro/KCFcpp](https://github.com/joaofaro/KCFcpp)]
 The code is changed from [[liliumao/KCF-DSST](https://github.com/liliumao/KCF-DSST)], the max_scale_factor and min_scale_factor is set to 10 and 0.1 in case of divergence error. 
 
 ## GOTURN Tracker
-The code is changed from [[davheld/GOTURN](https://github.com/davheld/GOTURN)].
-
 **[Learning to Track at 100 FPS with Deep Regression Networks](http://davheld.github.io/GOTURN/GOTURN.html)**,
 <br>
 [David Held](http://davheld.github.io/),
@@ -87,3 +85,5 @@ The code is changed from [[davheld/GOTURN](https://github.com/davheld/GOTURN)].
 [Silvio Savarese](http://cvgl.stanford.edu/silvio/),
 <br>
 European Conference on Computer Vision (ECCV), 2016 (In press)
+
+The code is changed from [[davheld/GOTURN](https://github.com/davheld/GOTURN)].
