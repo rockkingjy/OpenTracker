@@ -40,3 +40,4 @@ Trackers
 build/
 *.caffemodel
 *.bin
+.vscode/

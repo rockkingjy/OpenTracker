@@ -176,10 +176,10 @@ protected:
 
 //===========
     cv::Mat _alphaf;//alpha in paper, use this to calculate the detect result, changed in train();
-    cv::Mat _prob; //Gaussian Peak(training outputs);
-    cv::Mat _tmpl; //features of image (or the normalized gray image itself when raw), changed in train();
-    cv::Mat _num;
-    cv::Mat _den;
+    cv::Mat _prob;  //Gaussian Peak(training outputs);
+    cv::Mat _tmpl;  //features of image (or the normalized gray image itself when raw), changed in train();
+    cv::Mat _num;   //numerator: use to update as MOSSE
+    cv::Mat _den;   //denumerator: use to update as MOSSE
     cv::Mat _labCentroids;
 //=====dsst====
     cv::Mat sf_den;
@@ -189,7 +189,7 @@ protected:
     cv::Rect_<float> _roi;
 
 private:
-    int size_patch[3];//0:rows;1:cols;2:numFeatures;
+    int size_patch[3];//0:rows;1:cols;2:numFeatures; init in getFeatures();
     cv::Mat hann;
     cv::Size _tmpl_sz;
     float _scale;

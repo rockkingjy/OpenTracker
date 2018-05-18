@@ -41,15 +41,9 @@ the use of this software, even if advised of the possibility of such damage.
 #define _OPENCV_FFTTOOLS_HPP_
 #endif
 
-//NOTE: FFTW support is still shaky, disabled for now.
-/*#ifdef USE_FFTW
-#include <fftw3.h>
-#endif*/
-
 namespace FFTTools
 {
-// Previous declarations, to avoid warnings
-cv::Mat fftd(cv::Mat img, bool backwards = false, bool byRow = false);
+cv::Mat fftd(cv::Mat img, bool backwards = false, bool byRow = false);//byRow=true: 1d trasform, else 2d;
 cv::Mat real(cv::Mat img);
 cv::Mat imag(cv::Mat img);
 cv::Mat magnitude(cv::Mat img);
@@ -58,72 +52,19 @@ cv::Mat complexDivision(cv::Mat a, cv::Mat b);
 void rearrange(cv::Mat &img);
 void normalizedLogTransform(cv::Mat &img);
 
-
 cv::Mat fftd(cv::Mat img, bool backwards, bool byRow)
 {
-/*
-#ifdef USE_FFTW
-
-    fftw_complex * fm = (fftw_complex*) fftw_malloc(sizeof (fftw_complex) * img.cols * img.rows);
-
-    fftw_plan p = fftw_plan_dft_2d(img.rows, img.cols, fm, fm, backwards ? 1 : -1, 0 * FFTW_ESTIMATE);
-
-
     if (img.channels() == 1)
     {
-        for (int i = 0; i < img.rows; i++)
-            for (int j = 0; j < img.cols; j++)
-            {
-                fm[i * img.cols + j][0] = img.at<float>(i, j);
-                fm[i * img.cols + j][1] = 0;
-            }
-    }
-    else
-    {
-        assert(img.channels() == 2);
-        for (int i = 0; i < img.rows; i++)
-            for (int j = 0; j < img.cols; j++)
-            {
-                fm[i * img.cols + j][0] = img.at<cv::Vec2d > (i, j)[0];
-                fm[i * img.cols + j][1] = img.at<cv::Vec2d > (i, j)[1];
-            }
-    }
-    fftw_execute(p);
-    cv::Mat res(img.rows, img.cols, CV_64FC2);
-
-
-    for (int i = 0; i < img.rows; i++)
-        for (int j = 0; j < img.cols; j++)
-        {
-            res.at<cv::Vec2d > (i, j)[0] = fm[i * img.cols + j][0];
-            res.at<cv::Vec2d > (i, j)[1] = fm[i * img.cols + j][1];
-
-            //  _iout(fm[i * img.cols + j][0]);
-        }
-
-    if (backwards)res *= 1.d / (float) (res.cols * res.rows);
-
-    fftw_free(p);
-    fftw_free(fm);
-    return res;
-
-#else
-*/
-    if (img.channels() == 1)
-    {
-        cv::Mat planes[] = {cv::Mat_<float> (img), cv::Mat_<float>::zeros(img.size())};
-        //cv::Mat planes[] = {cv::Mat_<double> (img), cv::Mat_<double>::zeros(img.size())};
+        cv::Mat planes[] = {cv::Mat_<float>(img), cv::Mat_<float>::zeros(img.size())};
         cv::merge(planes, 2, img);
     }
-    if(byRow)
-      cv::dft(img, img, (cv::DFT_ROWS | cv::DFT_COMPLEX_OUTPUT));
+    if (byRow)
+        cv::dft(img, img, (cv::DFT_ROWS | cv::DFT_COMPLEX_OUTPUT));
     else
-      cv::dft(img, img, backwards ? (cv::DFT_INVERSE | cv::DFT_SCALE) : 0 );
+        cv::dft(img, img, backwards ? (cv::DFT_INVERSE | cv::DFT_SCALE) : 0);//do scale when ifft;
 
     return img;
-
-/*#endif*/
-
 }
 
 cv::Mat real(cv::Mat img)
@@ -145,9 +86,12 @@ cv::Mat magnitude(cv::Mat img)
     cv::Mat res;
     std::vector<cv::Mat> planes;
     cv::split(img, planes); // planes[0] = Re(DFT(I), planes[1] = Im(DFT(I))
-    if (planes.size() == 1) res = cv::abs(img);
-    else if (planes.size() == 2) cv::magnitude(planes[0], planes[1], res); // planes[0] = magnitude
-    else assert(0);
+    if (planes.size() == 1)
+        res = cv::abs(img);
+    else if (planes.size() == 2)
+        cv::magnitude(planes[0], planes[1], res); // planes[0] = magnitude
+    else
+        assert(0);
     return res;
 }
 
@@ -204,15 +148,15 @@ cv::Mat complexDivision(cv::Mat a, cv::Mat b)
     return res;
 }
 
-void rearrange(cv::Mat &img)
+void rearrange(cv::Mat &img) //KCF page 11 Figure 6;
 {
     // img = img(cv::Rect(0, 0, img.cols & -2, img.rows & -2));
     int cx = img.cols / 2;
     int cy = img.rows / 2;
 
-    cv::Mat q0(img, cv::Rect(0, 0, cx, cy)); // Top-Left - Create a ROI per quadrant
-    cv::Mat q1(img, cv::Rect(cx, 0, cx, cy)); // Top-Right
-    cv::Mat q2(img, cv::Rect(0, cy, cx, cy)); // Bottom-Left
+    cv::Mat q0(img, cv::Rect(0, 0, cx, cy));   // Top-Left - Create a ROI per quadrant
+    cv::Mat q1(img, cv::Rect(cx, 0, cx, cy));  // Top-Right
+    cv::Mat q2(img, cv::Rect(0, cy, cx, cy));  // Bottom-Left
     cv::Mat q3(img, cv::Rect(cx, cy, cx, cy)); // Bottom-Right
 
     cv::Mat tmp; // swap quadrants (Top-Left with Bottom-Right)
@@ -253,5 +197,4 @@ void normalizedLogTransform(cv::Mat &img)
     cv::log(img, img);
     // cv::normalize(img, img, 0, 1, CV_MINMAX);
 }
-
 }

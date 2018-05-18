@@ -1,5 +1,23 @@
 **Why most of the trackers are written by matlab? I hate that! Cpp is fast and clear! I even doubt that the FPS measured by using matlab is not really meaningful, especially for actual and embedded system use! So I will re-implement those trackers by cpp day by day, hope you like it!**
 
+
+## Supported tracker:
+Included                                   | Tracker    
+-------------------------------------------|---------------
+:ballot_box_with_check:                    | CSK          
+:ballot_box_with_check:                    | KCF          
+:ballot_box_with_check:                    | DSST          
+:ballot_box_with_check:                    | GOTURN         
+
+## Supported Dataset (more on progress):
+
+Included                                   | Dataset    | Reference
+-------------------------------------------|--------------|-----------
+:ballot_box_with_check:                    | TLP          | [Ref.](https://amoudgl.github.io/tlp/)
+:ballot_box_with_check:                    | UAV123          | [Ref.](https://ivul.kaust.edu.sa/Pages/Dataset-UAV123.aspx)
+
+
+
 ## Run to compare all the trackers
 ```
 make all
@@ -52,12 +70,15 @@ Authors: Joao Faro, Christian Bailer, Joao F. Henriques
 Contacts: joaopfaro@gmail.com, Christian.Bailer@dfki.de, henriques@isr.uc.pt   
 Institute of Systems and Robotics - University of Coimbra / Department of Augmented Vision DFKI   
 
+The code is changed from [[joaofaro/KCFcpp](https://github.com/joaofaro/KCFcpp)].
+
 ## DSST Tracker
 [3] M. Danelljan, G. Häger, F. Shahbaz Khan, and M. Felsberg. Discriminative Scale Space Tracking, 2016
 
-Consider the performance, max_scale_factor is not used, which means you can have a unlimited large ROI. What's more, since the actually picture read in by camera is much larger than test ones, DSST scale_step is changed to 1.05 instead of 1.02. The experiment of changing 1.05 to 1.02 with 33 candidate scales decrease nearly 10% when the average fps is around 20. But the decreasing effect will be enlarged when the size of ROI gets larger. And obviously, reduce the number of candidate scales can speed up the tracker. Change 33 candidate scales to 17 may speed up nearly 100%. So here is a trade-off that you can increase your scale_step but decrease your number of candidate scales to speed up your tracker if your ROI is assumed to have a reasonable size.
+The code is changed from [[liliumao/KCF-DSST](https://github.com/liliumao/KCF-DSST)], the max_scale_factor and min_scale_factor is set to 10 and 0.1 in case of divergence error. 
 
 ## GOTURN Tracker
+The code is changed from [[davheld/GOTURN](https://github.com/davheld/GOTURN)].
 
 **[Learning to Track at 100 FPS with Deep Regression Networks](http://davheld.github.io/GOTURN/GOTURN.html)**,
 <br>

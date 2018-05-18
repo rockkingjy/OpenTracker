@@ -78,8 +78,10 @@ inline void resize(cv::Rect_<t> &rect, float scalex, float scaley = 0)
 template <typename t>
 inline void limit(cv::Rect_<t> &rect, cv::Rect_<t> limit)
 {
-    if (rect.x + rect.width > limit.x + limit.width)rect.width = (limit.x + limit.width - rect.x);
-    if (rect.y + rect.height > limit.y + limit.height)rect.height = (limit.y + limit.height - rect.y);
+    if (rect.x + rect.width > limit.x + limit.width)
+        rect.width = (limit.x + limit.width - rect.x);
+    if (rect.y + rect.height > limit.y + limit.height)
+        rect.height = (limit.y + limit.height - rect.y);
     if (rect.x < limit.x)
     {
         rect.width -= (limit.x - rect.x);
@@ -90,6 +92,7 @@ inline void limit(cv::Rect_<t> &rect, cv::Rect_<t> limit)
         rect.height -= (limit.y - rect.y);
         rect.y = limit.y;
     }
+
     if(rect.width<0)rect.width=0;
     if(rect.height<0)rect.height=0;
 }
@@ -98,6 +101,7 @@ template <typename t>
 inline void limit(cv::Rect_<t> &rect, t width, t height, t x = 0, t y = 0)
 {
     limit(rect, cv::Rect_<t > (x, y, width, height));
+
 }
 
 template <typename t>
@@ -115,13 +119,16 @@ inline cv::Rect getBorder(const cv::Rect_<t > &original, cv::Rect_<t > & limited
 inline cv::Mat subwindow(const cv::Mat &in, const cv::Rect & window, int borderType = cv::BORDER_CONSTANT)
 {
     cv::Rect cutWindow = window;
-    RectTools::limit(cutWindow, in.cols, in.rows);
-    if (cutWindow.height <= 0 || cutWindow.width <= 0)assert(0); //return cv::Mat(window.height,window.width,in.type(),0) ;
-    cv::Rect border = RectTools::getBorder(window, cutWindow);
+    RectTools::limit(cutWindow, in.cols, in.rows); //limit cutwindow inside Mat in;
+
+    if (cutWindow.height <= 0 || cutWindow.width <= 0) assert(0); 
+    //    return cv::Mat(window.height,window.width,in.type(),0) ;
+
+    cv::Rect border = RectTools::getBorder(window, cutWindow); //get the border of cutWindow in window;
     cv::Mat res = in(cutWindow);
 
     if (border != cv::Rect(0, 0, 0, 0))
-    {
+    {// back to the same size of window with border filled with constant
         cv::copyMakeBorder(res, res, border.y, border.height, border.x, border.width, borderType);
     }
     return res;

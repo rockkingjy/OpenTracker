@@ -12,28 +12,29 @@
 #include <fstream>
 #include <string>
 
-
 using namespace cv;
 using namespace std;
 
-
 // Convert to string
-#define SSTR( x ) static_cast< std::ostringstream & >( \
-( std::ostringstream() << std::dec << x ) ).str()
+#define SSTR(x) static_cast<std::ostringstream &>(           \
+                    (std::ostringstream() << std::dec << x)) \
+                    .str()
 
 int main(int argc, char **argv)
 //int trackercompare()
 {
-// Create KCFTracker: 
+    string databaseTypes[2] = {"TLP", "UAV123"};
+    string databaseType = databaseTypes[1];
+    // Create KCFTracker:
     bool HOG = true, FIXEDWINDOW = true, MULTISCALE = true, LAB = true, DSST = false; //LAB color space features
-	KCFTracker kcftracker(HOG, FIXEDWINDOW, MULTISCALE, LAB, DSST);
+    KCFTracker kcftracker(HOG, FIXEDWINDOW, MULTISCALE, LAB, DSST);
 
-// Create DSSTTracker: 
-    DSST = true; 
-	KCFTracker dssttracker(HOG, FIXEDWINDOW, MULTISCALE, LAB, DSST);
+    // Create DSSTTracker:
+    DSST = true;
+    KCFTracker dssttracker(HOG, FIXEDWINDOW, MULTISCALE, LAB, DSST);
 
-// Create Opencv tracker:
-    string trackerTypes[6] = {"BOOSTING", "MIL", "KCF", "TLD","MEDIANFLOW", "GOTURN"};
+    // Create Opencv tracker:
+    string trackerTypes[6] = {"BOOSTING", "MIL", "KCF", "TLD", "MEDIANFLOW", "GOTURN"};
     string trackerType = trackerTypes[2];
     Ptr<cv::Tracker> opencvtracker;
 
@@ -49,7 +50,7 @@ int main(int argc, char **argv)
         opencvtracker = cv::TrackerMedianFlow::create();
     if (trackerType == "GOTURN")
         opencvtracker = cv::TrackerGOTURN::create();
-/*
+    /*
 // Create GOTURN tracker:
     const string model_file = "goturn/nets/deploy.prototxt";
     const string pretrain_file = "goturn/nets/goturun_tracker.caffemodel";
@@ -58,48 +59,74 @@ int main(int argc, char **argv)
     Regressor regressor(model_file,pretrain_file,gpu_id, false);
     goturn::Tracker goturntracker(false);
 */
-// Read from the images ====================================================
-    string path = "/media/elab/sdd/data/TLP/Bike";//Alladin";//IceSkating";//Sam";
-	// Read the groundtruth bbox
-	ifstream groundtruth(path + "/groundtruth_rect.txt");
-	int f,x,y,w,h,isLost;
-	std::string s;
-	getline(groundtruth, s, ',');	
-	f = atoi(s.c_str());
-	getline(groundtruth, s, ',');
-	x = atoi(s.c_str());
-	getline(groundtruth, s, ',');	
-	y = atoi(s.c_str());
-	getline(groundtruth, s, ',');
-	w = atoi(s.c_str());
-	getline(groundtruth, s, ',');	
-	h = atoi(s.c_str());
-	getline(groundtruth, s);
-	isLost = atoi(s.c_str());
-	cout << f <<" " << x <<" " << y <<" " << w <<" " << h <<" " << isLost << endl;
-    Rect2d bboxGroundtruth(x,y,w,h);
-	
-	// Read images in a folder
-	ostringstream osfile;
-	osfile << path << "/img/" << setw(5) << setfill('0') << f <<".jpg";
-	cout << osfile.str() << endl;
-    cv::Mat frame = cv::imread(osfile.str().c_str(), CV_LOAD_IMAGE_UNCHANGED);
-    if(! frame.data )
+    // Read from the images ====================================================
+    int f, x, y, w, h, isLost;
+    std::string s;
+    std::string path;
+    ifstream *groundtruth;
+    string folderUAV =  "bike1";//"uav2";//
+    ostringstream osfile;
+    if (databaseType == "TLP")
     {
-        cout <<  "Could not open or find the image" << std::endl ;
+        path = "/media/elab/sdd/data/TLP/Bike"; //Alladin";//IceSkating";//Sam";
+        // Read the groundtruth bbox
+        groundtruth = new ifstream(path + "/groundtruth_rect.txt");
+        getline(*groundtruth, s, ',');
+        f = atoi(s.c_str());
+        getline(*groundtruth, s, ',');
+        x = atoi(s.c_str());
+        getline(*groundtruth, s, ',');
+        y = atoi(s.c_str());
+        getline(*groundtruth, s, ',');
+        w = atoi(s.c_str());
+        getline(*groundtruth, s, ',');
+        h = atoi(s.c_str());
+        getline(*groundtruth, s);
+        isLost = atoi(s.c_str());
+        cout << f << " " << x << " " << y << " " << w << " " << h << " " << isLost << endl;
+        // Read images in a folder
+        osfile << path << "/img/" << setw(5) << setfill('0') << f << ".jpg";
+        cout << osfile.str() << endl;
+    }
+    else if (databaseType == "UAV123")
+    {
+        path = "/media/elab/sdd/data/UAV123/data_seq/UAV123/" + folderUAV;
+        // Read the groundtruth bbox
+        groundtruth = new ifstream("/media/elab/sdd/data/UAV123/anno/UAV123/" + folderUAV + ".txt");
+        f = 1;
+        getline(*groundtruth, s, ',');
+        x = atoi(s.c_str());
+        getline(*groundtruth, s, ',');
+        y = atoi(s.c_str());
+        getline(*groundtruth, s, ',');
+        w = atoi(s.c_str());
+        getline(*groundtruth, s);
+        h = atoi(s.c_str());
+        cout << x << " " << y << " " << w << " " << h << endl;
+        // Read images in a folder
+        osfile << path << "/" << setw(6) << setfill('0') << f << ".jpg";
+        cout << osfile.str() << endl;
+    }
+
+    Rect2d bboxGroundtruth(x, y, w, h);
+
+    cv::Mat frame = cv::imread(osfile.str().c_str(), CV_LOAD_IMAGE_UNCHANGED);
+    if (!frame.data)
+    {
+        cout << "Could not open or find the image" << std::endl;
         return -1;
     }
 
-	// Init the trackers=================================================
-    Rect2d kcfbbox(x,y,w,h);
+    // Init the trackers=================================================
+    Rect2d kcfbbox(x, y, w, h);
     kcftracker.init(frame, kcfbbox);
 
-    Rect2d dsstbbox(x,y,w,h);
+    Rect2d dsstbbox(x, y, w, h);
     dssttracker.init(frame, dsstbbox);
 
-    Rect2d opencvbbox(x,y,w,h);
+    Rect2d opencvbbox(x, y, w, h);
     opencvtracker->init(frame, opencvbbox);
-/*
+    /*
     cv::Rect goturnbbox(x,y,w,h);
     BoundingBox bbox_gt;
     BoundingBox bbox_estimate_uncentered;
@@ -107,18 +134,20 @@ int main(int argc, char **argv)
     goturntracker.Init(frame,bbox_gt,&regressor);
 */
 
-    while(frame.data) {
+    while (frame.data)
+    {
         // Draw ground truth box
-		rectangle(frame, bboxGroundtruth, Scalar( 0, 0, 0 ), 2, 1 );
+        rectangle(frame, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
 
         // Start timer
         double timer = (double)getTickCount();
-         
+
         // Update the KCF tracking result-----------------------------
         bool okkcf = kcftracker.update(frame, kcfbbox);
-        
+
         bool okdsst = dssttracker.update(frame, dsstbbox);
-//        cout << kcfbbox.x << ", " << kcfbbox.y << ", " <<kcfbbox.width << ", " << kcfbbox.height << std::endl;
+
+        //        cout << kcfbbox.x << ", " << kcfbbox.y << ", " <<kcfbbox.width << ", " << kcfbbox.height << std::endl;
         // Calculate Frames per second (FPS)-------------------------------
         float fps = getTickFrequency() / ((double)getTickCount() - timer);
         // Update the Opencv tracking result----------------------------
@@ -129,76 +158,108 @@ int main(int argc, char **argv)
 */
         //============================================================
         // draw kcf bbox
-        if (okkcf) {
-            rectangle(frame, kcfbbox, Scalar( 225, 0, 0 ), 2, 1); //blue
-        } else {
-            putText(frame, "Kcf tracking failure detected", Point(100,80), FONT_HERSHEY_SIMPLEX,
-                     0.75, Scalar(255,0,0),2);
+        if (okkcf)
+        {
+            rectangle(frame, kcfbbox, Scalar(225, 0, 0), 2, 1); //blue
         }
-        if (okdsst) {
-            rectangle(frame, dsstbbox, Scalar( 0, 0, 255 ), 2, 1); //blue
-        } else {
-            putText(frame, "DSST tracking failure detected", Point(100,80), FONT_HERSHEY_SIMPLEX,
-                     0.75, Scalar(0,0,255),2);
+        else
+        {
+            putText(frame, "Kcf tracking failure detected", Point(100, 80), FONT_HERSHEY_SIMPLEX,
+                    0.75, Scalar(255, 0, 0), 2);
+        }
+        if (okdsst)
+        {
+            rectangle(frame, dsstbbox, Scalar(0, 0, 255), 2, 1); //blue
+        }
+        else
+        {
+            putText(frame, "DSST tracking failure detected", Point(100, 80), FONT_HERSHEY_SIMPLEX,
+                    0.75, Scalar(0, 0, 255), 2);
         }
         // draw opencv bbox
-        if (okopencv) {
-            rectangle(frame, opencvbbox, Scalar( 0, 225, 0 ), 2, 1); //green
-        } else {
-            putText(frame, "Opencv tracking failure detected", Point(100,110), FONT_HERSHEY_SIMPLEX,
-                     0.75, Scalar(0,225,0),2);
+        if (okopencv)
+        {
+            rectangle(frame, opencvbbox, Scalar(0, 225, 0), 2, 1); //green
+        }
+        else
+        {
+            putText(frame, "Opencv tracking failure detected", Point(100, 110), FONT_HERSHEY_SIMPLEX,
+                    0.75, Scalar(0, 225, 0), 2);
         }
         // draw goturn bbox
         // rectangle(frame, goturnbbox, Scalar(0, 0, 255), 2, 1); //red
 
         // Display FPS on frame
-        putText(frame, "FPS in total: " + SSTR(long(fps)), Point(100,50), FONT_HERSHEY_SIMPLEX,
-                     0.75, Scalar(0,0,0), 2);
+        putText(frame, "FPS in total: " + SSTR(long(fps)), Point(100, 50), FONT_HERSHEY_SIMPLEX,
+                0.75, Scalar(0, 0, 0), 2);
         // Display tracker type on frame
         putText(frame, "Black:GT; Blue: KCF; Red: DSST; Green: opencv " + trackerType + ";",
-                 Point(100,20), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,0,0),2);
+                Point(100, 20), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0, 0, 0), 2);
         //=============================================================================
-        // Display frame.        
-        //cvNamedWindow("Tracking", CV_WINDOW_NORMAL); 
+        // Display frame.
+        //cvNamedWindow("Tracking", CV_WINDOW_NORMAL);
         imshow("Tracking", frame);
 
         int c = cvWaitKey(1);
-        if (c != -1) c = c%256;
-        if (c == 27) {
+        if (c != -1)
+            c = c % 256;
+        if (c == 27)
+        {
             cvDestroyWindow("Tracking");
             return 0;
-        } 
+        }
         waitKey(1);
-		// Read next image
-		f++;
-		osfile.str("");
-		osfile << path << "/img/" << setw(5) << setfill('0') << f <<".jpg";
-		cout << osfile.str() << endl;
-    	frame = cv::imread(osfile.str().c_str(), CV_LOAD_IMAGE_UNCHANGED);
-		// Read next bbox
-		getline(groundtruth, s, ',');	
-		f = atoi(s.c_str());
-		getline(groundtruth, s, ',');
-		x = atoi(s.c_str());
-		getline(groundtruth, s, ',');	
-		y = atoi(s.c_str());
-		getline(groundtruth, s, ',');
-		w = atoi(s.c_str());
-		getline(groundtruth, s, ',');	
-		h = atoi(s.c_str());
-		getline(groundtruth, s);
-		isLost = atoi(s.c_str());
-		//cout << f <<" " << x <<" " << y <<" " << w <<" " << h <<" " << isLost << endl;
-		bboxGroundtruth.x = x;
-		bboxGroundtruth.y = y;
-		bboxGroundtruth.width = w;
-		bboxGroundtruth.height = h;
+        // Read next image
+        f++;
+        osfile.str("");
 
+        if (databaseType == "TLP")
+        {
+            // Read the groundtruth bbox
+            getline(*groundtruth, s, ',');
+            //f = atoi(s.c_str());
+            getline(*groundtruth, s, ',');
+            x = atoi(s.c_str());
+            getline(*groundtruth, s, ',');
+            y = atoi(s.c_str());
+            getline(*groundtruth, s, ',');
+            w = atoi(s.c_str());
+            getline(*groundtruth, s, ',');
+            h = atoi(s.c_str());
+            getline(*groundtruth, s);
+            isLost = atoi(s.c_str());
+            //cout << "gt:" << f << " " << x << " " << y << " " << w << " " << h << " " << isLost << endl;
+            // Read images in a folder
+            osfile << path << "/img/" << setw(5) << setfill('0') << f << ".jpg";
+            //cout << osfile.str() << endl;
+        }
+        else if (databaseType == "UAV123")
+        {
+            // Read the groundtruth bbox
+            cout << osfile.str() << endl;
+            getline(*groundtruth, s, ',');
+            x = atoi(s.c_str());
+            getline(*groundtruth, s, ',');
+            y = atoi(s.c_str());
+            getline(*groundtruth, s, ',');
+            w = atoi(s.c_str());
+            getline(*groundtruth, s);
+            h = atoi(s.c_str());
+            //cout << "gt:" << x << " " << y << " " << w << " " << h << endl;
+            // Read images in a folder
+            osfile << path << "/" << setw(6) << setfill('0') << f << ".jpg";
+        }
+
+        bboxGroundtruth.x = x;
+        bboxGroundtruth.y = y;
+        bboxGroundtruth.width = w;
+        bboxGroundtruth.height = h;
+        frame = cv::imread(osfile.str().c_str(), CV_LOAD_IMAGE_UNCHANGED);
     }
     cvDestroyWindow("Tracking");
     return 0;
 
-/*
+    /*
 // Read from the video ====================================================
     // Read video
     VideoCapture video("videos/chaplin.mp4");

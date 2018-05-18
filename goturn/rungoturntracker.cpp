@@ -22,7 +22,7 @@ int main(int argc, char *argv[]){
     Tracker tracker(false);
     Loader loaderVideo(video_folder);
 
-    int video_num;
+    unsigned int video_num;
     printf("Please select video: ");
     scanf("%d",&video_num);
 
@@ -41,7 +41,7 @@ int main(int argc, char *argv[]){
 
         std::string windowName(video.video_name_, video.video_name_.find_last_of('/')+1);
 
-        for(int frame_num = 1; frame_num < video.all_frames_.size(); ++frame_num ){
+        for(unsigned int frame_num = 1; frame_num < video.all_frames_.size(); ++frame_num ){
 
             const string& image_file = video.video_name_ + "/" + video.all_frames_[frame_num];
             image_curr = cv::imread(image_file);
