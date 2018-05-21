@@ -15,7 +15,7 @@ Included                                   | Dataset    | Reference
 -------------------------------------------|--------------|-----------
 :ballot_box_with_check:                    | TLP          | [Web](https://amoudgl.github.io/tlp/)
 :ballot_box_with_check:                    | UAV123       | [Web](https://ivul.kaust.edu.sa/Pages/Dataset-UAV123.aspx)
-
+:ballot_box_with_check:                    | VOT          | [Web](http://votchallenge.net/vot2017/dataset.html)
 
 
 ## Run to compare all the trackers
@@ -75,7 +75,7 @@ The code is changed from [[joaofaro/KCFcpp](https://github.com/joaofaro/KCFcpp)]
 ## DSST Tracker
 [3] M. Danelljan, G. Häger, F. Shahbaz Khan, and M. Felsberg. Discriminative Scale Space Tracking, 2016
 
-The code is changed from [[liliumao/KCF-DSST](https://github.com/liliumao/KCF-DSST)], the max_scale_factor and min_scale_factor is set to 10 and 0.1 in case of divergence error. 
+The code is changed from [[liliumao/KCF-DSST](https://github.com/liliumao/KCF-DSST)], the max_scale_factor and min_scale_factor is set to 10 and 0.1 in case of divergence error(Especially run on UAV123 dataset when the object is quite small, ex.uav2/3/4...).
 
 ## GOTURN Tracker
 **[Learning to Track at 100 FPS with Deep Regression Networks](http://davheld.github.io/GOTURN/GOTURN.html)**,

@@ -99,7 +99,7 @@ KCFTracker::KCFTracker(bool hog, bool fixed_window, bool multiscale, bool lab, b
       output_sigma_factor=1.0f / 16.0f;
 */
     // Parameters equal in all cases
-    detect_thresh = 0.1;
+    detect_thresh = 0.15;
     lambda = 0.0001;
     padding = 2.5;
     output_sigma_factor = 0.125; //0.1

@@ -173,8 +173,8 @@ protected:
 
     // Compute the hanning window for scaling
     cv::Mat createHanningMatsForScale();
-
 //===========
+
     cv::Mat _alphaf;//alpha in paper, use this to calculate the detect result, changed in train();
     cv::Mat _prob;  //Gaussian Peak(training outputs);
     cv::Mat _tmpl;  //features of image (or the normalized gray image itself when raw), changed in train();

@@ -23,8 +23,8 @@ using namespace std;
 int main(int argc, char **argv)
 //int trackercompare()
 {
-    string databaseTypes[2] = {"TLP", "UAV123"};
-    string databaseType = databaseTypes[1];
+    string databaseTypes[3] = {"TLP", "UAV123", "VOT"};
+    string databaseType = databaseTypes[2];
     // Create KCFTracker:
     bool HOG = true, FIXEDWINDOW = true, MULTISCALE = true, LAB = true, DSST = false; //LAB color space features
     KCFTracker kcftracker(HOG, FIXEDWINDOW, MULTISCALE, LAB, DSST);
@@ -64,7 +64,6 @@ int main(int argc, char **argv)
     std::string s;
     std::string path;
     ifstream *groundtruth;
-    string folderUAV =  "bike1";//"uav2";//
     ostringstream osfile;
     if (databaseType == "TLP")
     {
@@ -90,6 +89,7 @@ int main(int argc, char **argv)
     }
     else if (databaseType == "UAV123")
     {
+        string folderUAV = "bike1"; //"uav2";//
         path = "/media/elab/sdd/data/UAV123/data_seq/UAV123/" + folderUAV;
         // Read the groundtruth bbox
         groundtruth = new ifstream("/media/elab/sdd/data/UAV123/anno/UAV123/" + folderUAV + ".txt");
@@ -105,6 +105,39 @@ int main(int argc, char **argv)
         cout << x << " " << y << " " << w << " " << h << endl;
         // Read images in a folder
         osfile << path << "/" << setw(6) << setfill('0') << f << ".jpg";
+        cout << osfile.str() << endl;
+    }
+    else if (databaseType == "VOT")
+    {
+        string folderVOT = "road"; //"uav2";//
+        path = "/media/elab/sdd/data/VOT/vot2017/" + folderVOT;
+        // Read the groundtruth bbox
+        groundtruth = new ifstream("/media/elab/sdd/data/VOT/vot2017/" + folderVOT + "/groundtruth.txt");
+        f = 1;
+        int x1, y1, x2, y2, x3, y3, x4, y4;
+        getline(*groundtruth, s, ',');
+        x1 = atoi(s.c_str());
+        getline(*groundtruth, s, ',');
+        y1 = atoi(s.c_str());
+        getline(*groundtruth, s, ',');
+        x2 = atoi(s.c_str());
+        getline(*groundtruth, s, ',');
+        y2 = atoi(s.c_str());
+        getline(*groundtruth, s, ',');
+        x3 = atoi(s.c_str());
+        getline(*groundtruth, s, ',');
+        y3 = atoi(s.c_str());
+        getline(*groundtruth, s, ',');
+        x4 = atoi(s.c_str());
+        getline(*groundtruth, s);
+        y4 = atoi(s.c_str());
+        x = x1;
+        y = y1;
+        w = x2 - x1;
+        h = y4 - y1;
+        cout << x << " " << y << " " << w << " " << h << endl;
+        // Read images in a folder
+        osfile << path << "/" << setw(8) << setfill('0') << f << ".jpg";
         cout << osfile.str() << endl;
     }
 
@@ -153,7 +186,7 @@ int main(int argc, char **argv)
         // Update the Opencv tracking result----------------------------
         bool okopencv = opencvtracker->update(frame, opencvbbox);
         // Update the GOTURN tracking result--------------------------
-/*        goturntracker.Track(frame, &regressor, &bbox_estimate_uncentered);
+        /*        goturntracker.Track(frame, &regressor, &bbox_estimate_uncentered);
         bbox_estimate_uncentered.putRect(goturnbbox);
 */
         //============================================================
@@ -248,6 +281,36 @@ int main(int argc, char **argv)
             //cout << "gt:" << x << " " << y << " " << w << " " << h << endl;
             // Read images in a folder
             osfile << path << "/" << setw(6) << setfill('0') << f << ".jpg";
+        }
+        else if (databaseType == "VOT")
+        {
+            // Read the groundtruth bbox
+            cout << osfile.str() << endl;
+            int x1, y1, x2, y2, x3, y3, x4, y4;
+            getline(*groundtruth, s, ',');
+            x1 = atoi(s.c_str());
+            getline(*groundtruth, s, ',');
+            y1 = atoi(s.c_str());
+            getline(*groundtruth, s, ',');
+            x2 = atoi(s.c_str());
+            getline(*groundtruth, s, ',');
+            y2 = atoi(s.c_str());
+            getline(*groundtruth, s, ',');
+            x3 = atoi(s.c_str());
+            getline(*groundtruth, s, ',');
+            y3 = atoi(s.c_str());
+            getline(*groundtruth, s, ',');
+            x4 = atoi(s.c_str());
+            getline(*groundtruth, s);
+            y4 = atoi(s.c_str());
+            x = x1;
+            y = y1;
+            w = x2 - x1;
+            h = y4 - y1;
+            //cout << x << " " << y << " " << w << " " << h << endl;
+            // Read images in a folder
+            osfile << path << "/" << setw(8) << setfill('0') << f << ".jpg";
+            //cout << osfile.str() << endl;
         }
 
         bboxGroundtruth.x = x;
