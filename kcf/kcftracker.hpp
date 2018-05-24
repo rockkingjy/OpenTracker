@@ -100,7 +100,7 @@ public:
     //cv::Rect update(cv::Mat image);
     bool update( const cv::Mat image, cv::Rect2d& roi);
 
-    float detect_thresh; // thresh hold for tracking error or not
+    float detect_thresh_kcf; // thresh hold for tracking error or not
     float sigma; // gaussian kernel bandwidth
     float lambda; // regularization
     float interp_factor; // linear interpolation factor for adaptation
@@ -112,9 +112,11 @@ public:
 
     float scale_step; // scale step for multi-scale estimation
     float scale_weight;  // to downweight detection scores of other scales for added stability
+
 //=====dsst====
-    int base_width; // initial ROI widt
-    int base_height; // initial ROI height
+    float detect_thresh_dsst; // thresh hold for tracking error or not
+    int base_width_dsst; // initial ROI widt
+    int base_height_dsst; // initial ROI height
     int scale_max_area; // max ROI size before compressing
     float scale_padding; // extra area surrounding the target for scaling
 //    float scale_step; // scale step for multi-scale estimation
@@ -124,13 +126,13 @@ public:
     float *scaleFactors; // all scale changing rate, from larger to smaller with 1 to be the middle
     int scale_model_width; // the model width for scaling
     int scale_model_height; // the model height for scaling
-    float currentScaleFactor; // scaling rate
     float min_scale_factor; // min scaling rate
     float max_scale_factor; // max scaling rate
     float scale_lambda; // regularization
 //===========
 
 protected:
+    bool update_kcf( const cv::Mat image, cv::Rect2d& roi);
     // Detect object in the current frame.
     cv::Point2f detect(cv::Mat z, cv::Mat x, float &peak_value); // paper Algorithm 1 , _alpha updated in train();
 
@@ -154,25 +156,23 @@ protected:
 
 //=====dsst====
     // Initialization for scales
-    void dsstInit(const cv::Rect &roi, cv::Mat image);
+    void init_dsst(const cv::Mat image, const cv::Rect2d& roi);
 
+    bool update_dsst( const cv::Mat image, cv::Rect2d& roi);
     // Detect the new scaling rate
-    cv::Point2i detect_scale(cv::Mat image);
+    cv::Point2i detect_dsst(cv::Mat image);
 
     // Train method for scaling
-    void train_scale(cv::Mat image, bool ini = false);
+    void train_dsst(cv::Mat image, bool ini = false);
 
     // Compute the F^l in the paper
-    cv::Mat get_scale_sample(const cv::Mat & image);
-
-    // Update the ROI size after training
-    void update_roi();
+    cv::Mat get_sample_dsst(const cv::Mat & image);
 
     // Compute the FFT Guassian Peak for scaling
-    cv::Mat computeYsf();
+    cv::Mat createGaussianPeak_dsst();
 
     // Compute the hanning window for scaling
-    cv::Mat createHanningMatsForScale();
+    cv::Mat createHanningMats_dsst();
 //===========
 
     cv::Mat _alphaf;//alpha in paper, use this to calculate the detect result, changed in train();
@@ -181,25 +181,25 @@ protected:
     cv::Mat _num;   //numerator: use to update as MOSSE
     cv::Mat _den;   //denumerator: use to update as MOSSE
     cv::Mat _labCentroids;
-//=====dsst====
-    cv::Mat sf_den;
-    cv::Mat sf_num;
-//===========
 
     cv::Rect_<float> _roi;
 
 private:
-    int size_patch[3];//0:rows;1:cols;2:numFeatures; init in getFeatures();
-    cv::Mat hann;
+    int _size_patch[3];//0:rows;1:cols;2:numFeatures; init in getFeatures();
+    cv::Mat _hann;
     cv::Size _tmpl_sz;
     float _scale;
     int _gaussian_size;
     bool _hogfeatures;
     bool _labfeatures;
+    float _peak_value;
 
 //=====dsst====
     bool _dsst;
-    cv::Mat s_hann;
-    cv::Mat ysf;
+    float _scale_dsst;
+    cv::Mat _den_dsst;
+    cv::Mat _num_dsst;
+    cv::Mat _hann_dsst;
+    cv::Mat _prob_dsst;
 //============    
 };

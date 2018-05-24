@@ -23,7 +23,7 @@ using namespace std;
 int main(int argc, char **argv)
 //int trackercompare()
 {
-    string databaseTypes[3] = {"TLP", "UAV123", "VOT"};
+    string databaseTypes[3] = {"VOT", "TLP", "UAV123"};
     string databaseType = databaseTypes[2];
     // Create KCFTracker:
     bool HOG = true, FIXEDWINDOW = true, MULTISCALE = true, LAB = true, DSST = false; //LAB color space features
@@ -60,7 +60,9 @@ int main(int argc, char **argv)
     goturn::Tracker goturntracker(false);
 */
     // Read from the images ====================================================
+
     int f, x, y, w, h, isLost;
+    float x1, y1, x2, y2, x3, y3, x4, y4; //gt for vot
     std::string s;
     std::string path;
     ifstream *groundtruth;
@@ -89,7 +91,7 @@ int main(int argc, char **argv)
     }
     else if (databaseType == "UAV123")
     {
-        string folderUAV = "bike1"; //"uav2";//
+        string folderUAV = "uav3"; //"bike1"; //
         path = "/media/elab/sdd/data/UAV123/data_seq/UAV123/" + folderUAV;
         // Read the groundtruth bbox
         groundtruth = new ifstream("/media/elab/sdd/data/UAV123/anno/UAV123/" + folderUAV + ".txt");
@@ -109,12 +111,11 @@ int main(int argc, char **argv)
     }
     else if (databaseType == "VOT")
     {
-        string folderVOT = "road"; //"uav2";//
+        string folderVOT = "girl";//"iceskater1";//"drone1"; //"iceskater2";//"helicopter";//"matrix";//"leaves";//"sheep";//"racing";//"girl";//"road"; //"uav2";//
         path = "/media/elab/sdd/data/VOT/vot2017/" + folderVOT;
         // Read the groundtruth bbox
         groundtruth = new ifstream("/media/elab/sdd/data/VOT/vot2017/" + folderVOT + "/groundtruth.txt");
         f = 1;
-        int x1, y1, x2, y2, x3, y3, x4, y4;
         getline(*groundtruth, s, ',');
         x1 = atoi(s.c_str());
         getline(*groundtruth, s, ',');
@@ -131,10 +132,10 @@ int main(int argc, char **argv)
         x4 = atoi(s.c_str());
         getline(*groundtruth, s);
         y4 = atoi(s.c_str());
-        x = x1;
-        y = y1;
-        w = x2 - x1;
-        h = y4 - y1;
+        x = (int)std::min(x1, x4);
+        y = (int)std::min(y1, y2);
+        w = (int)std::max(x2, x3) - x;
+        h = (int)std::max(y3, y4) - y;
         cout << x << " " << y << " " << w << " " << h << endl;
         // Read images in a folder
         osfile << path << "/" << setw(8) << setfill('0') << f << ".jpg";
@@ -148,6 +149,22 @@ int main(int argc, char **argv)
     {
         cout << "Could not open or find the image" << std::endl;
         return -1;
+    }
+    // Draw gt;
+    if (databaseType == "TLP")
+    {
+        rectangle(frame, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
+    }
+    else if (databaseType == "UAV123")
+    {
+        rectangle(frame, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
+    }
+    else if (databaseType == "VOT")
+    {
+        line(frame, cv::Point(x1, y1), cv::Point(x2, y2), Scalar(0, 0, 0), 2, 1);
+        line(frame, cv::Point(x2, y2), cv::Point(x3, y3), Scalar(0, 0, 0), 2, 1);
+        line(frame, cv::Point(x3, y3), cv::Point(x4, y4), Scalar(0, 0, 0), 2, 1);
+        line(frame, cv::Point(x4, y4), cv::Point(x1, y1), Scalar(0, 0, 0), 2, 1);
     }
 
     // Init the trackers=================================================
@@ -169,61 +186,72 @@ int main(int argc, char **argv)
 
     while (frame.data)
     {
-        // Draw ground truth box
-        rectangle(frame, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
-
         // Start timer
-        double timer = (double)getTickCount();
-
-        // Update the KCF tracking result-----------------------------
+        double timerkcf = (double)getTickCount();
         bool okkcf = kcftracker.update(frame, kcfbbox);
-
-        bool okdsst = dssttracker.update(frame, dsstbbox);
-
-        //        cout << kcfbbox.x << ", " << kcfbbox.y << ", " <<kcfbbox.width << ", " << kcfbbox.height << std::endl;
-        // Calculate Frames per second (FPS)-------------------------------
-        float fps = getTickFrequency() / ((double)getTickCount() - timer);
-        // Update the Opencv tracking result----------------------------
-        bool okopencv = opencvtracker->update(frame, opencvbbox);
-        // Update the GOTURN tracking result--------------------------
-        /*        goturntracker.Track(frame, &regressor, &bbox_estimate_uncentered);
-        bbox_estimate_uncentered.putRect(goturnbbox);
-*/
-        //============================================================
-        // draw kcf bbox
+        float fpskcf = getTickFrequency() / ((double)getTickCount() - timerkcf);
         if (okkcf)
         {
             rectangle(frame, kcfbbox, Scalar(225, 0, 0), 2, 1); //blue
         }
         else
         {
-            putText(frame, "Kcf tracking failure detected", Point(100, 80), FONT_HERSHEY_SIMPLEX,
+            putText(frame, "Kcf tracking failure detected", cv::Point(100, 80), FONT_HERSHEY_SIMPLEX,
                     0.75, Scalar(255, 0, 0), 2);
         }
+
+        // Update the GOTURN tracking result--------------------------
+        /*        goturntracker.Track(frame, &regressor, &bbox_estimate_uncentered);
+        bbox_estimate_uncentered.putRect(goturnbbox);
+        // draw goturn bbox
+        rectangle(frame, goturnbbox, Scalar(0, 0, 255), 2, 1); //red
+*/
+        double timerdsst = (double)getTickCount();
+        bool okdsst = dssttracker.update(frame, dsstbbox);
+        float fpsdsst = getTickFrequency() / ((double)getTickCount() - timerdsst);
         if (okdsst)
         {
             rectangle(frame, dsstbbox, Scalar(0, 0, 255), 2, 1); //blue
         }
         else
         {
-            putText(frame, "DSST tracking failure detected", Point(100, 80), FONT_HERSHEY_SIMPLEX,
+            putText(frame, "DSST tracking failure detected", cv::Point(100, 80), FONT_HERSHEY_SIMPLEX,
                     0.75, Scalar(0, 0, 255), 2);
         }
-        // draw opencv bbox
+
+        double timercv = (double)getTickCount();
+        bool okopencv = opencvtracker->update(frame, opencvbbox);
+        float fpscv = getTickFrequency() / ((double)getTickCount() - timercv);
+
         if (okopencv)
         {
             rectangle(frame, opencvbbox, Scalar(0, 225, 0), 2, 1); //green
         }
         else
         {
-            putText(frame, "Opencv tracking failure detected", Point(100, 110), FONT_HERSHEY_SIMPLEX,
+            putText(frame, "Opencv tracking failure detected", cv::Point(100, 110), FONT_HERSHEY_SIMPLEX,
                     0.75, Scalar(0, 225, 0), 2);
         }
-        // draw goturn bbox
-        // rectangle(frame, goturnbbox, Scalar(0, 0, 255), 2, 1); //red
+
+        // Draw ground truth box
+        if (databaseType == "TLP")
+        {
+            rectangle(frame, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
+        }
+        else if (databaseType == "UAV123")
+        {
+            rectangle(frame, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
+        }
+        else if (databaseType == "VOT")
+        {
+            line(frame, cv::Point(x1, y1), cv::Point(x2, y2), Scalar(0, 0, 0), 2, 1);
+            line(frame, cv::Point(x2, y2), cv::Point(x3, y3), Scalar(0, 0, 0), 2, 1);
+            line(frame, cv::Point(x3, y3), cv::Point(x4, y4), Scalar(0, 0, 0), 2, 1);
+            line(frame, cv::Point(x4, y4), cv::Point(x1, y1), Scalar(0, 0, 0), 2, 1);
+        }
 
         // Display FPS on frame
-        putText(frame, "FPS in total: " + SSTR(long(fps)), Point(100, 50), FONT_HERSHEY_SIMPLEX,
+        putText(frame, "FPS in total: " + SSTR(long(fpskcf)), Point(100, 50), FONT_HERSHEY_SIMPLEX,
                 0.75, Scalar(0, 0, 0), 2);
         // Display tracker type on frame
         putText(frame, "Black:GT; Blue: KCF; Red: DSST; Green: opencv " + trackerType + ";",
@@ -262,9 +290,9 @@ int main(int argc, char **argv)
             getline(*groundtruth, s);
             isLost = atoi(s.c_str());
             //cout << "gt:" << f << " " << x << " " << y << " " << w << " " << h << " " << isLost << endl;
-            // Read images in a folder
+
             osfile << path << "/img/" << setw(5) << setfill('0') << f << ".jpg";
-            //cout << osfile.str() << endl;
+            cout << osfile.str() << endl;
         }
         else if (databaseType == "UAV123")
         {
@@ -286,7 +314,6 @@ int main(int argc, char **argv)
         {
             // Read the groundtruth bbox
             cout << osfile.str() << endl;
-            int x1, y1, x2, y2, x3, y3, x4, y4;
             getline(*groundtruth, s, ',');
             x1 = atoi(s.c_str());
             getline(*groundtruth, s, ',');
@@ -303,14 +330,13 @@ int main(int argc, char **argv)
             x4 = atoi(s.c_str());
             getline(*groundtruth, s);
             y4 = atoi(s.c_str());
-            x = x1;
-            y = y1;
-            w = x2 - x1;
-            h = y4 - y1;
+            x = std::min(x1, x4);
+            y = std::min(y1, y2);
+            w = std::max(x2, x3) - x;
+            h = std::max(y3, y4) - y;
             //cout << x << " " << y << " " << w << " " << h << endl;
             // Read images in a folder
             osfile << path << "/" << setw(8) << setfill('0') << f << ".jpg";
-            //cout << osfile.str() << endl;
         }
 
         bboxGroundtruth.x = x;
