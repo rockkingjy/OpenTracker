@@ -23,8 +23,8 @@ using namespace std;
 int main(int argc, char **argv)
 //int trackercompare()
 {
-    string databaseTypes[3] = {"VOT", "TLP", "UAV123"};
-    string databaseType = databaseTypes[2];
+    string databaseTypes[4] = {"VOT-2017", "TB-2015", "TLP", "UAV123"};
+    string databaseType = databaseTypes[1];
     // Create KCFTracker:
     bool HOG = true, FIXEDWINDOW = true, MULTISCALE = true, LAB = true, DSST = false; //LAB color space features
     KCFTracker kcftracker(HOG, FIXEDWINDOW, MULTISCALE, LAB, DSST);
@@ -89,9 +89,28 @@ int main(int argc, char **argv)
         osfile << path << "/img/" << setw(5) << setfill('0') << f << ".jpg";
         cout << osfile.str() << endl;
     }
+    else if (databaseType == "TB-2015")
+    {
+        path = "/media/elab/sdd/data/TB-2015/Coke";///Bird1";//BlurFace"; 
+        // Read the groundtruth bbox
+        groundtruth = new ifstream(path + "/groundtruth_rect.txt");
+        f = 1;
+        getline(*groundtruth, s, ',');
+        x = atoi(s.c_str());
+        getline(*groundtruth, s, ',');
+        y = atoi(s.c_str());
+        getline(*groundtruth, s, ',');
+        w = atoi(s.c_str());
+        getline(*groundtruth, s);
+        h = atoi(s.c_str());
+        cout << f << " " << x << " " << y << " " << w << " " << h << " "<< endl;
+        // Read images in a folder
+        osfile << path << "/img/" << setw(4) << setfill('0') << f << ".jpg";
+        cout << osfile.str() << endl;
+    }
     else if (databaseType == "UAV123")
     {
-        string folderUAV = "uav3"; //"bike1"; //
+        string folderUAV = "bike2"; //"bike1"; //
         path = "/media/elab/sdd/data/UAV123/data_seq/UAV123/" + folderUAV;
         // Read the groundtruth bbox
         groundtruth = new ifstream("/media/elab/sdd/data/UAV123/anno/UAV123/" + folderUAV + ".txt");
@@ -109,9 +128,9 @@ int main(int argc, char **argv)
         osfile << path << "/" << setw(6) << setfill('0') << f << ".jpg";
         cout << osfile.str() << endl;
     }
-    else if (databaseType == "VOT")
+    else if (databaseType == "VOT-2017")
     {
-        string folderVOT = "girl";//"iceskater1";//"drone1"; //"iceskater2";//"helicopter";//"matrix";//"leaves";//"sheep";//"racing";//"girl";//"road"; //"uav2";//
+        string folderVOT = "girl"; //"iceskater1";//"drone1"; //"iceskater2";//"helicopter";//"matrix";//"leaves";//"sheep";//"racing";//"girl";//"road"; //"uav2";//
         path = "/media/elab/sdd/data/VOT/vot2017/" + folderVOT;
         // Read the groundtruth bbox
         groundtruth = new ifstream("/media/elab/sdd/data/VOT/vot2017/" + folderVOT + "/groundtruth.txt");
@@ -155,11 +174,15 @@ int main(int argc, char **argv)
     {
         rectangle(frame, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
     }
+    else if (databaseType == "TB-2015")
+    {
+        rectangle(frame, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
+    }
     else if (databaseType == "UAV123")
     {
         rectangle(frame, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
     }
-    else if (databaseType == "VOT")
+    else if (databaseType == "VOT-2017")
     {
         line(frame, cv::Point(x1, y1), cv::Point(x2, y2), Scalar(0, 0, 0), 2, 1);
         line(frame, cv::Point(x2, y2), cv::Point(x3, y3), Scalar(0, 0, 0), 2, 1);
@@ -238,6 +261,10 @@ int main(int argc, char **argv)
         {
             rectangle(frame, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
         }
+        else if (databaseType == "TB-2015")
+        {
+            rectangle(frame, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
+        }
         else if (databaseType == "UAV123")
         {
             rectangle(frame, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
@@ -290,14 +317,27 @@ int main(int argc, char **argv)
             getline(*groundtruth, s);
             isLost = atoi(s.c_str());
             //cout << "gt:" << f << " " << x << " " << y << " " << w << " " << h << " " << isLost << endl;
-
             osfile << path << "/img/" << setw(5) << setfill('0') << f << ".jpg";
-            cout << osfile.str() << endl;
+            //cout << osfile.str() << endl;
+        }
+        else if (databaseType == "TB-2015")
+        {
+            getline(*groundtruth, s, ',');
+            x = atoi(s.c_str());
+            getline(*groundtruth, s, ',');
+            y = atoi(s.c_str());
+            getline(*groundtruth, s, ',');
+            w = atoi(s.c_str());
+            getline(*groundtruth, s);
+            h = atoi(s.c_str());
+            //cout << f << " " << x << " " << y << " " << w << " " << h << " " << isLost << endl;
+            // Read images in a folder
+            osfile << path << "/img/" << setw(4) << setfill('0') << f << ".jpg";
+            //cout << osfile.str() << endl;
         }
         else if (databaseType == "UAV123")
         {
             // Read the groundtruth bbox
-            cout << osfile.str() << endl;
             getline(*groundtruth, s, ',');
             x = atoi(s.c_str());
             getline(*groundtruth, s, ',');
@@ -309,11 +349,11 @@ int main(int argc, char **argv)
             //cout << "gt:" << x << " " << y << " " << w << " " << h << endl;
             // Read images in a folder
             osfile << path << "/" << setw(6) << setfill('0') << f << ".jpg";
+            //cout << osfile.str() << endl;
         }
-        else if (databaseType == "VOT")
+        else if (databaseType == "VOT-2017")
         {
             // Read the groundtruth bbox
-            cout << osfile.str() << endl;
             getline(*groundtruth, s, ',');
             x1 = atoi(s.c_str());
             getline(*groundtruth, s, ',');
@@ -337,6 +377,7 @@ int main(int argc, char **argv)
             //cout << x << " " << y << " " << w << " " << h << endl;
             // Read images in a folder
             osfile << path << "/" << setw(8) << setfill('0') << f << ".jpg";
+            //cout << osfile.str() << endl;
         }
 
         bboxGroundtruth.x = x;

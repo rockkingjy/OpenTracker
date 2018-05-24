@@ -327,11 +327,11 @@ bool KCFTracker::update_dsst(const cv::Mat image, cv::Rect2d &roi)
     //scale estimation;
     cv::Point2i scale_pi = detect_dsst(image);
 
-    printf("dsst thresh: %f, peak: %f\n", detect_thresh_dsst, _peak_value);
+    //printf("dsst thresh: %f, peak: %f\n", detect_thresh_dsst, _peak_value);
     if (_peak_value >= detect_thresh_dsst)
     {
         _scale_dsst = _scale_dsst * scaleFactors[scale_pi.x];
-        printf("scale_pi.x:%d, _scale_dsst:%f\n", scale_pi.x, _scale_dsst);
+        //printf("scale_pi.x:%d, _scale_dsst:%f\n", scale_pi.x, _scale_dsst);
         if (_scale_dsst < min_scale_factor)
             _scale_dsst = min_scale_factor;
         else if (_scale_dsst > max_scale_factor)
@@ -839,7 +839,7 @@ cv::Mat KCFTracker::get_sample_dsst(const cv::Mat &image)
 
         //printf("cx:%f,cy:%f\n",cx,cy);
         //printf("patch_width: %f, patch_height: %f,\n",patch_width,patch_height);
-        printf("im_patch w: %d, im_path h: %d,\n", im_patch.rows, im_patch.cols);
+        //printf("im_patch w: %d, im_path h: %d,\n", im_patch.rows, im_patch.cols);
 
         if (im_patch.rows == 0 || im_patch.cols == 0)
         {
