@@ -1,16 +1,16 @@
 
 CC=gcc
 
-VPATH=./helper:./loader:./network:./tracker:/media/elab/sdd/caffe/build/install
+VPATH=./helper:./loader:./network:./tracker:/media/elab/sdd/caffe
 
-LDFLAGS= `pkg-config --libs opencv` -L/media/elab/sdd/caffe/build/install/lib -lcaffe-nv -lproto  \
+LDFLAGS= `pkg-config --libs opencv` -L/media/elab/sdd/caffe/build/lib -lcaffe-nv  \
 	-L/usr/local/cuda/lib64 -lcuda -lcudart -lcublas -lcurand -lcudnn \
 	-lboost_system -lboost_filesystem -lboost_regex -lglog 
 
-CXXFLAGS= -Wall `pkg-config --cflags opencv` -lstdc++ -lm -std=c++0x -I/media/elab/sdd/caffe/build/install/include/ \
+CXXFLAGS= -Wall `pkg-config --cflags opencv` -lstdc++ -lm -std=c++0x -I/media/elab/sdd/caffe/.build_release/src/ -I/media/elab/sdd/caffe/include/ \
 	-I/usr/local/cuda/include/
 
-DEPS = $(wildcard */*.h) $(wildcard /media/elab/sdd/caffe/build/install/include/*/*.hpp)
+DEPS = $(wildcard */*.h) $(wildcard /media/elab/sdd/caffe/include/*/*.hpp)
 
 #$(info DEPS is: $(DEPS))
 

@@ -1,7 +1,7 @@
 
 #include "kcf/kcftracker.hpp"
-#include "goturn/network/regressor.h"
-#include "goturn/tracker/tracker.h"
+//#include "goturn/network/regressor.h"
+//#include "goturn/tracker/tracker.h"
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/tracking.hpp>
@@ -24,7 +24,7 @@ int main(int argc, char **argv)
 //int trackercompare()
 {
     string databaseTypes[4] = {"VOT-2017", "TB-2015", "TLP", "UAV123"};
-    string databaseType = databaseTypes[1];
+    string databaseType = databaseTypes[0];
     // Create KCFTracker:
     bool HOG = true, FIXEDWINDOW = true, MULTISCALE = true, LAB = true, DSST = false; //LAB color space features
     KCFTracker kcftracker(HOG, FIXEDWINDOW, MULTISCALE, LAB, DSST);
