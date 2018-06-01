@@ -41,7 +41,7 @@ namespace eco{
 
 		void          init(cv::Mat& im, const cv::Rect& rect);		  //****** tracker intialization****
 
-		void          process_frame(const cv::Mat& frame);
+		void          update(const cv::Mat& frame);
 		
 		cv::Mat       deep_mean(const string& mean_file);
 		 
@@ -69,9 +69,9 @@ namespace eco{
 
 		bool                             useDeepFeature, is_color_image;
 		boost::shared_ptr< Net<float> >  net;				 // *** VGG net  
-		cv::Mat                          deep_mean_mat,yml_mean;      // *** mean file
-
-		size_t                           output_sz, k1, frameID, frames_since_last_train;     //*** the max size of feature and its index 
+		cv::Mat                          deep_mean_mat,yml_mean;       
+		//*** the max size of feature and its index
+		size_t                           output_sz, k1, frameID, frames_since_last_train;   
 		cv::Point2f                      pos;
 
 		eco_params                       params;			 // *** ECO prameters ***
@@ -88,8 +88,8 @@ namespace eco{
 		vector<cv::Size>                 feature_sz, filter_sz;
 		vector<int>						 feature_dim, compressed_dim;
 
-		vector<cv::Mat>                  ky, kx, yf, cos_window;                 // *** Compute the Fourier series indices and their transposes
-		vector<cv::Mat>					 interp1_fs, interp2_fs;				 // *** interpl fourier series
+		vector<cv::Mat>                  ky, kx, yf, cos_window;   // *** Compute the Fourier series indices and their transposes
+		vector<cv::Mat>					 interp1_fs, interp2_fs;   // *** interpl fourier series
 
 		vector<cv::Mat>					 reg_filter, projection_matrix;			 //**** spatial filter ***** 
 		vector<float>                    reg_energy, scaleFactors;

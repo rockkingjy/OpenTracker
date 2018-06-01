@@ -20,7 +20,7 @@ using namespace std;
 using namespace caffe;
 using namespace cv;
 using namespace eco;
-
+/*
 static string WIN_NAME = "ECO-Tracker";
 
 bool gotBB = false;
@@ -57,6 +57,7 @@ void mouseHandler(int event, int x, int y, int flags, void *param){
 void drawBox(cv::Mat& image, cv::Rect box, cv::Scalar color, int thick){
 	rectangle(image, cvPoint(box.x, box.y), cvPoint(box.x + box.width, box.y + box.height), color, thick);
 }
+*/
 
 int main()
 {
@@ -67,57 +68,6 @@ int main()
 	const string mean_file("model/VGG_mean.binaryproto");
 	const std::string mean_yml("model/mean.yml");
 
-#ifdef  USE_VIDEO
-	//***********Frame readed****************************************
-	cv::Mat frame;
-	cv::Rect result;
-
-	//***********reading frome video**********************************
-	cv::namedWindow(WIN_NAME);
-	cv::VideoCapture capture;
-	capture.open("/home/elab/Videos/tracking_bike.mp4");
-	if (!capture.isOpened())
-	{
-		std::cout << "capture device failed to open!" << std::endl;
-		return -1;
-	}
-
-	//**********Register mouse callback to draw the bounding box******
-	cvNamedWindow(WIN_NAME.c_str(), CV_WINDOW_AUTOSIZE);
-	cvSetMouseCallback(WIN_NAME.c_str(), mouseHandler, NULL);
-	
-	capture >> frame;
-	cv::Mat temp;
-	frame.copyTo(temp);
-	while (!gotBB)
-	{
-		drawBox(frame, box, cv::Scalar(0, 0, 255), 1);
-		cv::imshow(WIN_NAME, frame);
-		temp.copyTo(frame);
-		if (cvWaitKey(20) == 27)
-			return 1;
-	}
-	//************** Remove callback  *********************************
-	cvSetMouseCallback(WIN_NAME.c_str(), NULL, NULL);
-	printf("bbox:%d, %d, %d, %d\n", box.x, box.y, box.width, box.height);
-
-	ECO Eco(1, proto, model, mean_file,mean_yml);
-
-	Eco.init(frame, box);
-
-	int idx = 0;
-	while (idx++<100)
-	{
-		capture >> frame;
-		if (frame.empty())
-			return -1;
-		Eco.process_frame(frame);
-
-		//rectangle(frame, Point(result.x, result.y), Point(result.x + result.width, result.y + result.height), Scalar(0, 255, 255), 1, 8);
-		//imshow(WIN_NAME, frame);
-		//waitKey(1);
-	}
-#else
     string databaseTypes[4] = {"VOT-2017", "TB-2015", "TLP", "UAV123"};
     string databaseType = databaseTypes[1];
 	// Read from the images ====================================================
@@ -254,11 +204,10 @@ int main()
 	Rect2d ecobbox(x, y, w, h);
 	Eco.init(frame, ecobbox);
 
-
 	while (frame.data)
 	{
-		Eco.process_frame(frame);
-       // Read next image
+		Eco.update(frame);
+        // Read next image
         f++;
         osfile.str("");
 
@@ -348,8 +297,58 @@ int main()
         frame = cv::imread(osfile.str().c_str(), CV_LOAD_IMAGE_UNCHANGED);
 
 	}
-
 /*
+#ifdef  USE_VIDEO
+	//***********Frame readed****************************************
+	cv::Mat frame;
+	cv::Rect result;
+
+	//***********reading frome video**********************************
+	cv::namedWindow(WIN_NAME);
+	cv::VideoCapture capture;
+	capture.open("/home/elab/Videos/tracking_bike.mp4");
+	if (!capture.isOpened())
+	{
+		std::cout << "capture device failed to open!" << std::endl;
+		return -1;
+	}
+
+	//**********Register mouse callback to draw the bounding box******
+	cvNamedWindow(WIN_NAME.c_str(), CV_WINDOW_AUTOSIZE);
+	cvSetMouseCallback(WIN_NAME.c_str(), mouseHandler, NULL);
+	
+	capture >> frame;
+	cv::Mat temp;
+	frame.copyTo(temp);
+	while (!gotBB)
+	{
+		drawBox(frame, box, cv::Scalar(0, 0, 255), 1);
+		cv::imshow(WIN_NAME, frame);
+		temp.copyTo(frame);
+		if (cvWaitKey(20) == 27)
+			return 1;
+	}
+	//************** Remove callback  *********************************
+	cvSetMouseCallback(WIN_NAME.c_str(), NULL, NULL);
+	printf("bbox:%d, %d, %d, %d\n", box.x, box.y, box.width, box.height);
+
+	ECO Eco(1, proto, model, mean_file,mean_yml);
+
+	Eco.init(frame, box);
+
+	int idx = 0;
+	while (idx++<100)
+	{
+		capture >> frame;
+		if (frame.empty())
+			return -1;
+		Eco.process_frame(frame);
+
+		//rectangle(frame, Point(result.x, result.y), Point(result.x + result.width, result.y + result.height), Scalar(0, 255, 255), 1, 8);
+		//imshow(WIN_NAME, frame);
+		//waitKey(1);
+	}
+#else
 	DIR *dir=nullptr;
 	struct dirent *entry=nullptr;
 	string path = "F:\\code_tfy\\Matlab\\ECO\\ECO-Caffe\\3 - test\\sequences\\MountainBike\\img";
@@ -424,9 +423,9 @@ int main()
 
 
 	closedir(dir);
-*/
-#endif 
 
+#endif 
+*/
 	return 0;
 
 }

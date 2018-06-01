@@ -1,6 +1,8 @@
 
 #include "eco.h"
 
+#define debug(a, args...) printf("%s(%s:%d) " a "\n",  __func__,__FILE__, __LINE__, ##args)
+
 namespace eco{
 
 	#define ECO_TRAIN
@@ -103,13 +105,17 @@ namespace eco{
 		compressed_dim.push_back(hog_features.fparams.compressed_dim);
 
 		//***Number of Fourier coefficients to save for each filter layer.This will be an odd number.
+		debug("feature_sz.size():%d",feature_sz.size());
 		for (size_t i = 0; i != feature_sz.size(); ++i)
 		{
 			size_t size = feature_sz[i].width + (feature_sz[i].width + 1) % 2 ;
 			filter_sz.push_back(cv::Size(size, size));
 			k1 = size > output_sz ? i : k1;
+			debug("k1:%lu", k1);
+			//printf("Debug: %s, %s, %d===== k1:%lu \n", __FILE__, __func__,__LINE__,k1);
 			//wangsen
 			output_sz = std::max(size,output_sz);
+			debug("output_sz:%lu", output_sz);
 			//output_sz = size > output_sz ? size : output_sz;
 		}
 
@@ -161,13 +167,12 @@ namespace eco{
 			reg_energy.push_back(energy);
 		}
 
-		//*** scale facator **
+		//*** scale factor **
 		for (int i = -2; i < 3; i++)
 		{ 
 			scaleFactors.push_back(pow(params.scale_step, i));
 		}
 		
-
 		ECO_FEATS xl, xlw, xlf, xlf_porj;
 		
 		xl = feat_extrator.extractor(im, pos, vector<float>(1, currentScaleFactor), params,yml_mean, useDeepFeature, net);
@@ -273,7 +278,7 @@ namespace eco{
 		}
 		else  // just HOG feature;
 		{
-			// *** should be adde latter
+			// *** should be adde later
 			int max_cell_size = hog_features.fparams.cell_size;
 			int new_sample_sz = (1 + 2 * img_sample_sz.width / (2 * max_cell_size)) * max_cell_size;
 			vector<int> feature_sz_choices, num_odd_dimensions;
@@ -458,7 +463,7 @@ namespace eco{
 		return result;
 	}
 
-	void ECO::process_frame(const cv::Mat& frame)
+	void ECO::update(const cv::Mat& frame)
 	{
 		cv::Point sample_pos = cv::Point(pos);
 		vector<float> det_samples_pos;
@@ -482,9 +487,9 @@ namespace eco{
 		// 4: Interpolate features to the continuous domain
 		xt_proj = interpolate_dft(xt_proj, interp1_fs, interp2_fs);
 
-		printf("flageco1=========================================\n");
 		// 5: compute the scores of different scale of target
 		//vector<cv::Mat> scores_fs_sum(scaleFactors.size(), cv::Mat::zeros(filter_sz[k1], CV_32FC2));
+		debug("scaleFactors.size():%d, k1:%lu, filter_sz[k1]:%d", scaleFactors.size(), k1, filter_sz[k1]);
 		vector<cv::Mat> scores_fs_sum;
 		for (size_t i = 0; i < scaleFactors.size(); i++)
 			scores_fs_sum.push_back(cv::Mat::zeros(filter_sz[k1], CV_32FC2));
@@ -500,8 +505,6 @@ namespace eco{
 				score.copyTo(scores_fs_sum[j / hf_full[i].size()](roi));
 			}
 		}
-
-		printf("flageco2=========================================\n");
 		// 6: Locate the positon of target 
 		optimize_scores scores(scores_fs_sum, params.newton_iterations);
 		scores.compute_scores();
