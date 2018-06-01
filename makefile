@@ -16,7 +16,7 @@ OBJ = kcf/fhog.o kcf/kcftracker.o goturn/network/regressor_base.o goturn/network
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< 
 
-all: makekcf makegoturn trackerscompare.bin
+all: makekcf makegoturn makeeco trackerscompare.bin
 
 trackerscompare.bin: $(OBJ)
 	$(CC) -o $@ $^ $(LDFLAGS) $(CXXFLAGS) 
@@ -26,6 +26,9 @@ makekcf:
 
 makegoturn:
 	cd goturn && make -j8
+
+makeeco:
+	cd eco && make -j8
 
 .PHONY: clean
 

@@ -605,7 +605,7 @@ cv::Mat KCFTracker::getFeatures(const cv::Mat &image, bool inithann, float scale
         _size_patch[2] = map->numFeatures;
 
         FeaturesMap = cv::Mat(cv::Size(map->numFeatures, map->sizeX * map->sizeY), CV_32F, map->map); // Procedure do deal with cv::Mat multichannel bug
-        FeaturesMap = FeaturesMap.t();
+        FeaturesMap = FeaturesMap.t(); // transpose 
         freeFeatureMapObject(&map);
 
         // Lab features
