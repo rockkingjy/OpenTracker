@@ -67,7 +67,5 @@ private:
 	boost::shared_ptr< Net<float> >		net;
 };
 
-
-
 #endif
  

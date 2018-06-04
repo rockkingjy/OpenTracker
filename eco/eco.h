@@ -7,7 +7,6 @@
 
 #include <caffe/caffe.hpp>
 #include <caffe/util/io.hpp>
-#include <caffe/caffe.hpp>
 
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/opencv.hpp>
@@ -30,78 +29,84 @@ using namespace caffe;
 using namespace FFTTools;
 using namespace eco_sample_update;
 
-namespace eco{
+namespace eco
+{
 
-	class ECO
-	{
-	public:
-		virtual  ~ECO(){}
+class ECO
+{
+  public:
+	virtual ~ECO() {}
 
-		ECO(bool useDeepFeature = 0, const string& proto = "", const string& model = "", const string& mean_file = "",const std::string& mean_yml="");
+	ECO(bool useDeepFeature = 0, const string &proto = "", const string &model = "",
+		const string &mean_file = "", const std::string &mean_yml = "");
 
-		void          init(cv::Mat& im, const cv::Rect& rect);		  //****** tracker intialization****
+	void init(cv::Mat &im, const cv::Rect &rect); //****** tracker intialization****
 
-		void          update(const cv::Mat& frame);
-		
-		cv::Mat       deep_mean(const string& mean_file);
-		 
-		void          init_features(); // *** init the ECO features include deep feature or non-deep feature
+	void update(const cv::Mat &frame);
 
-		void          yf_gaussion();   //***** get the label of features *****
-		
-		void          cos_wind();      //***** construct cosine window
-		
-		ECO_FEATS     do_windows_x(const ECO_FEATS& xl, vector<cv::Mat>& cos_win);
+	void init_features(); // *** init the ECO features include deep feature or non-deep feature
 
-		ECO_FEATS     interpolate_dft(const ECO_FEATS& xlf, vector<cv::Mat>& interp1_fs, vector<cv::Mat>& interp2_fs);
+	cv::Mat meanMatFromYML(string path);
 
-		ECO_FEATS	  compact_fourier_coeff(const ECO_FEATS& xf);
+	cv::Mat deep_mean(const string &mean_file);
 
-		vector<cv::Mat>		init_projection_matrix(const ECO_FEATS& init_sample, const vector<int>& compressed_dim, const vector<int>& feature_dim);
+	void yf_gaussian(); //***** get the label of features *****
 
-		vector<cv::Mat>     project_mat_energy(vector<cv::Mat> proj, vector<cv::Mat> yf);
+	void cos_wind(); //***** construct cosine window
 
-		ECO_FEATS			full_fourier_coeff(const ECO_FEATS& xf);
+	ECO_FEATS do_windows_x(const ECO_FEATS &xl, vector<cv::Mat> &cos_win);
 
-		ECO_FEATS			shift_sample(ECO_FEATS& xf, cv::Point2f shift, std::vector<cv::Mat> kx, std::vector<cv::Mat>  ky);
+	ECO_FEATS interpolate_dft(const ECO_FEATS &xlf, vector<cv::Mat> &interp1_fs,
+							  vector<cv::Mat> &interp2_fs);
 
-	private:
+	ECO_FEATS compact_fourier_coeff(const ECO_FEATS &xf);
 
-		bool                             useDeepFeature, is_color_image;
-		boost::shared_ptr< Net<float> >  net;				 // *** VGG net  
-		cv::Mat                          deep_mean_mat,yml_mean;       
-		//*** the max size of feature and its index
-		size_t                           output_sz, k1, frameID, frames_since_last_train;   
-		cv::Point2f                      pos;
+	vector<cv::Mat> init_projection_matrix(const ECO_FEATS &init_sample,
+										   const vector<int> &compressed_dim,
+										   const vector<int> &feature_dim);
 
-		eco_params                       params;			 // *** ECO prameters ***
+	vector<cv::Mat> project_mat_energy(vector<cv::Mat> proj, vector<cv::Mat> yf);
 
-		//***  current target size,  initial target size,   
-		cv::Size                         target_sz, init_target_sz, img_sample_sz, img_support_sz;
-		cv::Size2f                       base_target_sz;     // *** adaptive target size
+	ECO_FEATS full_fourier_coeff(const ECO_FEATS &xf);
 
-		float                            currentScaleFactor; //*** current img scale ******
+	ECO_FEATS shift_sample(ECO_FEATS &xf, cv::Point2f shift,
+						   std::vector<cv::Mat> kx, std::vector<cv::Mat> ky);
 
-		cnn_feature                      cnn_features;       //*** corresponding to original matlab features{1}
-		hog_feature                      hog_features;       //*** corresponding to original matlab features{2}
+  private:
+	bool useDeepFeature;
+	boost::shared_ptr<Net<float>> net; // *** VGG net
+	cv::Mat deep_mean_mat, yml_mean;
+	//*** the max size of feature and its index
+	size_t output_sz, max_output_index, frameID, frames_since_last_train;
+	cv::Point2f pos;
 
-		vector<cv::Size>                 feature_sz, filter_sz;
-		vector<int>						 feature_dim, compressed_dim;
+	eco_params params; // *** ECO prameters ***
 
-		vector<cv::Mat>                  ky, kx, yf, cos_window;   // *** Compute the Fourier series indices and their transposes
-		vector<cv::Mat>					 interp1_fs, interp2_fs;   // *** interpl fourier series
+	//***  current target size,  initial target size,
+	cv::Size target_sz, img_sample_sz, img_support_sz;
+	cv::Size2f base_target_sz; // *** adaptive target size
+	float currentScaleFactor; //*** current img scale ******
 
-		vector<cv::Mat>					 reg_filter, projection_matrix;			 //**** spatial filter ***** 
-		vector<float>                    reg_energy, scaleFactors;
+	cnn_feature cnn_features; //*** corresponding to original matlab features{1}
+	hog_feature hog_features; //*** corresponding to original matlab features{2}
 
-		feature_extractor                feat_extrator;
+	vector<cv::Size> feature_sz, filter_sz;
+	vector<int> feature_dim, compressed_dim;
 
-		sample_update                    SampleUpdate;
+	// *** Compute the Fourier series indices and their transposes
+	vector<cv::Mat> ky, kx, yf, cos_window;
+	vector<cv::Mat> interp1_fs, interp2_fs; // *** interpl fourier series
 
-		ECO_FEATS                        sample_energy;
-		ECO_FEATS                        hf_full;
-		eco_train                        eco_trainer;
+	vector<cv::Mat> reg_filter, projection_matrix; //**** spatial filter *****
+	vector<float> reg_energy, scaleFactors;
 
-	};
+	feature_extractor feat_extrator;
 
-}
+	sample_update SampleUpdate;
+
+	ECO_FEATS sample_energy;
+	ECO_FEATS hf_full;
+	eco_train eco_trainer;
+};
+
+} // namespace eco

@@ -1,4 +1,6 @@
 #ifndef	OPTIMIZE_SCORES_H
+#define	OPTIMIZE_SCORES_H
+
 #include <opencv2/features2d/features2d.hpp>
 //#include <core\core.hpp>
 #include <opencv2/opencv.hpp>
@@ -35,7 +37,6 @@ private:
 	float disp_col;
 
 };
-
 
 
 #endif

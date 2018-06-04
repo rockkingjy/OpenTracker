@@ -69,7 +69,7 @@ int main()
 	const std::string mean_yml("model/mean.yml");
 
     string databaseTypes[4] = {"VOT-2017", "TB-2015", "TLP", "UAV123"};
-    string databaseType = databaseTypes[1];
+    string databaseType = databaseTypes[0];
 	// Read from the images ====================================================
     int f, x, y, w, h, isLost;
     float x1, y1, x2, y2, x3, y3, x4, y4; //gt for vot
@@ -200,7 +200,7 @@ int main()
         line(frame, cv::Point(x4, y4), cv::Point(x1, y1), Scalar(0, 0, 0), 2, 1);
     }
 
-	ECO Eco(0, proto, model, mean_file,mean_yml);
+	ECO Eco(1, proto, model, mean_file,mean_yml);
 	Rect2d ecobbox(x, y, w, h);
 	Eco.init(frame, ecobbox);
 

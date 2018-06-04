@@ -10,12 +10,21 @@ using std::string;
 //**** hog parameters cofiguration *****
 struct hog_params
 {
-	hog_params() :cell_size(4), compressed_dim(10), nOrients(9),nDim(31), penalty(0){}
+	hog_params() :cell_size(4), compressed_dim(10), nOrients(9), nDim(31), penalty(0){}
 	int           cell_size;
 	int           compressed_dim;
 	int           nOrients;
 	size_t        nDim; 
 	float         penalty;
+};
+
+struct hog_feature
+{
+	hog_params      fparams;
+
+	cv::Size		img_input_sz;	            //*** input sample size ******
+	cv::Size        img_sample_sz;			    //*** the size of sample *******
+	cv::Size        data_sz_block1;			    //*** hog feature *****
 };
 
 //*** cnn   feature   configuration *****
@@ -35,26 +44,15 @@ struct cnn_params{
 	vector<int>     start_ind;   // *** sample feature start index *****
 	vector<int>     end_ind;     // *** sample feature end   index ******
 };
- 
+
 struct cnn_feature
 {
 	cnn_params	    fparams;
 
-	float           input_size_scale;
 	cv::Size		img_input_sz;	            //*** VGG input sample size ******
 	cv::Size        img_sample_sz;              //*** the size of sample *******
 	cv::Size        data_sz_block1, data_sz_block2;
-	cv::Mat         mean;                       //**** the size of conv1 and conv5 *****
-};
-
-struct hog_feature
-{
-	hog_params      fparams;
-
-	cv::Size		img_input_sz;	            //*** input sample size ******
-	cv::Size        img_sample_sz;			    //*** the size of sample *******
-	cv::Size        data_sz_block1;			    //****  hog feature *****
-
+	cv::Mat         mean;                       
 };
 
 //*** ECO parameters  configuration *****
@@ -72,8 +70,8 @@ struct eco_params
 	hog_params eco_hog_params;
 	cnn_params eco_cnn_params;
 	
-	cnn_feature cnn_feat;
 	hog_feature hog_feat;
+	cnn_feature cnn_feat;
 
 	//***** img sample parameters *****
 	float  search_area_scale;
@@ -132,12 +130,4 @@ struct eco_params
 
 };
         
-
-
-struct feature_info
-{
-
-
-};
-
 #endif
