@@ -86,45 +86,41 @@ void ECO::init(cv::Mat &im, const cv::Rect &rect)
 	compressed_dim.push_back(hog_features.fparams.compressed_dim); //=10
 	debug("%d %d %d %d",feature_sz[0].width,feature_sz[0].height, feature_dim[0], compressed_dim[0]);
 
-	//***Number of Fourier coefficients to save for each filter layer.This will be an odd number.
+	//***Number of Fourier coefficients to save for each filter layer. This will be an odd number.
 	max_output_index = 0;
 	output_sz = 0;
 	for (size_t i = 0; i != feature_sz.size(); ++i)
 	{
 		size_t size = feature_sz[i].width + (feature_sz[i].width + 1) % 2; //=63, to make it as an odd number;
 		filter_sz.push_back(cv::Size(size, size));
-		
+		// get the largest feature and it's index;
 		max_output_index = size > output_sz ? i : max_output_index;
 		output_sz = std::max(size, output_sz);
 	}
-	debug("%ul %ul", max_output_index, output_sz);
-	//***Compute the Fourier series indices and their transposes***
-	for (size_t i = 0; i < filter_sz.size(); ++i)
+	debug("index:%ul,output:%ul", max_output_index, output_sz);
+
+	//***Compute the Fourier series indices k.
+	for (size_t i = 0; i < filter_sz.size(); ++i) // for each filter
 	{	
-		debug("%d", filter_sz[i].height);
+		debug("i: %d, N: %d", i, filter_sz[i].height);
 		cv::Mat_<float> tempy(filter_sz[i].height, 1, CV_32FC1);
 		cv::Mat_<float> tempx(1, filter_sz[i].height / 2 + 1, CV_32FC1);
 
-		//float* tempyData = tempy.ptr<float>(0);
+		// ky in [-(N-1)/2, (N-1)/2], because N = filter_sz[i].height is odd (check above), 63x1
 		for (int j = 0; j < tempy.rows; j++)
 		{
-			//wangsen
-			//tempyData[j] = j - (tempy.rows/2);
 			tempy.at<float>(j, 0) = j - (tempy.rows / 2); // y index
 		}
 		ky.push_back(tempy);
-
-		float *tempxData = tempx.ptr<float>(0);
+		// kx in [-N/2, 0], 1x32
 		for (int j = 0; j < tempx.cols; j++)
 		{
-			//wangsen why this is tempx.cols not tempx.cols/2
-			tempxData[j] = j - (filter_sz[i].height / 2);
-			//tempx.at<float>(0, j) = j - (filter_sz[i].height / 2);
+			tempx.at<float>(0, j) = j - (filter_sz[i].height / 2);
 		}
 		kx.push_back(tempx);
+		debug("ky:%d %d, kx:%d %d", ky[i].size().height, ky[i].size().width, kx[i].size().height, kx[i].size().width);
 	}
 
-	//*** construct the Gaussian label function using Poisson formula
 	yf_gaussian();
 	cos_wind();
 
@@ -448,18 +444,19 @@ cv::Mat ECO::deep_mean(const string &mean_file)
 	cv::Mat mean;
 	cv::merge(channels, mean);
 
-	cv::Scalar channel_mean = cv::mean(mean);
+	cv::Scalar channel_mean = cv::mean(mean); //get the mean for each channel.
 	return cv::Mat(cv::Size(224, 224), mean.type(), channel_mean);
 }
 
-void ECO::yf_gaussian()
+void ECO::yf_gaussian() // real part of (9) in paper C-COT
 {
+	// sig_y is sigma in (9)
 	float sig_y = sqrt(int(base_target_sz.width) * int(base_target_sz.height)) *
 				  (params.output_sigma_factor) * (float(output_sz) / img_support_sz.width);
 
-	for (unsigned int i = 0; i < ky.size(); i++)
+	for (unsigned int i = 0; i < ky.size(); i++) // for each filter
 	{
-		// ***** opencv matrix operation ******
+		// 2 dimension version of (9)
 		cv::Mat tempy(ky[i].size(), CV_32FC1);
 		tempy = CV_PI * sig_y * ky[i] / output_sz;
 		cv::exp(-2 * tempy.mul(tempy), tempy);
@@ -488,6 +485,7 @@ void ECO::cos_wind()
 		cos_window.push_back(hann2d(cv::Range(1, hann2d.rows - 1), cv::Range(1, hann2d.cols - 1)));
 	} 
 }
+
 ECO_FEATS ECO::do_windows_x(const ECO_FEATS &xl, vector<cv::Mat> &cos_win)
 {
 	ECO_FEATS xlw;

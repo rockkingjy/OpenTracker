@@ -50,9 +50,9 @@ class ECO
 
 	cv::Mat deep_mean(const string &mean_file);
 
-	void yf_gaussian(); //***** get the label of features *****
+	void yf_gaussian(); //***** the desired outputs of features, real part of (9) in paper C-COT
 
-	void cos_wind(); //***** construct cosine window
+	void cos_wind(); 	//***** construct cosine window of features;
 
 	ECO_FEATS do_windows_x(const ECO_FEATS &xl, vector<cv::Mat> &cos_win);
 
@@ -73,40 +73,42 @@ class ECO
 						   std::vector<cv::Mat> kx, std::vector<cv::Mat> ky);
 
   private:
-	bool useDeepFeature;
-	boost::shared_ptr<Net<float>> net; // *** VGG net
-	cv::Mat deep_mean_mat, yml_mean;
+	bool 				useDeepFeature;
+	boost::shared_ptr<Net<float>> 	net; // *** VGG net
+	cv::Mat 			deep_mean_mat, yml_mean;
 	//*** the max size of feature and its index
-	size_t output_sz, max_output_index, frameID, frames_since_last_train;
-	cv::Point2f pos;
+	size_t 				output_sz, max_output_index; //output_sz is T in (9) of C-COT paper
+	size_t 				frameID, frames_since_last_train;
+	cv::Point2f 		pos;
 
-	eco_params params; // *** ECO prameters ***
+	eco_params 			params; // *** ECO prameters ***
 
 	//***  current target size,  initial target size,
-	cv::Size target_sz, img_sample_sz, img_support_sz;
-	cv::Size2f base_target_sz; // *** adaptive target size
-	float currentScaleFactor; //*** current img scale ******
+	cv::Size 			target_sz, img_sample_sz, img_support_sz;
+	cv::Size2f 			base_target_sz; // *** adaptive target size
+	float 				currentScaleFactor; //*** current img scale ******
 
-	cnn_feature cnn_features; //*** corresponding to original matlab features{1}
-	hog_feature hog_features; //*** corresponding to original matlab features{2}
+	cnn_feature 		cnn_features; //*** corresponding to original matlab features{1}
+	hog_feature 		hog_features; //*** corresponding to original matlab features{2}
 
-	vector<cv::Size> feature_sz, filter_sz;
-	vector<int> feature_dim, compressed_dim;
+	vector<cv::Size> 	feature_sz, filter_sz;
+	vector<int> 		feature_dim, compressed_dim;
 
 	// *** Compute the Fourier series indices and their transposes
-	vector<cv::Mat> ky, kx, yf, cos_window;
-	vector<cv::Mat> interp1_fs, interp2_fs; // *** interpl fourier series
+	//kx, ky is the k in (9) of C-COT paper, yf is the left part of (9);
+	vector<cv::Mat> 	ky, kx, yf, cos_window; 
+	vector<cv::Mat> 	interp1_fs, interp2_fs; // *** interpl fourier series
 
-	vector<cv::Mat> reg_filter, projection_matrix; //**** spatial filter *****
-	vector<float> reg_energy, scaleFactors;
+	vector<cv::Mat> 	reg_filter, projection_matrix; //**** spatial filter *****
+	vector<float> 		reg_energy, scaleFactors;
 
-	feature_extractor feat_extrator;
+	feature_extractor 	feat_extrator;
 
-	sample_update SampleUpdate;
+	sample_update 		SampleUpdate;
 
-	ECO_FEATS sample_energy;
-	ECO_FEATS hf_full;
-	eco_train eco_trainer;
+	ECO_FEATS 			sample_energy;
+	ECO_FEATS 			hf_full;
+	eco_train 			eco_trainer;
 };
 
 } // namespace eco

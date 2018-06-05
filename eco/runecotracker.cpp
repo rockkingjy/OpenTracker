@@ -200,7 +200,7 @@ int main()
         line(frame, cv::Point(x4, y4), cv::Point(x1, y1), Scalar(0, 0, 0), 2, 1);
     }
 
-	ECO Eco(1, proto, model, mean_file,mean_yml);
+	ECO Eco(0, proto, model, mean_file,mean_yml);
 	Rect2d ecobbox(x, y, w, h);
 	Eco.init(frame, ecobbox);
 
