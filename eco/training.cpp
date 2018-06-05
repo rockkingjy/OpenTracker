@@ -136,7 +136,7 @@ void eco_train::train_init(ECO_FEATS phf, ECO_FEATS phf_inc, vector<cv::Mat> ppr
 }
 
 
-eco_train::ECO_FEATS eco_train::project_sample( const ECO_FEATS& x, const vector<cv::Mat>& projection_matrix)
+ECO_FEATS eco_train::project_sample( const ECO_FEATS& x, const vector<cv::Mat>& projection_matrix)
 {
 	ECO_FEATS result;
 
@@ -168,7 +168,7 @@ eco_train::ECO_FEATS eco_train::project_sample( const ECO_FEATS& x, const vector
 
 }
 
-eco_train::ECO_FEATS eco_train::mtimesx(ECO_FEATS& x, vector<cv::Mat> y, bool _conj)
+ECO_FEATS eco_train::mtimesx(ECO_FEATS& x, vector<cv::Mat> y, bool _conj)
 {
 	if (x.size() != y.size())
 		assert("Unmatched size");
@@ -482,7 +482,7 @@ void eco_train::train_filter(const vector<ECO_FEATS>& samplesf, const vector<flo
 	 
 }
  
-eco_train::ECO_FEATS   eco_train::pcg_eco_filter(const vector<ECO_FEATS>& samplesf, const vector<cv::Mat>& reg_filter, const vector<float> &sample_weights,  // right side of equation A(x)
+ECO_FEATS   eco_train::pcg_eco_filter(const vector<ECO_FEATS>& samplesf, const vector<cv::Mat>& reg_filter, const vector<float> &sample_weights,  // right side of equation A(x)
 					   const ECO_FEATS& rhs_samplef,  // the left side of the equation
 					   const ECO_FEATS& diag_M,       // preconditionor 
 					   ECO_FEATS& hf)                   // the union of filter [f+delta(f) delta(p)]
@@ -587,7 +587,7 @@ eco_train::ECO_FEATS   eco_train::pcg_eco_filter(const vector<ECO_FEATS>& sample
 	return x;
 }
 
-eco_train::ECO_FEATS   eco_train::lhs_operation(ECO_FEATS& hf, const vector<ECO_FEATS>& samplesf, const vector<cv::Mat>& reg_filter, const vector<float> &sample_weights)
+ECO_FEATS   eco_train::lhs_operation(ECO_FEATS& hf, const vector<ECO_FEATS>& samplesf, const vector<cv::Mat>& reg_filter, const vector<float> &sample_weights)
 {
 	ECO_FEATS res;
 	int num_features = hf.size();

@@ -186,25 +186,20 @@ namespace FFTTools
 		
 	}
 
-	float   mat_sum(const cv::Mat& org)
+	float mat_sum(const cv::Mat& org)
 	{
 		if (org.empty())
 			return 0;
-
 		float sum = 0;
-
 		for (size_t r = 0; r < (size_t)org.rows; r++)
 		{
 			const float* orgPtr = org.ptr<float>(r);
 			for (size_t c = 0; c < (size_t)org.cols; c++)
 			{
-				//sum += org.at < float >(r, c);
 				sum += orgPtr[c];
 			}
 		}
-
 		return sum;
-	
 	}
 
 	void normalizedLogTransform(cv::Mat &img)

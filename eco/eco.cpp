@@ -67,10 +67,6 @@ void ECO::init(cv::Mat &im, const cv::Rect &rect)
 
 	//**** window size, taking padding into account *****
 	base_target_sz = cv::Size2f(target_sz.width / currentScaleFactor, target_sz.height / currentScaleFactor);
-	if (currentScaleFactor > 1)
-		img_sample_sz = cv::Size(250, 250);
-	else
-		img_sample_sz = cv::Size(200, 200);
 
 	init_features();
 
@@ -84,7 +80,7 @@ void ECO::init(cv::Mat &im, const cv::Rect &rect)
 	feature_sz.push_back(hog_features.data_sz_block1);			   //=63x63
 	feature_dim.push_back(hog_features.fparams.nDim);			   //=31
 	compressed_dim.push_back(hog_features.fparams.compressed_dim); //=10
-	debug("%d %d %d %d",feature_sz[0].width,feature_sz[0].height, feature_dim[0], compressed_dim[0]);
+	debug("%d %d %d %d", feature_sz[0].width, feature_sz[0].height, feature_dim[0], compressed_dim[0]);
 
 	//***Number of Fourier coefficients to save for each filter layer. This will be an odd number.
 	max_output_index = 0;
@@ -97,14 +93,14 @@ void ECO::init(cv::Mat &im, const cv::Rect &rect)
 		max_output_index = size > output_sz ? i : max_output_index;
 		output_sz = std::max(size, output_sz);
 	}
-	debug("index:%ul,output:%ul", max_output_index, output_sz);
+	debug("index:%lu,output:%lu", max_output_index, output_sz);
 
 	//***Compute the Fourier series indices k.
 	for (size_t i = 0; i < filter_sz.size(); ++i) // for each filter
-	{	
-		debug("i: %d, N: %d", i, filter_sz[i].height);
+	{
+		debug("i: %lu, N: %d", i, filter_sz[i].height);
 		cv::Mat_<float> tempy(filter_sz[i].height, 1, CV_32FC1);
-		cv::Mat_<float> tempx(1, filter_sz[i].height / 2 + 1, CV_32FC1);
+		cv::Mat_<float> tempx(1, filter_sz[i].height / 2 + 1, CV_32FC1); // why 1/2 in x?===========????
 
 		// ky in [-(N-1)/2, (N-1)/2], because N = filter_sz[i].height is odd (check above), 63x1
 		for (int j = 0; j < tempy.rows; j++)
@@ -124,6 +120,7 @@ void ECO::init(cv::Mat &im, const cv::Rect &rect)
 	yf_gaussian();
 	cos_wind();
 
+	//*** Construct interpolation, refer C-COT
 	for (size_t i = 0; i < filter_sz.size(); ++i)
 	{
 		cv::Mat interp1_fs1, interp2_fs1;
@@ -133,18 +130,22 @@ void ECO::init(cv::Mat &im, const cv::Rect &rect)
 		interp2_fs.push_back(interp2_fs1);
 	}
 
-	//*** Construct spatial regularization filter
+	//*** Construct spatial regularization filter, refer SRDCF
 	for (size_t i = 0; i < filter_sz.size(); i++)
 	{
 		cv::Mat temp = get_reg_filter(img_support_sz, base_target_sz, params);
 		reg_filter.push_back(temp);
-		cv::Mat_<float> t = temp.mul(temp);
-		float energy = FFTTools::mat_sum(t);
+
+		cv::Mat_<float> t = temp.mul(temp);  //element-wise multiply
+		float energy = FFTTools::mat_sum(t); //sum up all the values of each points of the mat
 		reg_energy.push_back(energy);
 	}
 
-	//*** scale factor **
-	for (int i = -2; i < 3; i++)
+	//*** scale factor, 5 scales, refer SAMF
+	int scalemin = floor((1.0 - (float)params.number_of_scales) / 2.0);
+	int scalemax = floor(((float)params.number_of_scales - 1.0) / 2.0);
+	// debug("scale:%d, %d", scalemin, scalemax);
+	for (int i = scalemin; i <= scalemax; i++)
 	{
 		scaleFactors.push_back(pow(params.scale_step, i));
 	}
@@ -171,7 +172,8 @@ void ECO::init(cv::Mat &im, const cv::Rect &rect)
 	//*** project sample *****
 	xlf_porj = project_sample(xlf, projection_matrix);
 
-	//*** Update the samplesf to include the new sample.The distance matrix, kernel matrix and prior weight are also updated
+	//*** Update the samples to include the new sample.
+	// The distance matrix, kernel matrix and prior weight are also updated
 	SampleUpdate.init(filter_sz, compressed_dim);
 
 	SampleUpdate.update_sample_sapce_model(xlf_porj);
@@ -211,7 +213,7 @@ void ECO::init(cv::Mat &im, const cv::Rect &rect)
 #endif
 }
 
-void ECO::update(const cv::Mat &frame)
+bool ECO::update(const cv::Mat &frame, cv::Rect2d &roi)
 {
 	cv::Point sample_pos = cv::Point(pos);
 	vector<float> det_samples_pos;
@@ -223,7 +225,7 @@ void ECO::update(const cv::Mat &frame)
 	// 1: Extract features at multiple resolutions
 	ECO_FEATS xt = feat_extrator.extractor(frame, sample_pos, det_samples_pos, params, yml_mean, useDeepFeature, net);
 
-	//2:  project sample *****
+	// 2:  project sample *****
 	ECO_FEATS xt_proj = FeatProjMultScale(xt, projection_matrix);
 
 	// Do windowing of features ***
@@ -235,9 +237,7 @@ void ECO::update(const cv::Mat &frame)
 	// 4: Interpolate features to the continuous domain
 	xt_proj = interpolate_dft(xt_proj, interp1_fs, interp2_fs);
 
-	// 5: compute the scores of different scale of target
-	//vector<cv::Mat> scores_fs_sum(scaleFactors.size(), cv::Mat::zeros(filter_sz[k1], CV_32FC2));
-	debug("scaleFactors.size():%d, k1:%lu, filter_sz[k1]:%f", scaleFactors.size(), max_output_index, filter_sz[max_output_index].height);
+	// 5: compute the scores for different scales of target
 	vector<cv::Mat> scores_fs_sum;
 	for (size_t i = 0; i < scaleFactors.size(); i++)
 		scores_fs_sum.push_back(cv::Mat::zeros(filter_sz[max_output_index], CV_32FC2));
@@ -267,15 +267,15 @@ void ECO::update(const cv::Mat &frame)
 	pos = cv::Point2f(sample_pos) + cv::Point2f(dx, dy);
 
 	currentScaleFactor = currentScaleFactor * scaleFactors[scale_change_factor];
-	vector<float> sample_scale;
+	/*vector<float> sample_scale;
 	for (size_t i = 0; i < scaleFactors.size(); ++i)
 	{
 		sample_scale.push_back(scaleFactors[i] * currentScaleFactor);
-	}
+	}*/
 
 	//*****************************************************************************
 	//*****                     Model update step
-	//******************************************************************************
+	//*****************************************************************************
 
 	// 1: Use the sample that was used for detection
 	ECO_FEATS xtlf_proj;
@@ -309,12 +309,13 @@ void ECO::update(const cv::Mat &frame)
 		SampleUpdate.replace_sample(xtlf_proj, SampleUpdate.get_new_id());
 	}
 
-	// 5: update filter parameters
+	// 5: update filter parameters, Ns in ECO paper
 	bool train_tracker = frames_since_last_train >= params.train_gap;
 	if (train_tracker)
 	{
 		ECO_FEATS new_sample_energy = feats_pow2(xtlf_proj);
-		sample_energy = FeatScale(sample_energy, 1 - params.learning_rate) + FeatScale(new_sample_energy, params.learning_rate);
+		sample_energy = FeatScale(sample_energy, 1 - params.learning_rate) + 
+						FeatScale(new_sample_energy, params.learning_rate);
 		eco_trainer.train_filter(SampleUpdate.get_samples(), SampleUpdate.get_samples_weight(), sample_energy);
 		frames_since_last_train = 0;
 	}
@@ -326,22 +327,26 @@ void ECO::update(const cv::Mat &frame)
 	hf_full = full_fourier_coeff(eco_trainer.get_hf());
 
 	//*****************************************************************************
-	//*****                    just for test
+	//*****                    return
 	//******************************************************************************
-	cv::Rect resbox;
-	resbox.width = base_target_sz.width * currentScaleFactor;
-	resbox.height = base_target_sz.height * currentScaleFactor;
-	resbox.x = pos.x - resbox.width / 2;
-	resbox.y = pos.y - resbox.height / 2;
+	roi.width = base_target_sz.width * currentScaleFactor;
+	roi.height = base_target_sz.height * currentScaleFactor;
+	roi.x = pos.x - roi.width / 2;
+	roi.y = pos.y - roi.height / 2;
 
-	cv::Mat resframe = frame.clone();
-	cv::rectangle(resframe, resbox, cv::Scalar(0, 255, 0));
-	cv::imshow("ECO-Tracker", resframe);
-	cv::waitKey(10);
+	//roi = resbox;
+	debug("roi:%f, %f, %f, %f", roi.x, roi.y, roi.width, roi.height);
+
+	return true;
 }
 
 void ECO::init_features()
 {
+	if (currentScaleFactor > 1)
+		img_sample_sz = cv::Size(250, 250);
+	else
+		img_sample_sz = cv::Size(200, 200);
+
 	if (useDeepFeature)
 	{
 		//******** the cnn feature intialization **********
@@ -362,31 +367,28 @@ void ECO::init_features()
 
 		params.cnn_feat = cnn_features;
 
-		cv::Size scaled_sample_sz = cnn_features.img_input_sz;
-		img_support_sz = cv::Size(round((float)208 * img_sample_sz.width / scaled_sample_sz.width),
-								  round((float)208 * img_sample_sz.height / scaled_sample_sz.height));
+		img_support_sz = cv::Size(round((float)208 * img_sample_sz.width / cnn_features.img_input_sz.width),
+								  round((float)208 * img_sample_sz.height / cnn_features.img_input_sz.height));
 	}
 	else // just HOG feature;
 	{
-		int max_cell_size = hog_features.fparams.cell_size;
-		int new_sample_sz = (1 + 2 * img_sample_sz.width / (2 * max_cell_size)) * max_cell_size;
-		//debug("sample_sz:%d, %d", img_sample_sz.width, new_sample_sz);//=250,252
-		vector<int> feature_sz_choices, num_odd_dimensions;
-		int max_odd = -100, max_idx = -1;
-		for (size_t i = 0; i < (size_t)max_cell_size; i++)
+		int new_sample_sz = (1 + img_sample_sz.width / hog_features.fparams.cell_size) * hog_features.fparams.cell_size;
+		/*	debug("sample_sz:%d, %d", img_sample_sz.width, new_sample_sz);//=250,252
+		int max_odd = -1, max_idx = -1;
+		for (size_t i = 0; i < (size_t)hog_features.fparams.cell_size; i++)
 		{
-			int sz = (new_sample_sz + i) / max_cell_size;
-			feature_sz_choices.push_back(sz);
-			if (sz % 2 == 1)
+			int sz = (new_sample_sz + i) / hog_features.fparams.cell_size;
+			if (sz % 2 == 1) // find the max odd value and it's id;
 			{
 				max_idx = max_odd >= sz ? max_idx : i;
 				max_odd = max_odd >= sz ? max_odd : sz;
 			}
 		}
-		debug("max:%d, %d", max_idx, max_odd); //=0,63
 
-		new_sample_sz += max_idx;
-		img_support_sz = cv::Size(new_sample_sz, new_sample_sz);
+		new_sample_sz += max_idx; 
+		debug("max:%d, %d, %d", max_idx, max_odd, new_sample_sz); //=0,63
+	*/
+		img_support_sz = cv::Size(new_sample_sz, new_sample_sz); //63x63
 	}
 	//******** the HOG feature intialization **********
 	hog_features.img_input_sz = img_support_sz; //*** the imput-img-size of hog is the same as support size
@@ -483,7 +485,7 @@ void ECO::cos_wind()
 			hann2t.at<float>(i, 0) = 0.5 * (1 - std::cos(2 * 3.14159265358979323846 * i / (hann2t.rows - 1)));
 		cv::Mat hann2d = hann2t * hann1t;
 		cos_window.push_back(hann2d(cv::Range(1, hann2d.rows - 1), cv::Range(1, hann2d.cols - 1)));
-	} 
+	}
 }
 
 ECO_FEATS ECO::do_windows_x(const ECO_FEATS &xl, vector<cv::Mat> &cos_win)

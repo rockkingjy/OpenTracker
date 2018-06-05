@@ -3,15 +3,12 @@
 
 #include <vector>
 #include <opencv2/features2d/features2d.hpp>
-//#include <core\core.hpp>
 #include <opencv2/opencv.hpp>
 #include <numeric>
 
 #include "fftTool.h"
 #include "feature_operator.h"
 
-//using namespace std;
-//using namespace cv;
 using namespace FFTTools;
 
 #define	SAMPPLE_MAX_NUM  50
@@ -64,13 +61,13 @@ namespace eco_sample_update{
 
 		 const float                        minmum_sample_weight = 0.0036;
 
-		 mutable std::vector<float>              sample_weight;
+		 mutable std::vector<float>         sample_weight;
 
-		 mutable std::vector<ECO_FEATS>          samples_f;                     //**** all samples frontier ******
+		 mutable std::vector<ECO_FEATS>     samples_f;                     //**** all samples frontier ******
 
 		 mutable int                        num_training_samples = 0;      //**** the number of training samples ********
 
-		 std::vector<float>                      prior_weights;
+		 std::vector<float>                 prior_weights;
 
 		 ECO_FEATS                          new_sample, merged_sample;
 

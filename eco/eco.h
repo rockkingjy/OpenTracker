@@ -42,7 +42,7 @@ class ECO
 
 	void init(cv::Mat &im, const cv::Rect &rect); //****** tracker intialization****
 
-	void update(const cv::Mat &frame);
+	bool update(const cv::Mat &frame, cv::Rect2d& roi);
 
 	void init_features(); // *** init the ECO features include deep feature or non-deep feature
 
@@ -85,8 +85,8 @@ class ECO
 
 	//***  current target size,  initial target size,
 	cv::Size 			target_sz, img_sample_sz, img_support_sz;
-	cv::Size2f 			base_target_sz; // *** adaptive target size
-	float 				currentScaleFactor; //*** current img scale ******
+	cv::Size2f 			base_target_sz; // *** target size without scale
+	float 				currentScaleFactor; //*** current img scale 
 
 	cnn_feature 		cnn_features; //*** corresponding to original matlab features{1}
 	hog_feature 		hog_features; //*** corresponding to original matlab features{2}

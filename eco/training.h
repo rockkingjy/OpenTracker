@@ -13,6 +13,7 @@
 #include "fftTool.h"
 #include "recttools.hpp"
 #include "params.h"
+#include "feature_type.h"
 #include "feature_operator.h"
 
 //using namespace std;
@@ -26,9 +27,6 @@ public:
 	eco_train();
 
 	virtual ~eco_train();
-
-	typedef   vector<vector<cv::Mat> >  ECO_FEATS;          //*** feature type 
-	typedef   cv::Vec<float, 2>         COMPLEX;            //*** matrix element type
 
 	struct STATE
 	{

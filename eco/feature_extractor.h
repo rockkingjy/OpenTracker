@@ -29,43 +29,44 @@ using namespace caffe;
 
 class feature_extractor
 {
-public:
-	feature_extractor(){}
+  public:
+	feature_extractor() {}
 
-	virtual    ~feature_extractor(){};
+	virtual ~feature_extractor(){};
 
-	ECO_FEATS  extractor(cv::Mat image, cv::Point2f pos, vector<float> scales, const eco_params& gparams,
-						const cv::Mat& yml_mean, bool useDeepFeature = true, 
-						const boost::shared_ptr< Net<float> >& net = boost::shared_ptr< Net<float> >());
+	ECO_FEATS extractor(cv::Mat image, cv::Point2f pos,
+						vector<float> scales, const eco_params &gparams,
+						const cv::Mat &yml_mean, bool useDeepFeature = true,
+						const boost::shared_ptr<Net<float>> 
+						&net = boost::shared_ptr<Net<float>>());
 
-	cv::Mat    sample_patch(const cv::Mat& im, const cv::Point2f& pos, cv::Size2f sample_sz, 
-							cv::Size2f output_sz, const eco_params& gparams);
+	cv::Mat sample_patch(const cv::Mat &im, const cv::Point2f &pos, cv::Size2f sample_sz,
+						 cv::Size2f output_sz, const eco_params &gparams);
 
-	vector<cv::Mat>   get_hog(vector<cv::Mat> im);
+	vector<cv::Mat> get_hog(vector<cv::Mat> im);
 
-	vector<cv::Mat>   hog_feature_normalization(vector<cv::Mat>& feature);
+	vector<cv::Mat> hog_feature_normalization(vector<cv::Mat> &feature);
 
-	ECO_FEATS         get_cnn_layers(vector<cv::Mat> im,const cv::Mat& yml_mean);
-	
-	void              cnn_feature_normalization(ECO_FEATS& feature);
+	ECO_FEATS get_cnn_layers(vector<cv::Mat> im, const cv::Mat &yml_mean);
 
-	void			  WrapInputLayer(std::vector<cv::Mat>* input_channels);
+	void cnn_feature_normalization(ECO_FEATS &feature);
 
-	cv::Mat			  sample_pool(const cv::Mat& im, int smaple_factor, int stride);
+	void WrapInputLayer(std::vector<cv::Mat> *input_channels);
 
-	inline ECO_FEATS		get_cnn_feats()const { return cnn_feat_maps; }
+	cv::Mat sample_pool(const cv::Mat &im, int smaple_factor, int stride);
 
-	inline vector<cv::Mat>  get_hog_feats()const { return hog_feat_maps; }
+	inline ECO_FEATS get_cnn_feats() const { return cnn_feat_maps; }
 
-private: 
-	cnn_feature							cnn_features;
-	hog_feature							hog_features;
+	inline vector<cv::Mat> get_hog_feats() const { return hog_feat_maps; }
 
-	ECO_FEATS						    cnn_feat_maps;
-	vector<cv::Mat>                     hog_feat_maps;
-	
-	boost::shared_ptr< Net<float> >		net;
+  private:
+	cnn_feature cnn_features;
+	hog_feature hog_features;
+
+	ECO_FEATS cnn_feat_maps;
+	vector<cv::Mat> hog_feat_maps;
+
+	boost::shared_ptr<Net<float>> net;
 };
 
 #endif
- 

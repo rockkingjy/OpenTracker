@@ -11,7 +11,7 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-#include "head.h"  //****** caffe C++ problem solution *******   !!!just be careful
+#include "head.h" //****** caffe C++ problem solution *******   !!!just be careful
 #include "eco.h"
 
 //#define USE_VIDEO
@@ -20,6 +20,10 @@ using namespace std;
 using namespace caffe;
 using namespace cv;
 using namespace eco;
+// Convert to string
+#define SSTR(x) static_cast<std::ostringstream &>(           \
+                    (std::ostringstream() << std::dec << x)) \
+                    .str()
 /*
 static string WIN_NAME = "ECO-Tracker";
 
@@ -61,16 +65,16 @@ void drawBox(cv::Mat& image, cv::Rect box, cv::Scalar color, int thick){
 
 int main()
 {
-	
-	//***********load net prototxt ********************************
-	const string proto("model/imagenet-vgg-m-2048.prototxt");
-	const string model("model/VGG_CNN_M_2048.caffemodel");
-	const string mean_file("model/VGG_mean.binaryproto");
-	const std::string mean_yml("model/mean.yml");
+
+    //***********load net prototxt ********************************
+    const string proto("model/imagenet-vgg-m-2048.prototxt");
+    const string model("model/VGG_CNN_M_2048.caffemodel");
+    const string mean_file("model/VGG_mean.binaryproto");
+    const std::string mean_yml("model/mean.yml");
 
     string databaseTypes[4] = {"VOT-2017", "TB-2015", "TLP", "UAV123"};
     string databaseType = databaseTypes[0];
-	// Read from the images ====================================================
+    // Read from the images ====================================================
     int f, x, y, w, h, isLost;
     float x1, y1, x2, y2, x3, y3, x4, y4; //gt for vot
     std::string s;
@@ -101,7 +105,7 @@ int main()
     }
     else if (databaseType == "TB-2015")
     {
-        path = "/media/elab/sdd/data/TB-2015/Coke";///Bird1";//BlurFace"; 
+        path = "/media/elab/sdd/data/TB-2015/Coke"; ///Bird1";//BlurFace";
         // Read the groundtruth bbox
         groundtruth = new ifstream(path + "/groundtruth_rect.txt");
         f = 1;
@@ -113,7 +117,7 @@ int main()
         w = atoi(s.c_str());
         getline(*groundtruth, s);
         h = atoi(s.c_str());
-        cout << f << " " << x << " " << y << " " << w << " " << h << " "<< endl;
+        cout << f << " " << x << " " << y << " " << w << " " << h << " " << endl;
         // Read images in a folder
         osfile << path << "/img/" << setw(4) << setfill('0') << f << ".jpg";
         cout << osfile.str() << endl;
@@ -200,13 +204,63 @@ int main()
         line(frame, cv::Point(x4, y4), cv::Point(x1, y1), Scalar(0, 0, 0), 2, 1);
     }
 
-	ECO Eco(0, proto, model, mean_file,mean_yml);
-	Rect2d ecobbox(x, y, w, h);
-	Eco.init(frame, ecobbox);
+    imshow("Tracking", frame);
 
-	while (frame.data)
-	{
-		Eco.update(frame);
+    ECO ecotracker(0, proto, model, mean_file, mean_yml);
+    Rect2d ecobbox(x, y, w, h);
+    ecotracker.init(frame, ecobbox);
+
+    while (frame.data)
+    {
+        double timereco = (double)getTickCount();
+        bool okeco = ecotracker.update(frame, ecobbox);
+        float fpseco = getTickFrequency() / ((double)getTickCount() - timereco);
+        if (okeco)
+        {
+            rectangle(frame, ecobbox, Scalar(0, 225, 0), 2, 1); //blue
+        }
+        else
+        {
+            putText(frame, "ECO tracking failure detected", cv::Point(100, 80), FONT_HERSHEY_SIMPLEX,
+                    0.75, Scalar(0, 225, 0), 2);
+        }
+
+        // Draw ground truth box
+        if (databaseType == "TLP")
+        {
+            rectangle(frame, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
+        }
+        else if (databaseType == "TB-2015")
+        {
+            rectangle(frame, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
+        }
+        else if (databaseType == "UAV123")
+        {
+            rectangle(frame, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
+        }
+        else if (databaseType == "VOT-2017")
+        {
+            line(frame, cv::Point(x1, y1), cv::Point(x2, y2), Scalar(0, 0, 0), 2, 1);
+            line(frame, cv::Point(x2, y2), cv::Point(x3, y3), Scalar(0, 0, 0), 2, 1);
+            line(frame, cv::Point(x3, y3), cv::Point(x4, y4), Scalar(0, 0, 0), 2, 1);
+            line(frame, cv::Point(x4, y4), cv::Point(x1, y1), Scalar(0, 0, 0), 2, 1);
+        }
+
+        // Display FPS on frame
+        putText(frame, "FPS in total: " + SSTR(long(fpseco)), Point(100, 50), FONT_HERSHEY_SIMPLEX,
+                0.75, Scalar(0, 225, 0), 2);
+
+        imshow("Tracking", frame);
+
+        int c = cvWaitKey(1);
+        if (c != -1)
+            c = c % 256;
+        if (c == 27)
+        {
+            cvDestroyWindow("Tracking");
+            return 0;
+        }
+        waitKey(1);
         // Read next image
         f++;
         osfile.str("");
@@ -295,15 +349,14 @@ int main()
         bboxGroundtruth.width = w;
         bboxGroundtruth.height = h;
         frame = cv::imread(osfile.str().c_str(), CV_LOAD_IMAGE_UNCHANGED);
-
-	}
-/*
+    }
+    /*
 #ifdef  USE_VIDEO
-	//***********Frame readed****************************************
+	// **********Frame readed****************************************
 	cv::Mat frame;
 	cv::Rect result;
 
-	//***********reading frome video**********************************
+	// ***********reading frome video**********************************
 	cv::namedWindow(WIN_NAME);
 	cv::VideoCapture capture;
 	capture.open("/home/elab/Videos/tracking_bike.mp4");
@@ -313,7 +366,7 @@ int main()
 		return -1;
 	}
 
-	//**********Register mouse callback to draw the bounding box******
+	// **********Register mouse callback to draw the bounding box******
 	cvNamedWindow(WIN_NAME.c_str(), CV_WINDOW_AUTOSIZE);
 	cvSetMouseCallback(WIN_NAME.c_str(), mouseHandler, NULL);
 	
@@ -328,7 +381,7 @@ int main()
 		if (cvWaitKey(20) == 27)
 			return 1;
 	}
-	//************** Remove callback  *********************************
+	// ************** Remove callback  *********************************
 	cvSetMouseCallback(WIN_NAME.c_str(), NULL, NULL);
 	printf("bbox:%d, %d, %d, %d\n", box.x, box.y, box.width, box.height);
 
@@ -426,6 +479,5 @@ int main()
 
 #endif 
 */
-	return 0;
-
+    return 0;
 }

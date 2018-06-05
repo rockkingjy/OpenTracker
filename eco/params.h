@@ -59,11 +59,20 @@ struct cnn_feature
 struct eco_params
 {
 	eco_params() :
-		search_area_scale(4.5),  min_image_sample_size(40000), max_image_sample_size(62500),
-		refinement_iterations(1), newton_iterations(5),      clamp_position(false),
-		output_sigma_factor(0.0833333f), learning_rate(0.009), nSamples(50), sample_replace_strategy("lowest_prior"), lt_size(0), train_gap(5), skip_after_frame(1), use_detection_sample(1),
-		use_reg_window(true), reg_window_min(1e-4), reg_window_edge(10e-3), reg_window_power(2), reg_sparsity_threshold(0.05f),
-		interpolation_method("bicubic"), interpolation_bicubic_a(-0.75f), interpolation_centering(true), interpolation_windowing(false),
+		search_area_scale(4.5), min_image_sample_size(40000), max_image_sample_size(62500),
+
+		refinement_iterations(1), newton_iterations(5), clamp_position(false),
+
+		output_sigma_factor(0.0833333f), learning_rate(0.009), nSamples(50), 
+		sample_replace_strategy("lowest_prior"), lt_size(0), train_gap(5), 
+		skip_after_frame(1), use_detection_sample(1),
+
+		interpolation_method("bicubic"), interpolation_bicubic_a(-0.75f), 
+		interpolation_centering(true), interpolation_windowing(false),
+
+		use_reg_window(true), reg_window_min(1e-4), reg_window_edge(10e-3), 
+		reg_window_power(2), reg_sparsity_threshold(0.05f),	
+		
 		number_of_scales(5), scale_step(1.02f)
 	{}
 
@@ -78,22 +87,26 @@ struct eco_params
 	int    min_image_sample_size;
 	int    max_image_sample_size;
 
-
 	//***** Detection parameters *****
 	int    refinement_iterations;               // Number of iterations used to refine the resulting position in a frame
 	int	   newton_iterations ;                  // The number of Newton iterations used for optimizing the detection score
 	bool   clamp_position;                      // Clamp the target position to be inside the image
 
-
 	//***** Learning parameters
 	float	output_sigma_factor;			    // Label function sigma
-	float	learning_rate ;	 				    // Learning rate
+	float	learning_rate;	 				    // Learning rate
 	size_t	nSamples;                           // Maximum number of stored training samples
 	string	sample_replace_strategy;            // Which sample to replace when the memory is full
 	bool	lt_size;			                // The size of the long - term memory(where all samples have equal weight)
 	int 	train_gap;					        // The number of intermediate frames with no training(0 corresponds to training every frame)
 	int 	skip_after_frame;                   // After which frame number the sparse update scheme should start(1 is directly)
 	bool	use_detection_sample;               // Use the sample that was extracted at the detection stage also for learning
+
+	// Interpolation parameters
+	string  interpolation_method;				// The kind of interpolation kernel
+	float   interpolation_bicubic_a;			// The parameter for the bicubic interpolation kernel
+	bool    interpolation_centering;			// Center the kernel at the feature sample
+	bool    interpolation_windowing;			// Do additional windowing on the Fourier coefficients of the kernel
 
 	// Regularization window parameters
 	bool	use_reg_window; 					// Use spatial regularization or not
@@ -102,19 +115,10 @@ struct eco_params
 	size_t  reg_window_power;					// The degree of the polynomial to use(e.g. 2 is a quadratic window)
 	float	reg_sparsity_threshold;				// A relative threshold of which DFT coefficients that should be set to zero
 
-
-	// Interpolation parameters
-	string  interpolation_method;				// The kind of interpolation kernel
-	float   interpolation_bicubic_a;			// The parameter for the bicubic interpolation kernel
-	bool    interpolation_centering;			// Center the kernel at the feature sample
-	bool    interpolation_windowing;			// Do additional windowing on the Fourier coefficients of the kernel
-
 	// Scale parameters for the translation model
-	// Only used if: params.use_scale_filter = false
 	size_t  number_of_scales ;					// Number of scales to run the detector
 	float   scale_step;                         // The scale factor
 	
-
 	//***  Conjugate Gradient parameters
 	int     CG_iter      = 5;                  // The number of Conjugate Gradient iterations in each update after the first frame
 	int     init_CG_iter = 10 * 15;            // The total number of Conjugate Gradient iterations used in the first frame

@@ -151,11 +151,12 @@ ECO_FEATS feature_extractor::get_cnn_layers(vector<cv::Mat> im,const cv::Mat& ym
 		{
 			cv::Mat feat_map(shape[2], shape[3], CV_32FC(1), (void*)pstart);
 			feat_map = feat_map.t();
-			const float* inData = feat_map.ptr<float>(0);
-			inData = pstart;
+			//const float* inData = feat_map.ptr<float>(0);
+			//inData = pstart;
 			pstart += shape[2] * shape[3];
 
-			cnn_params fparams = cnn_features.fparams;                                //  extract features according to fparamss
+			//  extract features according to fparamss
+			cnn_params fparams = cnn_features.fparams;  
 			cv::Mat extract_map = feat_map(cv::Range(fparams.start_ind[0 + 2 * idx] - 1, fparams.end_ind[0 + 2 * idx]),
 				cv::Range(fparams.start_ind[0 + 2 * idx] - 1, fparams.end_ind[0 + 2 * idx]));
 			
