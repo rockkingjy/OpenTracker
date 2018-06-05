@@ -189,7 +189,7 @@ int main(int argc, char **argv)
         line(frame, cv::Point(x3, y3), cv::Point(x4, y4), Scalar(0, 0, 0), 2, 1);
         line(frame, cv::Point(x4, y4), cv::Point(x1, y1), Scalar(0, 0, 0), 2, 1);
     }
-
+    imshow("Tracking", frame);
     // Init the trackers=================================================
     Rect2d kcfbbox(x, y, w, h);
     kcftracker.init(frame, kcfbbox);
@@ -209,7 +209,7 @@ int main(int argc, char **argv)
 
     while (frame.data)
     {
-        // Start timer
+        //KCF========================
         double timerkcf = (double)getTickCount();
         bool okkcf = kcftracker.update(frame, kcfbbox);
         float fpskcf = getTickFrequency() / ((double)getTickCount() - timerkcf);
@@ -229,6 +229,7 @@ int main(int argc, char **argv)
         // draw goturn bbox
         rectangle(frame, goturnbbox, Scalar(0, 0, 255), 2, 1); //red
 */
+        //DSST=============================
         double timerdsst = (double)getTickCount();
         bool okdsst = dssttracker.update(frame, dsstbbox);
         float fpsdsst = getTickFrequency() / ((double)getTickCount() - timerdsst);
@@ -241,11 +242,10 @@ int main(int argc, char **argv)
             putText(frame, "DSST tracking failure detected", cv::Point(100, 80), FONT_HERSHEY_SIMPLEX,
                     0.75, Scalar(0, 0, 255), 2);
         }
-
+        //Opencv========================================
         double timercv = (double)getTickCount();
         bool okopencv = opencvtracker->update(frame, opencvbbox);
         float fpscv = getTickFrequency() / ((double)getTickCount() - timercv);
-
         if (okopencv)
         {
             rectangle(frame, opencvbbox, Scalar(0, 225, 0), 2, 1); //green
@@ -256,7 +256,7 @@ int main(int argc, char **argv)
                     0.75, Scalar(0, 225, 0), 2);
         }
 
-        // Draw ground truth box
+        // Draw ground truth box===========================================
         if (databaseType == "TLP")
         {
             rectangle(frame, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
@@ -269,7 +269,7 @@ int main(int argc, char **argv)
         {
             rectangle(frame, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
         }
-        else if (databaseType == "VOT")
+        else if (databaseType == "VOT-2017")
         {
             line(frame, cv::Point(x1, y1), cv::Point(x2, y2), Scalar(0, 0, 0), 2, 1);
             line(frame, cv::Point(x2, y2), cv::Point(x3, y3), Scalar(0, 0, 0), 2, 1);
