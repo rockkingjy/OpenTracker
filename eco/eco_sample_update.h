@@ -28,7 +28,7 @@ namespace eco_sample_update{
 
 		void       init(const std::vector<cv::Size>& filter, const std::vector<int>& feature_dim);
 
-		void       update_sample_sapce_model( ECO_FEATS& new_train_sample);
+		void       update_sample_space_model( ECO_FEATS& new_train_sample);
 
 		cv::Mat    find_gram_vector( ECO_FEATS& new_train_sample) ;
 

@@ -37,8 +37,7 @@ class ECO
   public:
 	virtual ~ECO() {}
 
-	ECO(bool useDeepFeature = 0, const string &proto = "", const string &model = "",
-		const string &mean_file = "", const std::string &mean_yml = "");
+	ECO() {};
 
 	void init(cv::Mat &im, const cv::Rect &rect); //****** tracker intialization****
 
@@ -73,23 +72,20 @@ class ECO
 						   std::vector<cv::Mat> kx, std::vector<cv::Mat> ky);
 
   private:
-	bool 				useDeepFeature;
-	boost::shared_ptr<Net<float>> 	net; // *** VGG net
+	eco_params 			params;
+	boost::shared_ptr<Net<float>> 	net;
 	cv::Mat 			deep_mean_mat, yml_mean;
+
 	//*** the max size of feature and its index
 	size_t 				output_sz, max_output_index; //output_sz is T in (9) of C-COT paper
 	size_t 				frameID, frames_since_last_train;
-	cv::Point2f 		pos;
-
-	eco_params 			params; // *** ECO prameters ***
+	cv::Point2f 		pos; // final result.
 
 	//***  current target size,  initial target size,
 	cv::Size 			target_sz, img_sample_sz, img_support_sz;
 	cv::Size2f 			base_target_sz; // *** target size without scale
 	float 				currentScaleFactor; //*** current img scale 
 
-	cnn_feature 		cnn_features; //*** corresponding to original matlab features{1}
-	hog_feature 		hog_features; //*** corresponding to original matlab features{2}
 
 	vector<cv::Size> 	feature_sz, filter_sz;
 	vector<int> 		feature_dim, compressed_dim;

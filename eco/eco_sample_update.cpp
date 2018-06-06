@@ -35,7 +35,7 @@ namespace eco_sample_update{
 		prior_weights.resize(nSamples);
 	}
 
-	void  sample_update::update_sample_sapce_model(ECO_FEATS& new_train_sample)
+	void  sample_update::update_sample_space_model(ECO_FEATS& new_train_sample)
 	{
 		if (num_training_samples == 1)
 		{

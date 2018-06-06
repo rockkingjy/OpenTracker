@@ -34,14 +34,18 @@ class feature_extractor
 
 	virtual ~feature_extractor(){};
 
-	ECO_FEATS extractor(cv::Mat image, cv::Point2f pos,
-						vector<float> scales, const eco_params &gparams,
-						const cv::Mat &yml_mean, bool useDeepFeature = true,
-						const boost::shared_ptr<Net<float>> 
-						&net = boost::shared_ptr<Net<float>>());
+	ECO_FEATS extractor(cv::Mat 			image, 
+						cv::Point2f 		pos,
+						vector<float> 		scales,
+						const eco_params 	&params,
+						const cv::Mat 		&yml_mean,
+						const boost::shared_ptr<Net<float>> &net = boost::shared_ptr<Net<float>>());
 
-	cv::Mat sample_patch(const cv::Mat &im, const cv::Point2f &pos, cv::Size2f sample_sz,
-						 cv::Size2f output_sz, const eco_params &gparams);
+	cv::Mat sample_patch(const cv::Mat &im, 
+						 const cv::Point2f &pos, 
+						 cv::Size2f sample_sz,
+						 cv::Size2f output_sz, 
+						 const eco_params &gparams);
 
 	vector<cv::Mat> get_hog(vector<cv::Mat> im);
 

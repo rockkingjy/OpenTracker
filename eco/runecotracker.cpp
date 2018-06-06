@@ -65,13 +65,6 @@ void drawBox(cv::Mat& image, cv::Rect box, cv::Scalar color, int thick){
 
 int main()
 {
-
-    //***********load net prototxt ********************************
-    const string proto("model/imagenet-vgg-m-2048.prototxt");
-    const string model("model/VGG_CNN_M_2048.caffemodel");
-    const string mean_file("model/VGG_mean.binaryproto");
-    const std::string mean_yml("model/mean.yml");
-
     string databaseTypes[4] = {"VOT-2017", "TB-2015", "TLP", "UAV123"};
     string databaseType = databaseTypes[0];
     // Read from the images ====================================================
@@ -206,7 +199,7 @@ int main()
 
     imshow("Tracking", frame);
 
-    ECO ecotracker(0, proto, model, mean_file, mean_yml);
+    ECO ecotracker;
     Rect2d ecobbox(x, y, w, h);
     ecotracker.init(frame, ecobbox);
 
@@ -247,7 +240,7 @@ int main()
         }
 
         // Display FPS on frame
-        putText(frame, "FPS in total: " + SSTR(long(fpseco)), Point(100, 50), FONT_HERSHEY_SIMPLEX,
+        putText(frame, "FPS: " + SSTR(float(fpseco)), Point(100, 50), FONT_HERSHEY_SIMPLEX,
                 0.75, Scalar(0, 225, 0), 2);
 
         imshow("Tracking", frame);
