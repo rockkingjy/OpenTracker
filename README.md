@@ -27,7 +27,9 @@ Included                                   | Dataset    | Reference
 --------------------------------
 For the environment settings and detailed procedures(with all the packages from the very beginning), refer to: [[My DeeplearningSettings](https://github.com/rockkingjy/DeepLearningSettings)].
 
-For trackers that use Deep features, you need to install [[caffe](https://github.com/rockkingjy/caffe)], and change the **makefile** according to your path. Compile of caffe refer to : [[Install caffe by makefile](https://github.com/rockkingjy/DeepLearningSettings/blob/master/caffe.md)].
+The only extra-package is: **Opencv3.x**(already installed if you follow the environment settings above).
+
+Of course, for trackers that use Deep features, you need to install [[caffe](https://github.com/rockkingjy/caffe)], and change the **makefile** according to your path. Compile of caffe refer to : [[Install caffe by makefile](https://github.com/rockkingjy/DeepLearningSettings/blob/master/caffe.md)].
 
 ## Run to compare all the trackers
 ```
@@ -149,7 +151,7 @@ J. van de Weijer, C. Schmid, J. J. Verbeek, and D. Larlus.
     Object tracking benchmark.  
     In CVPR, 2013.  
 
-## VOT datavase
+## VOT database
 http://votchallenge.net/
 
 
