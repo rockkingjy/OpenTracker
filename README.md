@@ -1,23 +1,26 @@
 **Why most of the trackers are written by matlab? I hate that! Cpp is fast and clear! I even doubt that the FPS measured by using matlab is not really meaningful, especially for actual and embedded system use! So I will re-implement those trackers by cpp day by day, hope you like it!**
 
 
-## Supported tracker:
+## Supported tracker (more in progressing):
 Included                                   | Tracker    
 -------------------------------------------|---------------
 :ballot_box_with_check:                    | CSK          
 :ballot_box_with_check:                    | KCF          
 :ballot_box_with_check:                    | DSST          
 :ballot_box_with_check:                    | GOTURN         
-:ballot_box_with_check:                    | ECO         
+ :construction-worker:                     | ECO         
+ :construction-worker:                     | C-COT
+ :construction-worker:                     | SRDCF
+ :construction-worker:                     | SRDCF-Deep                           
 
-## Supported Dataset (more on progress):
+## Supported Dataset (more in progressing):
 
 Included                                   | Dataset    | Reference
 -------------------------------------------|--------------|-----------
 :ballot_box_with_check:                    | TLP          | [Web](https://amoudgl.github.io/tlp/)
 :ballot_box_with_check:                    | UAV123       | [Web](https://ivul.kaust.edu.sa/Pages/Dataset-UAV123.aspx)
 :ballot_box_with_check:                    | VOT-2017     | [Web](http://votchallenge.net/vot2017/dataset.html)
-:ballot_box_with_check:                    | TB-2015     | [Web](http://cvlab.hanyang.ac.kr/tracker_benchmark/index.html)
+:ballot_box_with_check:                    | TB-2015      | [Web](http://cvlab.hanyang.ac.kr/tracker_benchmark/index.html)
 
 
 
