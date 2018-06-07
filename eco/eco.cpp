@@ -330,12 +330,10 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2d &roi)
 	cv::Point2f shift_samp = 2 * CV_PI * cv::Point2f(pos - cv::Point2f(sample_pos))
 							 * (1 / (currentScaleFactor * img_support_sz.width));
 	xlf_proj = shift_sample(xlf_proj, shift_samp, kx, ky);
-	ddebug();
 
 	// 3: Update the samples to include the new sample, the distance matrix, 
 	// kernel matrix and prior weight are also updated
 	SampleUpdate.update_sample_space_model(xlf_proj);
-	ddebug();
 
 	// 4: insert new sample
 	if (SampleUpdate.get_merge_id() > 0)
