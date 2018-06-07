@@ -89,8 +89,10 @@ void ECO::init(cv::Mat &im, const cv::Rect &rect)
 	feature_sz.push_back(params.hog_features.data_sz_block1);			   //=63x63
 	feature_dim.push_back(params.hog_features.fparams.nDim);			   //=31
 	compressed_dim.push_back(params.hog_features.fparams.compressed_dim); //=10
-	debug("features: %d %d %d %d", feature_sz[0].width, feature_sz[0].height, feature_dim[0], compressed_dim[0]);
-
+	for(size_t i = 0; i < feature_sz.size(); i++)
+	{
+		debug("features %lu: %d %d %d %d", i, feature_sz[i].width, feature_sz[i].height, feature_dim[i], compressed_dim[i]);
+	}
 	// *** Number of Fourier coefficients to save for each filter layer. This will be an odd number.
 	max_output_index = 0;
 	output_sz = 0;
@@ -99,6 +101,7 @@ void ECO::init(cv::Mat &im, const cv::Rect &rect)
 	{
 		size_t size = feature_sz[i].width + (feature_sz[i].width + 1) % 2; //=63, to make it as an odd number;
 		filter_sz.push_back(cv::Size(size, size));
+		debug("filter_sz %lu: %d, %d", i, filter_sz[i].height, filter_sz[i].width);
 		// get the largest feature and it's index;
 		max_output_index = size > output_sz ? i : max_output_index;
 		output_sz = std::max(size, output_sz);
@@ -108,7 +111,6 @@ void ECO::init(cv::Mat &im, const cv::Rect &rect)
 	// *** Compute the Fourier series indices k.
 	for (size_t i = 0; i < filter_sz.size(); ++i) // for each filter
 	{
-		debug("i: %lu, N: %d", i, filter_sz[i].height);
 		cv::Mat_<float> tempy(filter_sz[i].height, 1, CV_32FC1);
 		cv::Mat_<float> tempx(1, filter_sz[i].height / 2 + 1, CV_32FC1); // why 1/2 in x?===========????
 
@@ -124,7 +126,8 @@ void ECO::init(cv::Mat &im, const cv::Rect &rect)
 			tempx.at<float>(0, j) = j - (filter_sz[i].height / 2);
 		}
 		kx.push_back(tempx);
-		debug("ky:%d %d, kx:%d %d", ky[i].size().height, ky[i].size().width, kx[i].size().height, kx[i].size().width);
+		debug("i: %lu, N: %d, ky:%d %d, kx:%d %d", i, filter_sz[i].height,
+					 ky[i].size().height, ky[i].size().width, kx[i].size().height, kx[i].size().width);
 	}
 
 	// *** construct the Gaussian label function using Poisson formula
@@ -198,7 +201,7 @@ void ECO::init(cv::Mat &im, const cv::Rect &rect)
 
 	//*** Update the samples to include the new sample.
 	// The distance matrix, kernel matrix and prior weight are also updated
-	SampleUpdate.init(filter_sz, compressed_dim);
+	SampleUpdate.init(filter_sz, compressed_dim, params.nSamples);
 
 	SampleUpdate.update_sample_space_model(xlf_porj);
 
@@ -334,7 +337,7 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2d &roi)
 	// 3: Update the samples to include the new sample, the distance matrix, 
 	// kernel matrix and prior weight are also updated
 	SampleUpdate.update_sample_space_model(xlf_proj);
-
+	ddebug();
 	// 4: insert new sample
 	if (SampleUpdate.get_merge_id() > 0)
 	{
@@ -378,10 +381,10 @@ void ECO::init_features()
 	if (params.useDeepFeature)
 	{
 		//******** the cnn feature intialization **********
-		params.cnn_features.fparams.start_ind = vector<int>({3, 3, 1, 1});
-		params.cnn_features.fparams.end_ind = vector<int>({106, 106, 13, 13});
+		//params.cnn_features.fparams.start_ind = vector<int>({3, 3, 1, 1});
+		//params.cnn_features.fparams.end_ind = vector<int>({106, 106, 13, 13});
 
-		params.cnn_features.img_input_sz = cv::Size(224, 224);
+		//params.cnn_features.img_input_sz = cv::Size(224, 224);
 		params.cnn_features.img_sample_sz = img_sample_sz;
 
 		std::vector<cv::Size> cnn_output_sz;

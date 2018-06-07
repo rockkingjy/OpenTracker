@@ -6,27 +6,22 @@
 #include <opencv2/opencv.hpp>
 #include <numeric>
 
+#include "feature_type.h"
 #include "fftTool.h"
 #include "feature_operator.h"
 
 using namespace FFTTools;
-
-#define	SAMPPLE_MAX_NUM  50
-#define INF              0x7fffffff 
 
 namespace eco_sample_update{
 
 	class sample_update
 	{
 	public:
-		typedef std::vector<std::vector<cv::Mat> > ECO_FEATS;
-		typedef cv::Vec<float, 2>        COMPLEX;
-
 		sample_update(){};
 
 		virtual    ~sample_update(){};
 
-		void       init(const std::vector<cv::Size>& filter, const std::vector<int>& feature_dim);
+		void       init(const std::vector<cv::Size>& filter, const std::vector<int>& feature_dim, size_t max_samples);
 
 		void       update_sample_space_model( ECO_FEATS& new_train_sample);
 
@@ -53,9 +48,9 @@ namespace eco_sample_update{
 		std::vector<ECO_FEATS>  get_samples() const{ return samples_f; }
 
 	private:
-		 mutable cv::Mat                    distance_matrix, gram_matrix;  //**** distance matrix and its kernel
+		 mutable cv::Mat                    distance_matrix, gram_matrix; //**** distance matrix and its kernel
 		  
-		 const int                          nSamples = SAMPPLE_MAX_NUM; 
+		 size_t                          	nSamples = 50; 
 
 		 const float                        learning_rate = 0.009;
 
@@ -63,9 +58,9 @@ namespace eco_sample_update{
 
 		 mutable std::vector<float>         sample_weight;
 
-		 mutable std::vector<ECO_FEATS>     samples_f;                     //**** all samples frontier ******
+		 mutable std::vector<ECO_FEATS>     samples_f; // all samples frontier
 
-		 mutable int                        num_training_samples = 0;      //**** the number of training samples ********
+		 mutable int                        num_training_samples = 0; 
 
 		 std::vector<float>                 prior_weights;
 

@@ -86,7 +86,6 @@ class ECO
 	cv::Size2f 			base_target_sz; // *** target size without scale
 	float 				currentScaleFactor; //*** current img scale 
 
-
 	vector<cv::Size> 	feature_sz, filter_sz;
 	vector<int> 		feature_dim, compressed_dim;
 
