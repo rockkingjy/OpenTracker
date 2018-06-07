@@ -48,25 +48,25 @@ namespace eco_sample_update{
 		std::vector<ECO_FEATS>  get_samples() const{ return samples_f; }
 
 	private:
-		 mutable cv::Mat                    distance_matrix, gram_matrix; //**** distance matrix and its kernel
+		 cv::Mat                    distance_matrix, gram_matrix; //**** distance matrix and its kernel
 		  
-		 size_t                          	nSamples = 50; 
+		 size_t                     nSamples = 50; 
 
-		 const float                        learning_rate = 0.009;
+		 const float                learning_rate = 0.009;
 
-		 const float                        minmum_sample_weight = 0.0036;
+		 const float                minmum_sample_weight = 0.0036;
 
-		 mutable std::vector<float>         sample_weight;
+		 std::vector<float>         sample_weight;
 
-		 mutable std::vector<ECO_FEATS>     samples_f; // all samples frontier
+		 std::vector<ECO_FEATS>     samples_f; // all samples frontier
 
-		 mutable int                        num_training_samples = 0; 
+		 size_t		                num_training_samples = 0; 
 
-		 std::vector<float>                 prior_weights;
+		 std::vector<float>         prior_weights;
 
-		 ECO_FEATS                          new_sample, merged_sample;
+		 ECO_FEATS                  new_sample, merged_sample;
 
-		 int                                merged_sample_id = -1, new_sample_id = -1;
+		 int                        merged_sample_id = -1, new_sample_id = -1;
 
 	};
 

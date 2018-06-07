@@ -9,7 +9,7 @@ namespace eco_sample_update
 void sample_update::init(const std::vector<cv::Size> &filter, const std::vector<int> &feature_dim, size_t max_samples)
 {
 	nSamples = max_samples;
-	// distance matrix initialization 
+	// distance matrix initialization
 	distance_matrix.create(cv::Size(nSamples, nSamples), CV_32FC2);
 	gram_matrix.create(cv::Size(nSamples, nSamples), CV_32FC2);
 	
@@ -33,12 +33,11 @@ void sample_update::init(const std::vector<cv::Size> &filter, const std::vector<
 			temp.push_back(temp_single_feat);
 		}
 		samples_f.push_back(temp);
-
-		for (size_t j = 0; j < (size_t)feature_dim.size(); j++)
-		{
-			debug("samples: %lu, features: %lu, size: %lu, %d, %d", n, j, samples_f[n][j].size(), 
-					samples_f[n][j][0].rows, samples_f[n][j][0].cols);
-		}
+	}
+	for (size_t j = 0; j < (size_t)feature_dim.size(); j++)
+	{
+		debug("samples: %lu, features: %lu, size: %lu, mat: %d x %d", nSamples, j, samples_f[nSamples - 1][j].size(),
+			  samples_f[nSamples - 1][j][feature_dim[j] - 1].rows, samples_f[nSamples - 1][j][feature_dim[j] - 1].cols);
 	}
 	// resize prior weights to the same as nSamples
 	prior_weights.resize(nSamples);
@@ -46,15 +45,9 @@ void sample_update::init(const std::vector<cv::Size> &filter, const std::vector<
 
 void sample_update::update_sample_space_model(ECO_FEATS &new_train_sample)
 {
-	if (num_training_samples == 1)
-	{
-		//int i = 0;
-	};
-	//int unm_feature_blocks = new_train_sample.size();
-
 	//*** Find the inner product of the new sample with existing samples ***
 	cv::Mat gram_vector = find_gram_vector(new_train_sample);
-
+	
 	float new_train_sample_norm = 2 * FeatEnergy(new_train_sample);
 	cv::Mat dist_vec(nSamples, 1, CV_32FC2);
 	for (size_t i = 0; i < nSamples; i++)
@@ -68,7 +61,7 @@ void sample_update::update_sample_space_model(ECO_FEATS &new_train_sample)
 
 	std::vector<int> merged_sample;
 
-	if ((size_t)num_training_samples == nSamples) //*** if memory is full   ****
+	if (num_training_samples == nSamples) //*** if memory is full   ****
 	{
 		float min_sample_weight = INF;
 		int min_sample_id = 0;
@@ -172,8 +165,9 @@ void sample_update::update_sample_space_model(ECO_FEATS &new_train_sample)
 				new_sample = new_train_sample;
 				ddebug();
 			}
+			debug("num_training_samples: %lu", num_training_samples);
+			ddebug();
 		}
-
 	}	//**** end if memory is full *******
 	else //*** if memory is not full ***
 	{
@@ -193,6 +187,7 @@ void sample_update::update_sample_space_model(ECO_FEATS &new_train_sample)
 		new_sample = new_train_sample;
 
 		num_training_samples++;
+		debug("num_training_samples: %lu", num_training_samples);
 	}
 }
 
@@ -203,7 +198,7 @@ cv::Mat sample_update::find_gram_vector(ECO_FEATS &new_train_sample)
 		result.at<cv::Vec<float, 2>>(i, 0) = cv::Vec<float, 2>(INF, 0);
 
 	std::vector<float> dist_vec;
-	for (size_t i = 0; i < (size_t)num_training_samples; i++)
+	for (size_t i = 0; i < num_training_samples; i++)
 	{
 		dist_vec.push_back(2 * feat_dis_compute(samples_f[i], new_train_sample));
 	}
@@ -213,7 +208,8 @@ cv::Mat sample_update::find_gram_vector(ECO_FEATS &new_train_sample)
 	return result;
 }
 
-float sample_update::feat_dis_compute(std::vector<std::vector<cv::Mat>> &feat1, std::vector<std::vector<cv::Mat>> &feat2)
+float sample_update::feat_dis_compute(std::vector<std::vector<cv::Mat>> &feat1,
+									  std::vector<std::vector<cv::Mat>> &feat2)
 {
 	if (feat1.size() != feat2.size())
 		return 0;
