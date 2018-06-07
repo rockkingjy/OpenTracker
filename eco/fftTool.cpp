@@ -55,27 +55,18 @@ namespace FFTTools
 
 	cv::Mat complexMultiplication(cv::Mat a, cv::Mat b)
 	{
+		if (a.channels() == 1)     // for single channel image s
+		{
+			std::vector<cv::Mat> a_vector = { a, cv::Mat::zeros(a.size(), CV_32FC1)};
+			cv::merge(a_vector, a);
+		}
+
 		if (b.channels() == 1)     // for single channel image s
 		{
-			std::vector<cv::Mat> bb = { b, cv::Mat::zeros(b.size(), CV_32FC1)};
-			cv::merge(bb, b);
+			std::vector<cv::Mat> b_vector = { b, cv::Mat::zeros(b.size(), CV_32FC1)};
+			cv::merge(b_vector, b);
 		}
 
-
-		cv::Mat res(a.rows, b.cols, CV_32FC2);
-		
-		for (size_t i = 0; i < (size_t)a.rows; i++)
-		{
-			for (size_t j = 0; j < (size_t)b.cols; j++)
-			{
-				cv::Complex<float> ai(a.at<cv::Vec<float, 2>>(i, j)[0], a.at<cv::Vec<float, 2>>(i, j)[1]),
-					bi(b.at<cv::Vec<float, 2>>(i, j)[0], b.at<cv::Vec<float, 2>>(i, j)[1]),c;
-				c = ai * bi;
-				res.at<cv::Vec<float, 2>>(i, j) = cv::Vec<float, 2>(c.re, c.im);
-			}
-		}
-
-		/*
 		std::vector<cv::Mat> pa;
 		std::vector<cv::Mat> pb;
 		cv::split(a, pa);
@@ -88,8 +79,9 @@ namespace FFTTools
 
 		cv::Mat res;
 		cv::merge(pres, res);
-*/
+	
 		return res;
+	
 	}
 
 	cv::Mat complexDivision(cv::Mat a, cv::Mat b)
@@ -163,27 +155,14 @@ namespace FFTTools
 
 	cv::Mat mat_conj(const cv::Mat& org)
 	{
-		//cv::Mat conj(org.size(), org.type());
-		//if (org.empty())
-		//	return org;
-		//for (size_t r = 0; r < org.rows; r++)
-		//{
-		//	for (size_t  c = 0; c < org.cols; c++)
-		//	{
-		//		conj.at<cv::Vec<float, 2> >(r, c) = conjugate(org.at<cv::Vec<float, 2> >(r, c));
-		//	}
-		//}
-		//return conj;
 		if (org.empty())
 			return org;
 		std::vector<cv::Mat_<float>> planes;
 		cv::split(org,planes);
-		planes[1]=-planes[1];
+		planes[1] = -planes[1];
 		cv::Mat result;
 		cv::merge(planes,result);
 		return result;
-		
-		
 	}
 
 	float mat_sum(const cv::Mat& org)

@@ -65,7 +65,7 @@ struct eco_params
 	hog_feature 		hog_features; 
 
 	// Features
-	bool 	useDeepFeature 		 = false;
+	bool 	useDeepFeature 		 = true;
 
 	// img sample parameters 
 	string search_area_shape 	 = "square";	// The shape of the samples
