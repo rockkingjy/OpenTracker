@@ -1,4 +1,4 @@
-**Why most of the trackers are written by matlab? I hate that! Cpp is fast and clear! I even doubt that the FPS measured by using matlab is not really meaningful, especially for actual and embedded system use! So I will re-implement those trackers by cpp day by day, hope you like it!**
+**Why most of the trackers are written by matlab? I hate that! C++ is fast and clear! I even doubt that the FPS measured by using matlab is really meaningful, especially for actual and embedded system use! So I will re-implement those trackers by cpp day by day, keep the clarity and less extra-package in mind, hope you like it!**
 
 
 ## Supported tracker (more in progressing):
@@ -9,7 +9,7 @@ Included                                   | Tracker
 :ballot_box_with_check:                    | DSST          
 :ballot_box_with_check:                    | GOTURN         
  :hammer:                    | ECO         
- :hammer:                     | C-COT
+ :hammer:                    | C-COT
  :hammer:                    | SRDCF
  :hammer:                    | SRDCF-Deep                           
 
@@ -23,7 +23,8 @@ Included                                   | Dataset    | Reference
 :ballot_box_with_check:                    | TB-2015      | [Web](http://cvlab.hanyang.ac.kr/tracker_benchmark/index.html)
 
 
-
+# Compile and Run
+--------------------------------
 ## Run to compare all the trackers
 ```
 make all
@@ -67,25 +68,8 @@ make -j12
 ## Run ECO
 In developing...
 
+# References (not complete, tell me if I forgot you)
 --------------------------------
-## KCF Tracker
-
-J. F. Henriques, R. Caseiro, P. Martins, J. Batista,   
-"High-Speed Tracking with Kernelized Correlation Filters", TPAMI 2015.
-
-J. F. Henriques, R. Caseiro, P. Martins, J. Batista,   
-"Exploiting the Circulant Structure of Tracking-by-detection with Kernels", ECCV 2012.
-
-Authors: Joao Faro, Christian Bailer, Joao F. Henriques   
-Contacts: joaopfaro@gmail.com, Christian.Bailer@dfki.de, henriques@isr.uc.pt   
-Institute of Systems and Robotics - University of Coimbra / Department of Augmented Vision DFKI   
-
-The code has been referred to: [[joaofaro/KCFcpp](https://github.com/joaofaro/KCFcpp)].
-
-## DSST Tracker
-M. Danelljan, G. Häger, F. Shahbaz Khan, and M. Felsberg. Discriminative Scale Space Tracking, 2016
-
-The code has been referred to: [[liliumao/KCF-DSST](https://github.com/liliumao/KCF-DSST)], the max_scale_factor and min_scale_factor is set to 10 and 0.1 in case of divergence error(Especially run on UAV123 dataset when the object is quite small, ex.uav2/3/4...).
 
 ## GOTURN Tracker
 **[Learning to Track at 100 FPS with Deep Regression Networks](http://davheld.github.io/GOTURN/GOTURN.html)**,
@@ -96,11 +80,74 @@ The code has been referred to: [[liliumao/KCF-DSST](https://github.com/liliumao/
 <br>
 European Conference on Computer Vision (ECCV), 2016 (In press)
 
-The code has been referred to: [[davheld/GOTURN](https://github.com/davheld/GOTURN)].
+## KCF Tracker
+J. F. Henriques, R. Caseiro, P. Martins, J. Batista,   
+"High-Speed Tracking with Kernelized Correlation Filters", TPAMI 2015.
+
+## CSK Tracker
+J. F. Henriques, R. Caseiro, P. Martins, J. Batista,   
+"Exploiting the Circulant Structure of Tracking-by-detection with Kernels", ECCV 2012.
 
 ## ECO Tracker
-
 Martin Danelljan, Goutam Bhat, Fahad Khan, Michael Felsberg.  
 <a href="https://arxiv.org/abs/1611.09224">ECO: Efficient Convolution Operators for Tracking</a>.  
 In Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR), 2017. 
+
+## C-COT Tracker
+Martin Danelljan, Andreas Robinson, Fahad Khan, Michael Felsberg.  
+    Beyond Correlation Filters: Learning Continuous Convolution Operators for Visual Tracking.  
+    In Proceedings of the European Conference on Computer Vision (ECCV), 2016.  
+    http://www.cvl.isy.liu.se/research/objrec/visualtracking/conttrack/index.html
+    
+## SRDCF Tracker
+Martin Danelljan, Gustav Häger, Fahad Khan, Michael Felsberg.  
+    Learning Spatially Regularized Correlation Filters for Visual Tracking.  
+    In Proceedings of the International Conference in Computer Vision (ICCV), 2015.  
+    http://www.cvl.isy.liu.se/research/objrec/visualtracking/regvistrack/index.html
+
+## SRDCF-Deep Tracker
+Martin Danelljan, Gustav Häger, Fahad Khan, Michael Felsberg.  
+    Convolutional Features for Correlation Filter Based Visual Tracking.  
+    ICCV workshop on the Visual Object Tracking (VOT) Challenge, 2015.  
+    http://www.cvl.isy.liu.se/research/objrec/visualtracking/regvistrack/index.html
+	
+## DSST Tracker
+Martin Danelljan, Gustav Häger, Fahad Khan and Michael Felsberg.  
+    Accurate Scale Estimation for Robust Visual Tracking.  
+    In Proceedings of the British Machine Vision Conference (BMVC), 2014.  
+    http://www.cvl.isy.liu.se/research/objrec/visualtracking/scalvistrack/index.html
+    
+
+Martin Danelljan, Gustav Häger, Fahad Khan, Michael Felsberg.  
+    Discriminative Scale Space Tracking.  
+    Transactions on Pattern Analysis and Machine Intelligence (TPAMI), 2017.  
+    http://www.cvl.isy.liu.se/research/objrec/visualtracking/scalvistrack/index.html
+
+## Color Names feature
+J. van de Weijer, C. Schmid, J. J. Verbeek, and D. Larlus.  
+    Learning color names for real-world applications.  
+    TIP, 18(7):1512–1524, 2009.  
+
+## OBT database
+ Y. Wu, J. Lim, and M.-H. Yang.  
+    Online object tracking: A benchmark.  
+    In CVPR, 2013.  
+    https://sites.google.com/site/trackerbenchmark/benchmarks/v10
+
+## VOT datavase
+http://votchallenge.net/
+
+
+## Code references:
+
+KCF: [[joaofaro/KCFcpp](https://github.com/joaofaro/KCFcpp)].
+
+DSST: [[liliumao/KCF-DSST](https://github.com/liliumao/KCF-DSST)], the max_scale_factor and min_scale_factor is set to 10 and 0.1 in case of divergence error (Tested on UAV123 dataset when the object is quite small, ex.uav2/3/4...).
+
+GOTURN: [[davheld/GOTURN](https://github.com/davheld/GOTURN)].
+
+ECO: [[martin-danelljan/ECO]](https://github.com/martin-danelljan/ECO)].
+
+
+
 
