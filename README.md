@@ -25,11 +25,11 @@ Included                                   | Dataset    | Reference
 
 # Compile and Run
 --------------------------------
-For the **environment settings** and detailed procedures(with all the packages from the very beginning), refer to: [[My DeeplearningSettings](https://github.com/rockkingjy/DeepLearningSettings)].
+For the **environment settings** and detailed procedures (with all the packages from the very beginning), refer to: [[My DeeplearningSettings](https://github.com/rockkingjy/DeepLearningSettings)].
 
-The only extra-package is: **Opencv3.x**(already installed if you follow the environment settings above).
+The only extra-package is: **Opencv3.x** (already installed if you follow the environment settings above).
 
-Of course, for trackers that use Deep features, you need to install [[**caffe**](https://github.com/rockkingjy/caffe)](maybe I will use Darknet with C in the future, I like Darknet!), and change the **makefile** according to your path. Compile of caffe refer to : [[Install caffe by makefile](https://github.com/rockkingjy/DeepLearningSettings/blob/master/caffe.md)].
+Of course, for trackers that use Deep features, you need to install [[**caffe**](https://github.com/rockkingjy/caffe)] (maybe I will use Darknet with C in the future, I like Darknet :lips: ), and change the **makefile** according to your path. Compile of caffe refer to : [[Install caffe by makefile](https://github.com/rockkingjy/DeepLearningSettings/blob/master/caffe.md)].
 
 ## Run to compare all the trackers
 ```
