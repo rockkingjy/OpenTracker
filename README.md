@@ -1,4 +1,4 @@
-**Why most of the trackers are written by matlab? I hate that! C++ is fast and clear! I even doubt that the FPS measured by using matlab is really meaningful, especially for actual and embedded system use! So I will re-implement those trackers by cpp day by day, keep the clarity and less extra-packages in mind, hope you like it!**
+**Why most of the trackers are written by matlab? Slow speed, lots of extra-packages, need lots of money to buy the licences, version compliance problems (gcc4.9 gcc5.0 oh my god)... Anyway, I hate that! C++ is fast and clear! I even doubt that the FPS measured by using matlab is really meaningful, especially for actual and embedded system use! So I will re-implement those trackers by cpp day by day, keep the clarity and less extra-packages in mind, hope you like it!**
 
 
 ## Supported tracker (more in progressing):
@@ -76,8 +76,9 @@ Change the path of your test images in **eco/runecotracker.cpp**.
 You can download a pretrained [[VGG_CNN_M_2048.caffemodel (370 MB)](https://drive.google.com/file/d/1-kYYCcTR7gBZyHM5oVChNvu0Q9XPdva3/view?usp=sharing)], put it into folder: **eco/model**
 
 
-# References (not complete, tell me if I forgot you)
+# References 
 --------------------------------
+(not complete, tell me if I forgot you)
 
 ## GOTURN Tracker
 **[Learning to Track at 100 FPS with Deep Regression Networks](http://davheld.github.io/GOTURN/GOTURN.html)**,
@@ -155,7 +156,7 @@ J. van de Weijer, C. Schmid, J. J. Verbeek, and D. Larlus.
 http://votchallenge.net/
 
 
-## Code references
+## Some code references
 
 KCF: [joaofaro/KCFcpp](https://github.com/joaofaro/KCFcpp).
 
