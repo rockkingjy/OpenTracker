@@ -129,6 +129,11 @@ Martin Danelljan, Gustav Häger, Fahad Khan, Michael Felsberg.
     Transactions on Pattern Analysis and Machine Intelligence (TPAMI), 2017.  
     http://www.cvl.isy.liu.se/research/objrec/visualtracking/scalvistrack/index.html
 
+## HOG feature
+N. Dalal and B. Triggs. 
+    Histograms of oriented gradients for human detection. 
+    In CVPR, 2005. 
+
 ## Color Names feature
 J. van de Weijer, C. Schmid, J. J. Verbeek, and D. Larlus.  
     Learning color names for real-world applications.  
@@ -137,8 +142,12 @@ J. van de Weijer, C. Schmid, J. J. Verbeek, and D. Larlus.
 ## OBT database
  Y. Wu, J. Lim, and M.-H. Yang.  
     Online object tracking: A benchmark.  
-    In CVPR, 2013.  
+    TPAMI 37(9), 1834-1848 (2015).  
     https://sites.google.com/site/trackerbenchmark/benchmarks/v10
+
+ Y. Wu, J. Lim, and M.-H. Yang.  
+    Object tracking benchmark.  
+    In CVPR, 2013.  
 
 ## VOT datavase
 http://votchallenge.net/
