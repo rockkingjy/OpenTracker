@@ -1,4 +1,4 @@
-**Why most of the trackers are written by matlab? I hate that! C++ is fast and clear! I even doubt that the FPS measured by using matlab is really meaningful, especially for actual and embedded system use! So I will re-implement those trackers by cpp day by day, keep the clarity and less extra-package in mind, hope you like it!**
+**Why most of the trackers are written by matlab? I hate that! C++ is fast and clear! I even doubt that the FPS measured by using matlab is really meaningful, especially for actual and embedded system use! So I will re-implement those trackers by cpp day by day, keep the clarity and less extra-packages in mind, hope you like it!**
 
 
 ## Supported tracker (more in progressing):
@@ -25,6 +25,10 @@ Included                                   | Dataset    | Reference
 
 # Compile and Run
 --------------------------------
+For the environment settings and detailed procedures(with all the packages from the very beginning), refer to: [[My DeeplearningSettings](https://github.com/rockkingjy/DeepLearningSettings)].
+
+For trackers that use Deep features, you need to install [[caffe](https://github.com/rockkingjy/caffe)], and change the **makefile** according to your path. Compile of caffe refer to : [[Install caffe by makefile](https://github.com/rockkingjy/DeepLearningSettings/blob/master/caffe.md)].
+
 ## Run to compare all the trackers
 ```
 make all
@@ -50,9 +54,8 @@ make -j12
 ## Run GOTURN
 Change the path of your test images in **goturn/rungoturntracker.cpp**.
 
-Need to install [[caffe](https://github.com/rockkingjy/caffe)], and change the goturn/makefile according to your installation.
 ### Pretrained model
-You can download a pretrained [[tracker model (434 MB)](https://drive.google.com/file/d/1uc9k8sTqug_EY9kv1v_QnrDxjkrTJejR/view?usp=sharing)], put it into folder: **goturn/nets**
+You can download a pretrained [[goturun_tracker.caffemodel (434 MB)](https://drive.google.com/file/d/1uc9k8sTqug_EY9kv1v_QnrDxjkrTJejR/view?usp=sharing)], put it into folder: **goturn/nets**
 
 ```
 cd goturn
@@ -66,7 +69,10 @@ make -j12
 ```
 
 ## Run ECO
-In developing...
+Change the path of your test images in **eco/runecotracker.cpp**.
+
+You can download a pretrained [[VGG_CNN_M_2048.caffemodel (370 MB)](https://drive.google.com/file/d/1-kYYCcTR7gBZyHM5oVChNvu0Q9XPdva3/view?usp=sharing)], put it into folder: **eco/model**
+
 
 # References (not complete, tell me if I forgot you)
 --------------------------------
@@ -138,7 +144,7 @@ J. van de Weijer, C. Schmid, J. J. Verbeek, and D. Larlus.
 http://votchallenge.net/
 
 
-## Code references:
+## Code references
 
 KCF: [[joaofaro/KCFcpp](https://github.com/joaofaro/KCFcpp)].
 
