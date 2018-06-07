@@ -12,7 +12,7 @@ void sample_update::init(const std::vector<cv::Size> &filter, const std::vector<
 	// distance matrix initialization
 	distance_matrix.create(cv::Size(nSamples, nSamples), CV_32FC2);
 	gram_matrix.create(cv::Size(nSamples, nSamples), CV_32FC2);
-	
+
 	for (size_t i = 0; i < (size_t)distance_matrix.rows; i++)
 	{
 		for (size_t j = 0; j < (size_t)distance_matrix.cols; j++)
@@ -47,7 +47,7 @@ void sample_update::update_sample_space_model(ECO_FEATS &new_train_sample)
 {
 	//*** Find the inner product of the new sample with existing samples ***
 	cv::Mat gram_vector = find_gram_vector(new_train_sample);
-	
+
 	float new_train_sample_norm = 2 * FeatEnergy(new_train_sample);
 	cv::Mat dist_vec(nSamples, 1, CV_32FC2);
 	for (size_t i = 0; i < nSamples; i++)
@@ -58,8 +58,6 @@ void sample_update::update_sample_space_model(ECO_FEATS &new_train_sample)
 		else
 			dist_vec.at<cv::Vec<float, 2>>(i, 0) = cv::Vec<float, 2>(INF, 0);
 	}
-
-	std::vector<int> merged_sample;
 
 	if (num_training_samples == nSamples) //*** if memory is full   ****
 	{
@@ -87,7 +85,6 @@ void sample_update::update_sample_space_model(ECO_FEATS &new_train_sample)
 		}
 		else
 		{
-
 			//*** If no sample has low enough prior weight, then we either merge
 			//*** the new sample with an existing sample, or merge two of the
 			//*** existing samples and insert the new sample in the vacated position
@@ -119,8 +116,8 @@ void sample_update::update_sample_space_model(ECO_FEATS &new_train_sample)
 				ECO_FEATS existing_sample_to_merge = samples_f[merged_sample_id];
 
 				//*** Merge the new_train_sample with existing sample ***
-				ECO_FEATS merged_sample = merge_samples(existing_sample_to_merge, new_train_sample,
-														prior_weights[merged_sample_id], learning_rate, std::string("merge"));
+				merged_sample = merge_samples(existing_sample_to_merge, new_train_sample,
+											  prior_weights[merged_sample_id], learning_rate, std::string("merge"));
 
 				//*** Update distance matrix and the gram matrix
 				update_distance_matrix(gram_vector, new_train_sample_norm, merged_sample_id, -1,
@@ -133,7 +130,6 @@ void sample_update::update_sample_space_model(ECO_FEATS &new_train_sample)
 			}
 			else
 			{
-
 				//*** If the min distance amongst any of the existing  samples is less than the min distance of
 				//*** the new sample to the existing samples, we merge the nearest existing samples and insert the new
 				//*** sample in the vacated position
@@ -147,8 +143,9 @@ void sample_update::update_sample_space_model(ECO_FEATS &new_train_sample)
 					std::swap(closest_exist_sample_pair.x, closest_exist_sample_pair.y);
 
 				//*** Merge the existing closest samples ****
-				ECO_FEATS merged_sample = merge_samples(samples_f[closest_exist_sample_pair.x], samples_f[closest_exist_sample_pair.y],
-														prior_weights[closest_exist_sample_pair.x], prior_weights[closest_exist_sample_pair.y], std::string("Merge"));
+				merged_sample = merge_samples(samples_f[closest_exist_sample_pair.x], samples_f[closest_exist_sample_pair.y],
+											  prior_weights[closest_exist_sample_pair.x], prior_weights[closest_exist_sample_pair.y],
+											  std::string("Merge"));
 
 				//**  Update distance matrix and the gram matrix
 				update_distance_matrix(gram_vector, new_train_sample_norm, closest_exist_sample_pair.x, closest_exist_sample_pair.y,
@@ -161,12 +158,9 @@ void sample_update::update_sample_space_model(ECO_FEATS &new_train_sample)
 				//** Set the merged sample position and new sample position **
 				merged_sample_id = closest_exist_sample_pair.x;
 				new_sample_id = closest_exist_sample_pair.y;
-				ddebug();
 				new_sample = new_train_sample;
-				ddebug();
 			}
 			debug("num_training_samples: %lu", num_training_samples);
-			ddebug();
 		}
 	}	//**** end if memory is full *******
 	else //*** if memory is not full ***
@@ -333,18 +327,18 @@ ECO_FEATS sample_update::merge_samples(ECO_FEATS &sample1, ECO_FEATS &sample2, f
 	float alpha1 = w1 / (w1 + w2);
 	float alpha2 = 1 - alpha1;
 
+	ECO_FEATS merged_sample = sample1;
+
 	if (sample_merge_type == std::string("replace"))
-		return sample1;
+	{
+	}
 	else if (sample_merge_type == std::string("merge"))
 	{
-		ECO_FEATS merged_sample = sample1;
 		for (size_t i = 0; i < sample1.size(); i++)
 			for (size_t j = 0; j < sample1[i].size(); j++)
 				merged_sample[i][j] = alpha1 * sample1[i][j] + alpha2 * sample2[i][j];
-		return merged_sample;
 	}
-	else
-		assert("Invalid sample merge type");
+	return merged_sample;
 }
 
 void sample_update::replace_sample(ECO_FEATS &new_sample, size_t idx)

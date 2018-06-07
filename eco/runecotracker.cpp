@@ -66,7 +66,7 @@ void drawBox(cv::Mat& image, cv::Rect box, cv::Scalar color, int thick){
 int main()
 {
     string databaseTypes[4] = {"VOT-2017", "TB-2015", "TLP", "UAV123"};
-    string databaseType = databaseTypes[1];
+    string databaseType = databaseTypes[0];
     // Read from the images ====================================================
     int f, x, y, w, h, isLost;
     float x1, y1, x2, y2, x3, y3, x4, y4; //gt for vot
@@ -117,7 +117,7 @@ int main()
     }
     else if (databaseType == "UAV123")
     {
-        string folderUAV = "bike2"; //"bike1"; //
+        string folderUAV = "uav8"; //"bike1"; //
         path = "/media/elab/sdd/data/UAV123/data_seq/UAV123/" + folderUAV;
         // Read the groundtruth bbox
         groundtruth = new ifstream("/media/elab/sdd/data/UAV123/anno/UAV123/" + folderUAV + ".txt");
@@ -197,7 +197,7 @@ int main()
         line(frame, cv::Point(x4, y4), cv::Point(x1, y1), Scalar(0, 0, 0), 2, 1);
     }
 
-    imshow("Tracking", frame);
+    //imshow("Tracking", frame);
 
     ECO ecotracker;
     Rect2d ecobbox(x, y, w, h);
@@ -243,7 +243,7 @@ int main()
         putText(frame, "FPS: " + SSTR(float(fpseco)), Point(100, 50), FONT_HERSHEY_SIMPLEX,
                 0.75, Scalar(0, 225, 0), 2);
 
-        imshow("Tracking", frame);
+        //imshow("Tracking", frame);
 
         int c = cvWaitKey(1);
         if (c != -1)

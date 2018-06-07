@@ -119,7 +119,11 @@ namespace RectTools
 	{
 		cv::Rect cutWindow = window;
 		RectTools::limit(cutWindow, in.cols, in.rows);
-		if (cutWindow.height <= 0 || cutWindow.width <= 0)assert(0); //return cv::Mat(window.height,window.width,in.type(),0) ;
+		if (cutWindow.height <= 0 || cutWindow.width <= 0)
+		{
+			printf("Error in cut window size!\n");
+			assert(0); //return cv::Mat(window.height,window.width,in.type(),0) ;
+		}
 		cv::Rect border = RectTools::getBorder(window, cutWindow);
 		cv::Mat res = in(cutWindow);
 
@@ -127,7 +131,6 @@ namespace RectTools
 		{
 			cv::copyMakeBorder(res, res, border.y, border.height, border.x, border.width, borderType);
 		}
-
 
 		return res;
 	}

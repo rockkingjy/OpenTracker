@@ -1,6 +1,7 @@
 #include "feature_extractor.h"
 
 #define debug(a, args...) printf("%s(%s:%d) " a "\n", __func__, __FILE__, __LINE__, ##args)
+#define ddebug(a, args...) printf("%s(%s:%d) " a "\n", __func__, __FILE__, __LINE__, ##args)
 
 ECO_FEATS feature_extractor::extractor(cv::Mat image,
 									   cv::Point2f pos,
@@ -17,12 +18,13 @@ ECO_FEATS feature_extractor::extractor(cv::Mat image,
 		cnn_features = params.cnn_features;
 		this->net = net;
 	}
-	// extract image pathes for different kinds of feautures
+
+	// extract image path for different kinds of feautures
 	vector<vector<cv::Mat>> img_samples;
 	for (int i = 0; i < num_features; ++i)
 	{
 		vector<cv::Mat> img_samples_temp(num_scales);
-		for (unsigned int j = 0; j < scales.size(); ++j)
+		for (unsigned int j = 0; j < scales.size(); ++j) //for different scales
 		{
 			cv::Size2f img_sample_sz = (i == 0) && params.useDeepFeature ? cnn_features.img_sample_sz : hog_features.img_sample_sz;
 			cv::Size2f img_input_sz = (i == 0) && params.useDeepFeature ? cnn_features.img_input_sz : hog_features.img_input_sz;
@@ -33,7 +35,6 @@ ECO_FEATS feature_extractor::extractor(cv::Mat image,
 		img_samples.push_back(img_samples_temp);
 	}
 
-	
 	// Extract image patches features(all kinds of features)
 	ECO_FEATS sum_features;
 	if (params.useDeepFeature)
@@ -41,7 +42,6 @@ ECO_FEATS feature_extractor::extractor(cv::Mat image,
 		sum_features = get_cnn_layers(img_samples[0], yml_mean);
 		cnn_feature_normalization(sum_features);
 	}
-
 	hog_feat_maps = get_hog(img_samples[img_samples.size() - 1]);
 	vector<cv::Mat> hog_maps_vec = hog_feature_normalization(hog_feat_maps);
 
@@ -49,7 +49,11 @@ ECO_FEATS feature_extractor::extractor(cv::Mat image,
 	return sum_features;
 }
 
-cv::Mat feature_extractor::sample_patch(const cv::Mat &im, const cv::Point2f &poss, cv::Size2f sample_sz, cv::Size2f output_sz, const eco_params &gparams)
+cv::Mat feature_extractor::sample_patch(const cv::Mat &im,
+										const cv::Point2f &poss,
+										cv::Size2f sample_sz,
+										cv::Size2f output_sz,
+										const eco_params &gparams)
 {
 	cv::Point pos(poss.operator cv::Point());
 
@@ -84,7 +88,17 @@ cv::Mat feature_extractor::sample_patch(const cv::Mat &im, const cv::Point2f &po
 	sample_sz.width = round(sample_sz.width);
 	sample_sz.height = round(sample_sz.height);
 	cv::Point pos2(pos.x - floor((sample_sz.width + 1) / 2) + 1, pos.y - floor((sample_sz.height + 1) / 2) + 1);
-	cv::Mat im_patch = RectTools::subwindow(new_im, cv::Rect(pos2, sample_sz), IPL_BORDER_REPLICATE); // cv::Rect(cv::Point(0, 0), new_im.size())
+
+	//debug("new_im:%d, %d, pos:%d, %d, sample_sz:%f, %f", new_im.cols, new_im.rows, pos2.x, pos2.y, sample_sz.width, sample_sz.height);
+	cv::Mat im_patch;
+	if (sample_sz.width - pos2.x > 0 && sample_sz.height - pos2.y > 0)
+	{
+		im_patch = RectTools::subwindow(new_im, cv::Rect(pos2, sample_sz), IPL_BORDER_REPLICATE);
+	}
+	else
+	{
+		im_patch = RectTools::subwindow(new_im, cv::Rect(cv::Point(0, 0), new_im.size()), IPL_BORDER_REPLICATE);
+	}
 
 	cv::Mat resized_patch;
 	cv::resize(im_patch, resized_patch, output_sz);
