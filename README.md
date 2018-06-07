@@ -8,10 +8,10 @@ Included                                   | Tracker
 :ballot_box_with_check:                    | KCF          
 :ballot_box_with_check:                    | DSST          
 :ballot_box_with_check:                    | GOTURN         
-:construction-worker:                     | ECO         
-:construction-worker:                     | C-COT
-:construction-worker:                     | SRDCF
-:construction-worker:                     | SRDCF-Deep                           
+ :hammer:                    | ECO         
+ :hammer:                     | C-COT
+ :hammer:                    | SRDCF
+ :hammer:                    | SRDCF-Deep                           
 
 ## Supported Dataset (more in progressing):
 
