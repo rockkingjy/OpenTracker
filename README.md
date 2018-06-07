@@ -130,8 +130,8 @@ Martin Danelljan, Gustav Häger, Fahad Khan, Michael Felsberg.
     http://www.cvl.isy.liu.se/research/objrec/visualtracking/scalvistrack/index.html
 
 ## HOG feature
-N. Dalal and B. Triggs. 
-    Histograms of oriented gradients for human detection. 
+N. Dalal and B. Triggs.  
+    Histograms of oriented gradients for human detection.  
     In CVPR, 2005. 
 
 ## Color Names feature
@@ -155,13 +155,13 @@ http://votchallenge.net/
 
 ## Code references
 
-KCF: [[joaofaro/KCFcpp](https://github.com/joaofaro/KCFcpp)].
+KCF: [joaofaro/KCFcpp](https://github.com/joaofaro/KCFcpp).
 
-DSST: [[liliumao/KCF-DSST](https://github.com/liliumao/KCF-DSST)], the max_scale_factor and min_scale_factor is set to 10 and 0.1 in case of divergence error (Tested on UAV123 dataset when the object is quite small, ex.uav2/3/4...).
+DSST: [liliumao/KCF-DSST](https://github.com/liliumao/KCF-DSST), the max_scale_factor and min_scale_factor is set to 10 and 0.1 in case of divergence error (Tested on UAV123 dataset when the object is quite small, ex.uav2/3/4...).
 
-GOTURN: [[davheld/GOTURN](https://github.com/davheld/GOTURN)].
+GOTURN: [davheld/GOTURN](https://github.com/davheld/GOTURN).
 
-ECO: [[martin-danelljan/ECO]](https://github.com/martin-danelljan/ECO)].
+ECO: [martin-danelljan/ECO](https://github.com/martin-danelljan/ECO).
 
 
 
