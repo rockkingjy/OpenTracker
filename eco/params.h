@@ -35,25 +35,25 @@ struct cnn_params{
 	vector<int>	    cell_size 		  = { 4, 16 };
 	vector<float>   penalty			  = { 0, 0 };
 
-	vector<int>     start_ind		  = {3, 3, 1, 1};   // *** sample feature start index *****
-	vector<int>     end_ind           = {106, 106, 13, 13};// *** sample feature end   index ******
+	vector<int>     start_ind		  = {3, 3, 1, 1};   	// sample feature start index 
+	vector<int>     end_ind           = {106, 106, 13, 13}; // sample feature end index 
 };
 
 struct hog_feature
 {
 	hog_params      fparams;
 
-	cv::Size		img_input_sz;	            //*** input sample size ******
-	cv::Size        img_sample_sz;			    //*** the size of sample *******
-	cv::Size        data_sz_block1;			    //*** hog feature *****
+	cv::Size		img_input_sz;	 // input sample size 
+	cv::Size        img_sample_sz;   // the size of sample in the image
+	cv::Size        data_sz_block1;			   
 };
 
 struct cnn_feature
 {
 	cnn_params	    fparams;
 
-	cv::Size		img_input_sz = cv::Size(224, 224);//*** VGG input sample size ******
-	cv::Size        img_sample_sz;              //*** the size of sample *******
+	cv::Size		img_input_sz = cv::Size(224, 224);  // VGG input sample size
+	cv::Size        img_sample_sz;              		// the size of sample
 	cv::Size        data_sz_block1, data_sz_block2;
 	cv::Mat         mean;                       
 };
@@ -66,6 +66,8 @@ struct eco_params
 
 	// Features
 	bool 	useDeepFeature 		 = false;
+	bool	useHogFeature		 = true;		// Not used yet, add later.......
+	bool	useCnFeature		 = true;		// Not used yet, add later.......
 
 	// img sample parameters 
 	string search_area_shape 	 = "square";	// The shape of the samples
@@ -81,7 +83,7 @@ struct eco_params
 	// Learning parameters
 	float	output_sigma_factor = 0.0833333f;	// Label function sigma
 	float	learning_rate 		= 0.009;	 	// Learning rate
-	size_t	nSamples            = 10; //50;          // Maximum number of stored training samples
+	size_t	nSamples            = 50;           // Maximum number of stored training samples
 	string	sample_replace_strategy = "lowest_prior";	// Which sample to replace when the memory is full
 	bool	lt_size			    = 0;            // The size of the long - term memory(where all samples have equal weight)
 	int 	train_gap			= 5;		    // The number of intermediate frames with no training(0 corresponds to training every frame)

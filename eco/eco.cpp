@@ -1,13 +1,10 @@
-
 #include "eco.h"
-
-#define debug(a, args...) printf("%s(%s:%d) " a "\n", __func__, __FILE__, __LINE__, ##args)
-#define ddebug(a, args...) printf("%s(%s:%d) " a "\n", __func__, __FILE__, __LINE__, ##args)
 
 namespace eco
 {
-void ECO::init(cv::Mat &im, const cv::Rect &rect)
+void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 {
+	debug("rect: %f, %f, %f, %f", rect.x, rect.y, rect.width, rect.height);
 	if (params.useDeepFeature)
 	{
 		yml_mean = meanMatFromYML(params.cnn_features.fparams.mean_yml);
@@ -49,36 +46,31 @@ void ECO::init(cv::Mat &im, const cv::Rect &rect)
 	}
 
 	// get the ini position
-	pos.x = rect.x + (float)rect.width / 2;
-	pos.y = rect.y + (float)rect.height / 2;
-	debug("pos:%f, %f", pos.x, pos.y);
-	target_sz = rect.size();
+	pos.x = rect.x + (rect.width - 1.0) / 2.0;
+	pos.y = rect.y + (rect.height - 1.0) / 2.0;
+	debug("pos:%f, %f", pos.y, pos.x);
 
-	// *** Calculate search area and initial scale factor ****
-	int search_area = rect.area() * pow(params.search_area_scale, 2);
-	debug("search_area:%d, %d", rect.area(), search_area);
+	// *** Calculate search area and initial scale factor
+	float search_area = rect.area() * pow(params.search_area_scale, 2);
+	debug("search_area:%f", search_area);
 	if (search_area > params.max_image_sample_size)
 		currentScaleFactor = sqrt((float)search_area / params.max_image_sample_size);
 	else if (search_area < params.min_image_sample_size)
 		currentScaleFactor = sqrt((float)search_area / params.min_image_sample_size);
 	else
 		currentScaleFactor = 1.0;
-
 	debug("currentscale:%f", currentScaleFactor);
-	// *** target size at the initial scale ***
-	base_target_sz = cv::Size2f(target_sz.width / currentScaleFactor, target_sz.height / currentScaleFactor);
 
-	// *** window size, taking padding into account ***
-	img_sample_sz = cv::Size(sqrt(base_target_sz.area() * pow(params.search_area_scale, 2)),
-							 sqrt(base_target_sz.area() * pow(params.search_area_scale, 2)));
-	debug("img_sample_sz: %d, %d", img_sample_sz.width, img_sample_sz.height);
-	/*	if (currentScaleFactor > 1)
-		img_sample_sz = cv::Size(250, 250);
-	else
-		img_sample_sz = cv::Size(200, 200); */
+	// *** target size at the initial scale
+	base_target_sz = cv::Size2f(rect.size().width / currentScaleFactor, rect.size().height / currentScaleFactor);
+	debug("base_target_sz:%f x %f", base_target_sz.height, base_target_sz.width);
+	// *** window size, taking padding into account
+	float img_sample_sz_tmp = sqrt(base_target_sz.area() * pow(params.search_area_scale, 2));
+	img_sample_sz = cv::Size2i(img_sample_sz_tmp, img_sample_sz_tmp);
+	debug("img_sample_sz: %d x %d", img_sample_sz.height, img_sample_sz.width);
 
+	// features setting
 	init_features();
-
 	if (params.useDeepFeature)
 	{
 		feature_sz.push_back(params.cnn_features.data_sz_block1);
@@ -91,8 +83,9 @@ void ECO::init(cv::Mat &im, const cv::Rect &rect)
 	compressed_dim.push_back(params.hog_features.fparams.compressed_dim); //=10
 	for (size_t i = 0; i < feature_sz.size(); i++)
 	{
-		debug("features %lu: %d %d %d %d", i, feature_sz[i].width, feature_sz[i].height, feature_dim[i], compressed_dim[i]);
+		debug("features %lu: %d %d %d x %d", i, feature_dim[i], compressed_dim[i], feature_sz[i].height, feature_sz[i].width);
 	}
+
 	// *** Number of Fourier coefficients to save for each filter layer. This will be an odd number.
 	max_output_index = 0;
 	output_sz = 0;
@@ -101,12 +94,12 @@ void ECO::init(cv::Mat &im, const cv::Rect &rect)
 	{
 		size_t size = feature_sz[i].width + (feature_sz[i].width + 1) % 2; //=63, to make it as an odd number;
 		filter_sz.push_back(cv::Size(size, size));
-		debug("filter_sz %lu: %d, %d", i, filter_sz[i].height, filter_sz[i].width);
+		debug("filter_sz %lu: %d x %d", i, filter_sz[i].height, filter_sz[i].width);
 		// get the largest feature and it's index;
 		max_output_index = size > output_sz ? i : max_output_index;
 		output_sz = std::max(size, output_sz);
 	}
-	debug("index:%lu,output:%lu", max_output_index, output_sz);
+	debug("max_output_index:%lu, output_sz:%lu", max_output_index, output_sz);
 
 	// *** Compute the Fourier series indices k.
 	for (size_t i = 0; i < filter_sz.size(); ++i) // for each filter
@@ -126,7 +119,7 @@ void ECO::init(cv::Mat &im, const cv::Rect &rect)
 			tempx.at<float>(0, j) = j - (filter_sz[i].height / 2);
 		}
 		kx.push_back(tempx);
-		debug("i: %lu, N: %d, ky:%d %d, kx:%d %d", i, filter_sz[i].height,
+		debug("i: %lu, N: %d, ky:%d x %d, kx:%d x %d", i, filter_sz[i].height,
 			  ky[i].size().height, ky[i].size().width, kx[i].size().height, kx[i].size().width);
 	}
 
@@ -141,26 +134,28 @@ void ECO::init(cv::Mat &im, const cv::Rect &rect)
 	{
 		cv::Mat interp1_fs1, interp2_fs1;
 		interpolator::get_interp_fourier(filter_sz[i], interp1_fs1, interp2_fs1, params.interpolation_bicubic_a);
-
 		interp1_fs.push_back(interp1_fs1);
 		interp2_fs.push_back(interp2_fs1);
+		//showmat2ch(interp1_fs1, 2);
+		//showmat2ch(interp2_fs1, 2);
 	}
-
+	
 	//*** Construct spatial regularization filter, refer SRDCF
 	for (size_t i = 0; i < filter_sz.size(); i++)
 	{
 		cv::Mat temp = get_reg_filter(img_support_sz, base_target_sz, params);
 		reg_filter.push_back(temp);
+		debug("reg_filter %lu:", i); showmat(temp, 2);
 		// Compute the energy of the filter (used for preconditioner)drone_flip
 		cv::Mat_<float> t = temp.mul(temp);  //element-wise multiply
 		float energy = FFTTools::mat_sum(t); //sum up all the values of each points of the mat
 		reg_energy.push_back(energy);
+		debug("reg_energy %lu: %f", i, energy);
 	}
 
 	//*** scale factor, 5 scales, refer SAMF
 	int scalemin = floor((1.0 - (float)params.number_of_scales) / 2.0);
 	int scalemax = floor(((float)params.number_of_scales - 1.0) / 2.0);
-	debug("scale:%d, %d", scalemin, scalemax);
 	for (int i = scalemin; i <= scalemax; i++)
 	{
 		scaleFactors.push_back(pow(params.scale_step, i));
@@ -172,16 +167,22 @@ void ECO::init(cv::Mat &im, const cv::Rect &rect)
 																	 5 / (float)img_support_sz.height)) /
 												  std::log(params.scale_step)));
 		params.max_scale_factor = //10;
-			std::pow(params.scale_step, std::floor(std::log(std::fmin(im.rows / (float)img_support_sz.width,
-																	  im.cols / (float)img_support_sz.height)) /
+			std::pow(params.scale_step, std::floor(std::log(std::fmin(im.cols / (float)base_target_sz.width,
+																	  im.rows / (float)base_target_sz.height)) /
 												   std::log(params.scale_step)));
 	}
+	debug("scale:%d, %d", scalemin, scalemax);
 	debug("scalefactor min: %f max: %f", params.min_scale_factor, params.max_scale_factor);
-
+	for (size_t i = 0; i < params.number_of_scales; i++)
+	{
+		debug("scaleFactor %lu: %f", i, scaleFactors[i]);
+	}
+//=========================================================================================================
 	ECO_FEATS xl, xlw, xlf, xlf_porj;
 
 	xl = feat_extrator.extractor(im, pos, vector<float>(1, currentScaleFactor), params, yml_mean, net);
-
+	debug("xl size: %lu, %lu, %d, %d", xl.size(), xl[0].size(), xl[0][0].cols, xl[0][0].rows);
+	//showmat(xl[0][0],2);
 	//*** Do windowing of features ***
 	xl = do_windows_x(xl, cos_window);
 
@@ -193,12 +194,13 @@ void ECO::init(cv::Mat &im, const cv::Rect &rect)
 
 	//*** New sample to be added
 	xlf = compact_fourier_coeff(xlf);
-
+	debug("xlf size: %lu, %lu, %d, %d", xlf.size(), xlf[0].size(), xlf[0][0].cols, xlf[0][0].rows);
 	//*** Compress feature dementional projection matrix
 	projection_matrix = init_projection_matrix(xl, compressed_dim, feature_dim); //*** EXACT EQUAL TO MATLAB
 
 	//*** project sample *****
 	xlf_porj = project_sample(xlf, projection_matrix);
+	debug("xlf_porj size: %lu, %lu, %d, %d", xlf_porj.size(), xlf_porj[0].size(), xlf_porj[0][0].cols, xlf_porj[0][0].rows);
 
 	//*** Update the samples to include the new sample.
 	// The distance matrix, kernel matrix and prior weight are also updated
@@ -228,6 +230,7 @@ void ECO::init(cv::Mat &im, const cv::Rect &rect)
 	projection_matrix = eco_trainer.get_proj(); //*** exect to matlab tracker
 
 	xlf_porj = project_sample(xlf, projection_matrix);
+	debug("xlf_porj size: %lu, %lu, %d, %d", xlf_porj.size(), xlf_porj[0].size(), xlf_porj[0][0].cols, xlf_porj[0][0].rows);
 
 	SampleUpdate.replace_sample(xlf_porj, 0);
 
@@ -238,11 +241,16 @@ void ECO::init(cv::Mat &im, const cv::Rect &rect)
 	frames_since_last_train = 0;
 
 	hf_full = full_fourier_coeff(eco_trainer.get_hf());
+	for (size_t i = 0; i < hf_full.size(); i++)
+	{
+		debug("hf_full: %lu, %lu, %d x %d", i, hf_full[i].size(), hf_full[i][0].cols, hf_full[i][0].rows);
+	}
+	//showmat(hf_full[0][0], 2);
+	//assert(0);
 }
 
-bool ECO::update(const cv::Mat &frame, cv::Rect2d &roi)
+bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 {
-	ddebug();
 	cv::Point sample_pos = cv::Point(pos);
 	vector<float> det_samples_pos;
 	for (size_t i = 0; i < scaleFactors.size(); ++i)
@@ -252,9 +260,10 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2d &roi)
 	ddebug();
 	// 1: Extract features at multiple resolutions
 	ECO_FEATS xt = feat_extrator.extractor(frame, sample_pos, det_samples_pos, params, yml_mean, net);
-	ddebug();
+	debug("xt size: %lu, %lu, %d, %d", xt.size(), xt[0].size(), xt[0][0].cols, xt[0][0].rows);
 	// 2:  project sample *****
 	ECO_FEATS xt_proj = FeatProjMultScale(xt, projection_matrix);
+	debug("xt_proj size: %lu, %lu, %d, %d", xt_proj.size(), xt_proj[0].size(), xt_proj[0][0].cols, xt_proj[0][0].rows);
 
 	// 3: Do windowing of features ***
 	xt_proj = do_windows_x(xt_proj, cos_window);
@@ -264,6 +273,7 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2d &roi)
 
 	// 5: Interpolate features to the continuous domain
 	xt_proj = interpolate_dft(xt_proj, interp1_fs, interp2_fs);
+	debug("xt_proj size: %lu, %lu, %d, %d", xt_proj.size(), xt_proj[0].size(), xt_proj[0][0].cols, xt_proj[0][0].rows);
 
 	// 6: compute the scores for different scales of target
 	// Compute convolution for each feature block in the Fourier domain and the sum over all blocks.
@@ -297,14 +307,14 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2d &roi)
 			   currentScaleFactor * scaleFactors[scale_change_factor];
 	float dy = scores.get_disp_row() * (img_support_sz.height / output_sz) *
 			   currentScaleFactor * scaleFactors[scale_change_factor];
-
+	debug("get_disp_col: %f, get_disp_row: %f, dx: %f, dy: %f", scores.get_disp_col(), scores.get_disp_row(), dx, dy);
 	// 9: Update position
 	pos = cv::Point2f(sample_pos) + cv::Point2f(dx, dy);
 
 	// 10: Update the scale
 	currentScaleFactor = currentScaleFactor * scaleFactors[scale_change_factor];
 
-	// 11: Adjust to make sure we are not too large or too small
+	// 11: Adjust the scale to make sure we are not too large or too small
 	if (currentScaleFactor < params.min_scale_factor)
 	{
 		currentScaleFactor = params.min_scale_factor;
@@ -313,7 +323,26 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2d &roi)
 	{
 		currentScaleFactor = params.max_scale_factor;
 	}
-	ddebug();
+
+	// Visualization
+	cv::Mat resframe = frame.clone();
+	cv::rectangle(resframe, roi, cv::Scalar(0, 255, 0));
+	cv::imshow("Tracking", resframe);
+	cv::waitKey(1);
+
+	// Apply the colormap:
+	cv::Mat cm_tmp, cm_img;
+	FFTTools::magnitude(scores_fs_sum[scale_change_factor]).convertTo(cm_tmp, CV_8U);
+
+	//showmat(cm_tmp, 1);
+
+	cv::resize(cm_tmp, cm_img,
+			   cv::Size(img_support_sz.width, img_support_sz.height),
+			   0, 0, cv::INTER_NEAREST);
+	cv::applyColorMap(cm_img, cm_img, cv::COLORMAP_JET);
+
+	//cv::imshow("cm_img", cm_img);
+	//cv::waitKey(1);
 	//*****************************************************************************
 	//*****                     Model update step
 	//*****************************************************************************
@@ -371,28 +400,7 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2d &roi)
 	roi.height = base_target_sz.height * currentScaleFactor;
 	roi.x = pos.x - roi.width / 2;
 	roi.y = pos.y - roi.height / 2;
-
-	//roi = resbox;
 	debug("roi:%f, %f, %f, %f", roi.x, roi.y, roi.width, roi.height);
-
-	//show
-	/*
-	cv::Mat resframe = frame.clone();
-	cv::rectangle(resframe, roi, cv::Scalar(0, 255, 0));
-	cv::imshow("Tracking", resframe);
-	cv::waitKey(1);
-*/
-	// Apply the colormap:
-	cv::Mat cm_img0, temp;
-	std::vector<cv::Mat> tmp_vector;
-	scores_fs_sum[scale_change_factor].convertTo(temp, CV_8U);
-	cv::split(temp, tmp_vector);
-	debug("%d, %d", temp.cols, temp.rows);
-	debug("tmp_vector:%lu", tmp_vector.size());
-	cv::applyColorMap(tmp_vector[0], cm_img0, cv::COLORMAP_JET);
-	// Show the result:
-	cv::imshow("cm_img0", cm_img0);
-	cv::waitKey(1);
 
 	return true;
 }
@@ -401,11 +409,6 @@ void ECO::init_features()
 {
 	if (params.useDeepFeature)
 	{
-		//******** the cnn feature intialization **********
-		//params.cnn_features.fparams.start_ind = vector<int>({3, 3, 1, 1});
-		//params.cnn_features.fparams.end_ind = vector<int>({106, 106, 13, 13});
-
-		//params.cnn_features.img_input_sz = cv::Size(224, 224);
 		params.cnn_features.img_sample_sz = img_sample_sz;
 
 		std::vector<cv::Size> cnn_output_sz;
@@ -417,39 +420,24 @@ void ECO::init_features()
 													  cnn_output_sz[1].height / params.cnn_features.fparams.downsample_factor[1]);
 		params.cnn_features.mean = deep_mean_mat;
 
-		//params.cnn_feat = params.cnn_features;
-
 		img_support_sz = cv::Size(round((float)208 * img_sample_sz.width / params.cnn_features.img_input_sz.width),
 								  round((float)208 * img_sample_sz.height / params.cnn_features.img_input_sz.height));
 	}
-	else // just HOG feature;
+	if (params.useHogFeature) // just HOG feature;
 	{
-		int new_sample_sz = (1 + img_sample_sz.width / params.hog_features.fparams.cell_size) * params.hog_features.fparams.cell_size;
-		/*	debug("sample_sz:%d, %d", img_sample_sz.width, new_sample_sz);//=250,252
-		int max_odd = -1, max_idx = -1;
-		for (size_t i = 0; i < (size_t)params.hog_features.fparams.cell_size; i++)
-		{
-			int sz = (new_sample_sz + i) / params.hog_features.fparams.cell_size;
-			if (sz % 2 == 1) // find the max odd value and it's id;
-			{
-				max_idx = max_odd >= sz ? max_idx : i;
-				max_odd = max_odd >= sz ? max_odd : sz;
-			}
-		}
-
-		new_sample_sz += max_idx; 
-		debug("max:%d, %d, %d", max_idx, max_odd, new_sample_sz); //=0,63
-	*/
-		img_support_sz = cv::Size(new_sample_sz, new_sample_sz); //63x63
+		//int new_sample_sz = (1 + img_sample_sz.width / params.hog_features.fparams.cell_size) * params.hog_features.fparams.cell_size;
+		img_support_sz = img_sample_sz; //cv::Size(img_sample_sz.width;, img_sample_sz.hight);
+		params.hog_features.img_input_sz = img_support_sz;
+		params.hog_features.img_sample_sz = img_support_sz;
+		params.hog_features.data_sz_block1 = cv::Size(img_support_sz.width / params.hog_features.fparams.cell_size,
+													  img_support_sz.height / params.hog_features.fparams.cell_size);
 	}
-	//******** the HOG feature intialization **********
-	params.hog_features.img_input_sz = img_support_sz; //*** the imput-img-size of hog is the same as support size
-	params.hog_features.img_sample_sz = img_support_sz;
-	params.hog_features.data_sz_block1 = cv::Size(img_support_sz.width / params.hog_features.fparams.cell_size,
-												  img_support_sz.height / params.hog_features.fparams.cell_size);
-	debug("params.hog_features: %d, %d, %d, %d", img_support_sz.width, img_support_sz.height,
-		  params.hog_features.data_sz_block1.width, params.hog_features.data_sz_block1.height);
-	//params.hog_feat = params.hog_features;
+
+	if (params.useCnFeature)
+	{
+	}
+
+	debug("im_support_sz:%d x %d", img_support_sz.width, img_support_sz.height);
 }
 
 cv::Mat ECO::meanMatFromYML(string path)
@@ -506,9 +494,9 @@ cv::Mat ECO::deep_mean(const string &mean_file)
 void ECO::yf_gaussian() // real part of (9) in paper C-COT
 {
 	// sig_y is sigma in (9)
-	float sig_y = sqrt(int(base_target_sz.width) * int(base_target_sz.height)) *
-				  (params.output_sigma_factor) * (float(output_sz) / img_support_sz.width);
-
+	double sig_y = sqrt(int(base_target_sz.width) * int(base_target_sz.height)) *
+				   (params.output_sigma_factor) * (float(output_sz) / img_support_sz.width);
+	debug("sig_y:%lf", sig_y);
 	for (unsigned int i = 0; i < ky.size(); i++) // for each filter
 	{
 		// 2 dimension version of (9)
@@ -523,6 +511,10 @@ void ECO::yf_gaussian() // real part of (9) in paper C-COT
 		tempx = sqrt(2 * CV_PI) * sig_y / output_sz * tempx;
 
 		yf.push_back(cv::Mat(tempy * tempx));
+
+		//showmat(tempy, 2);
+		//showmat(tempx, 2);
+		//showmat(yf[i], 2);
 	}
 }
 
@@ -538,6 +530,8 @@ void ECO::cos_wind()
 			hann2t.at<float>(i, 0) = 0.5 * (1 - std::cos(2 * 3.14159265358979323846 * i / (hann2t.rows - 1)));
 		cv::Mat hann2d = hann2t * hann1t;
 		cos_window.push_back(hann2d(cv::Range(1, hann2d.rows - 1), cv::Range(1, hann2d.cols - 1)));
+
+		//showmat(cos_window[i],2);
 	}
 }
 

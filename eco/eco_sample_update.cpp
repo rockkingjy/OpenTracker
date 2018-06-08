@@ -1,8 +1,5 @@
 #include "eco_sample_update.h"
 
-#define debug(a, args...) printf("%s(%s:%d) " a "\n", __func__, __FILE__, __LINE__, ##args)
-#define ddebug(a, args...) printf("%s(%s:%d) " a "\n", __func__, __FILE__, __LINE__, ##args)
-
 namespace eco_sample_update
 {
 

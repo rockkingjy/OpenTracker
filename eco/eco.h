@@ -25,6 +25,8 @@
 #include "eco_sample_update.h"
 #include "optimize_scores.h"
 #include "training.h"
+#include "fftTool.h"
+#include "debug.h"
 
 #endif
 
@@ -44,9 +46,9 @@ class ECO
 
 	ECO() {};
 
-	void init(cv::Mat &im, const cv::Rect &rect); //****** tracker intialization****
+	void init(cv::Mat &im, const cv::Rect2f &rect); //****** tracker intialization****
 
-	bool update(const cv::Mat &frame, cv::Rect2d& roi);
+	bool update(const cv::Mat &frame, cv::Rect2f& roi);
 
 	void init_features(); // *** init the ECO features include deep feature or non-deep feature
 
@@ -81,34 +83,39 @@ class ECO
 	boost::shared_ptr<Net<float>> 	net;
 	cv::Mat 			deep_mean_mat, yml_mean;
 
-	//*** the max size of feature and its index
-	size_t 				output_sz, max_output_index; //output_sz is T in (9) of C-COT paper
-	size_t 				frameID, frames_since_last_train;
-	cv::Point2f 		pos; // final result.
+	cv::Point2f 		pos; 			// final result
+	size_t 				frames_since_last_train; 	 // used for update;
 
-	//***  current target size,  initial target size,
-	cv::Size 			target_sz, img_sample_sz, img_support_sz;
-	cv::Size2f 			base_target_sz; // *** target size without scale
-	float 				currentScaleFactor; //*** current img scale 
+	// The max size of feature and its index, output_sz is T in (9) of C-COT paper
+	size_t 				output_sz, max_output_index; 	
+
+	//cv::Size 			target_sz;		// Original target size
+	cv::Size2f 			base_target_sz; // target size without scale
+	cv::Size2i			img_sample_sz;  // size of original sampling size
+	cv::Size2i			img_support_sz;	// the corresponding size in the image
 
 	vector<cv::Size> 	feature_sz, filter_sz;
 	vector<int> 		feature_dim, compressed_dim;
 
-	// *** Compute the Fourier series indices and their transposes
-	//kx, ky is the k in (9) of C-COT paper, yf is the left part of (9);
-	vector<cv::Mat> 	ky, kx, yf, cos_window; 
-	vector<cv::Mat> 	interp1_fs, interp2_fs; // *** interpl fourier series
+	float 				currentScaleFactor; 		// current img scale 
 
-	vector<cv::Mat> 	reg_filter, projection_matrix; //**** spatial filter *****
+	// Compute the Fourier series indices 
+	// kx, ky is the k in (9) of C-COT paper, yf is the left part of (9);
+	vector<cv::Mat> 	ky, kx, yf, cos_window; 
+	vector<cv::Mat> 	interp1_fs, interp2_fs; 	// interpl fourier series
+
+	vector<cv::Mat> 	reg_filter, projection_matrix; // spatial filter
 	vector<float> 		reg_energy, scaleFactors;
 
 	feature_extractor 	feat_extrator;
 
 	sample_update 		SampleUpdate;
 
+	eco_train 			eco_trainer;
+
 	ECO_FEATS 			sample_energy;
 	ECO_FEATS 			hf_full;
-	eco_train 			eco_trainer;
+	
 };
 
 } // namespace eco

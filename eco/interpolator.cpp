@@ -25,14 +25,13 @@ void interpolator::get_interp_fourier(cv::Size filter_sz, cv::Mat &interp1_fs,
 	interp1_fs = cubic_spline_fourier(temp1 / filter_sz.height, a) / filter_sz.height;
 	interp2_fs = cubic_spline_fourier(temp2 / filter_sz.width, a) / filter_sz.width;
 
-	//*** Center the feature grids by shifting the interpolated features
-	//*** Multiply Fourier coeff with e ^ (-i*pi*k / N)
+	// Multiply Fourier coeff with e ^ (-i*pi*k / N): [cos(pi*k/N), -sin(pi*k/N)]
 	cv::Mat result1(temp1.size(), CV_32FC1), result2(temp1.size(), CV_32FC1);
 	temp1 = temp1 / filter_sz.height;
 	temp2 = temp2 / filter_sz.width;
 	std::transform(temp1.begin<float>(), temp1.end<float>(), result1.begin<float>(), mat_cos1);
 	std::transform(temp1.begin<float>(), temp1.end<float>(), result2.begin<float>(), mat_sin1);
-	cv::Mat planes1[] = {interp1_fs.mul(result1), interp1_fs.mul(result2)};
+	cv::Mat planes1[] = {interp1_fs.mul(result1), -interp1_fs.mul(result2)};
 	cv::merge(planes1, 2, interp1_fs);
 
 	interp2_fs = interp1_fs.t();

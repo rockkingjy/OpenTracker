@@ -1,5 +1,4 @@
-#ifndef	SAMPLE_UPDATE_H
-#define SAMPLE_UPDATA_H
+#pragma once
 
 #include <vector>
 #include <opencv2/features2d/features2d.hpp>
@@ -9,6 +8,7 @@
 #include "feature_type.h"
 #include "fftTool.h"
 #include "feature_operator.h"
+#include "debug.h"
 
 using namespace FFTTools;
 
@@ -71,7 +71,3 @@ namespace eco_sample_update{
 	};
 
 };
-
-
-
-#endif

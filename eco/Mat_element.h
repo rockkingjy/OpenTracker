@@ -41,9 +41,6 @@ inline float mat_sin4(float x)
 
 cv::Mat precision(cv::Mat img);
 
-
-
-
 inline cv::Mat precision(cv::Mat img)
 {
 	if (img.empty())

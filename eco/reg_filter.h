@@ -3,8 +3,10 @@
 
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/opencv.hpp>
+#include <cmath>
 #include "params.h"
 #include "fftTool.h"
+#include "debug.h"
 
 using FFTTools::fftd;
 using FFTTools::magnitude;
