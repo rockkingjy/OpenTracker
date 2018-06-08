@@ -33,5 +33,3 @@ classification.bin: classification.o
 
 clean:
 	rm -rf */*.o *.o *.bin
-
-

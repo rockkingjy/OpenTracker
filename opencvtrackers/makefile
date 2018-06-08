@@ -9,7 +9,6 @@ DEPS = *.h *.hpp
 
 OBJ = opencvtrackers.o
 
-
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< 
 
@@ -20,3 +19,4 @@ opencvtrackers.bin: $(OBJ)
 
 clean:
 	rm -rf *.o *.bin
+

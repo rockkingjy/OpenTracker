@@ -389,6 +389,7 @@ int main(int argc, char **argv)
     cvDestroyWindow("Tracking");
     return 0;
 
+
     /*
 // Read from the video ====================================================
     // Read video

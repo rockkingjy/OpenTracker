@@ -34,3 +34,4 @@ makeeco:
 
 clean:
 	rm -rf */*/*.o */*.o *.o */*.bin *.bin
+

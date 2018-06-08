@@ -20,3 +20,4 @@ runkcftracker.bin: $(OBJ)
 
 clean:
 	rm -rf *.o *.bin
+
