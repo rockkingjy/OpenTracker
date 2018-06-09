@@ -143,16 +143,17 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	//*** Construct spatial regularization filter, refer SRDCF
 	for (size_t i = 0; i < filter_sz.size(); i++)
 	{
-		cv::Mat temp = get_reg_filter(img_support_sz, base_target_sz, params);
-		reg_filter.push_back(temp);
-		debug("reg_filter %lu:", i); showmat(temp, 2);
+		cv::Mat temp_d = get_reg_filter(img_support_sz, base_target_sz, params);
+		cv::Mat temp_f;
+		temp_d.convertTo(temp_f, CV_32FC1);
+		reg_filter.push_back(temp_f);
+		debug("reg_filter %lu:", i); showmatall(temp_f, 2);
 		// Compute the energy of the filter (used for preconditioner)drone_flip
-		cv::Mat_<float> t = temp.mul(temp);  //element-wise multiply
-		float energy = FFTTools::mat_sum(t); //sum up all the values of each points of the mat
+		cv::Mat_<double> t = temp_d.mul(temp_d);  //element-wise multiply
+		float energy = FFTTools::mat_sumd(t); //sum up all the values of each points of the mat
 		reg_energy.push_back(energy);
 		debug("reg_energy %lu: %f", i, energy);
 	}
-
 	//*** scale factor, 5 scales, refer SAMF
 	int scalemin = floor((1.0 - (float)params.number_of_scales) / 2.0);
 	int scalemax = floor(((float)params.number_of_scales - 1.0) / 2.0);
@@ -188,10 +189,10 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 
 	//*** Compute the fourier series ***
 	xlf = do_dft(xl);
-
+	ddebug();
 	//*** Interpolate features to the continuous domain **
 	xlf = interpolate_dft(xlf, interp1_fs, interp2_fs);
-
+	ddebug();
 	//*** New sample to be added
 	xlf = compact_fourier_coeff(xlf);
 	debug("xlf size: %lu, %lu, %d, %d", xlf.size(), xlf[0].size(), xlf[0][0].cols, xlf[0][0].rows);
@@ -220,7 +221,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 		hf.push_back(vector<cv::Mat>(xlf_porj[i].size(), cv::Mat::zeros(xlf_porj[i][0].size(), CV_32FC2)));
 		hf_inc.push_back(vector<cv::Mat>(xlf_porj[i].size(), cv::Mat::zeros(xlf_porj[i][0].size(), CV_32FC2)));
 	}
-
+	ddebug();
 	eco_trainer.train_init(hf, hf_inc, projection_matrix, xlf, yf, reg_filter,
 						   new_sample_energy, reg_energy, proj_energy, params);
 

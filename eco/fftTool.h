@@ -9,6 +9,7 @@
 namespace FFTTools
 {
 	// Previous declarations, to avoid warnings
+	cv::Mat fftf(const cv::Mat& img_org, bool backwards = false);
 	cv::Mat fftd(const cv::Mat& img_org, bool backwards = false);
 	cv::Mat real(cv::Mat img);
 	cv::Mat imag(cv::Mat img);
@@ -18,10 +19,11 @@ namespace FFTTools
 	void rearrange(cv::Mat &img);
 	void normalizedLogTransform(cv::Mat &img);
 
-	//***** add by tanfeiyang **** 2017.8.15
 	cv::Mat fftshift(const cv::Mat& org_img, bool rowshift = true, bool colshift = true, bool reverse = 0);
+	cv::Mat fftshiftd(const cv::Mat& org_img, bool rowshift = true, bool colshift = true, bool reverse = 0);
 	cv::Mat mat_conj(const cv::Mat& org);
-	float   mat_sum(const cv::Mat& org);                         //** just for single channel float *** 
+	float   mat_sum(const cv::Mat& org); //** just for single channel float *** 
+	double  mat_sumd(const cv::Mat& org);                     
 	 
 	cv::Mat cmat_multi(const cv::Mat&a, const cv::Mat& b); //** the mulitiplciation of two complex matrix
 	cv::Mat real2complx(const cv::Mat& x);

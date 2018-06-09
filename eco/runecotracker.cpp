@@ -118,7 +118,7 @@ int main()
     }
     else if (databaseType == "UAV123")
     {
-        string folderUAV = "uav8"; //"bike1"; //
+        string folderUAV = "bike1"; //
         path = "/media/elab/sdd/data/UAV123/data_seq/UAV123/" + folderUAV;
         // Read the groundtruth bbox
         groundtruth = new ifstream("/media/elab/sdd/data/UAV123/anno/UAV123/" + folderUAV + ".txt");

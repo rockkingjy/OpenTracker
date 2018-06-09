@@ -29,10 +29,10 @@ ECO_FEATS do_dft(const ECO_FEATS& xlw)
 		{
 			int size = xlw[i][j].rows;
 			if (size % 2 == 1)
-				temp.push_back(FFTTools::fftshift(fftd(xlw[i][j])));
+				temp.push_back(FFTTools::fftshift(FFTTools::fftf(xlw[i][j])));
 			else
 			{
-				cv::Mat xf = FFTTools::fftshift(fftd(xlw[i][j]));
+				cv::Mat xf = FFTTools::fftshift(FFTTools::fftf(xlw[i][j]));
 				cv::Mat xf_pad = RectTools::subwindow(xf, cv::Rect(cv::Point(0, 0), cv::Size(size + 1, size + 1)));
 				for (size_t k = 0; k < (size_t)xf_pad.rows; k++)
 				{

@@ -10,7 +10,8 @@ namespace FFTTools
 	{
 		return cv::Vec<_Tp, 2>(v[0], -v[1]);
 	}
-	cv::Mat fftd(const cv::Mat& img_org, bool backwards)
+	
+	cv::Mat fftf(const cv::Mat& img_org, bool backwards)
 	{
 		cv::Mat img;
 		img_org.copyTo(img);
@@ -23,9 +24,21 @@ namespace FFTTools
 		cv::dft(img, img, backwards ? (cv::DFT_INVERSE | cv::DFT_SCALE) : 0);
 
 		return img;
+	}
 
-		/*#endif*/
+	cv::Mat fftd(const cv::Mat& img_org, bool backwards)
+	{
+		cv::Mat img;
+		img_org.copyTo(img);
+		if (img.channels() == 1)
+		{
+			//cv::Mat planes[] = { cv::Mat_<float>(img), cv::Mat_<float>::zeros(img.size()) };
+			cv::Mat planes[] = {cv::Mat_<double> (img), cv::Mat_<double>::zeros(img.size())};
+			cv::merge(planes, 2, img);
+		}
+		cv::dft(img, img, backwards ? (cv::DFT_INVERSE | cv::DFT_SCALE) : 0);
 
+		return img;
 	}
 
 	cv::Mat real(cv::Mat img)
@@ -152,6 +165,31 @@ namespace FFTTools
 		}
 		return temp;
 	}
+	cv::Mat fftshiftd(const cv::Mat& org_img, bool rowshift, bool colshift, bool reverse)
+	{
+		cv::Mat temp(org_img.size(), org_img.type());
+		
+		if (org_img.empty())
+			return cv::Mat();
+
+		int w = org_img.cols, h = org_img.rows;
+		int rshift = reverse ? h - h / 2 : h/2,
+			cshift = reverse ? w - w / 2 : w/2;
+
+		for (int i = 0; i < org_img.rows; i++)
+		{
+			int ii = rowshift ? (i + rshift) % h : i;
+			for (int j = 0; j < org_img.cols; j++)
+			{
+				int jj = colshift ? (j + cshift) % w : j;
+				if (org_img.channels() == 2)
+					temp.at<cv::Vec<double, 2>>(ii, jj) = org_img.at<cv::Vec<double, 2>>(i, j);
+				else
+					temp.at<double>(ii, jj) = org_img.at<double>(i, j);
+			}
+		}
+		return temp;
+	}
 
 	cv::Mat mat_conj(const cv::Mat& org)
 	{
@@ -180,6 +218,23 @@ namespace FFTTools
 		}
 		return sum;
 	}
+
+	double mat_sumd(const cv::Mat& org)
+	{
+		if (org.empty())
+			return 0;
+		double sum = 0;
+		for (size_t r = 0; r < (size_t)org.rows; r++)
+		{
+			const double* orgPtr = org.ptr<double>(r);
+			for (size_t c = 0; c < (size_t)org.cols; c++)
+			{
+				sum += orgPtr[c];
+			}
+		}
+		return sum;
+	}
+
 
 	void normalizedLogTransform(cv::Mat &img)
 	{

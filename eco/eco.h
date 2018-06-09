@@ -38,7 +38,6 @@ using namespace eco_sample_update;
 
 namespace eco
 {
-
 class ECO
 {
   public:

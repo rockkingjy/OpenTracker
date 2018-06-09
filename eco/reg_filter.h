@@ -8,9 +8,6 @@
 #include "fftTool.h"
 #include "debug.h"
 
-using FFTTools::fftd;
-using FFTTools::magnitude;
-
 cv::Mat  get_reg_filter(cv::Size sz, cv::Size2f target_sz, const eco_params& params);
 
 #endif 

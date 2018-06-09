@@ -60,8 +60,8 @@ int main(int argc, char **argv)
     goturn::Tracker goturntracker(false);
 */
     // Read from the images ====================================================
-
-    int f, x, y, w, h, isLost;
+    int f, isLost;
+    float x, y, w, h;
     float x1, y1, x2, y2, x3, y3, x4, y4; //gt for vot
     std::string s;
     std::string path;
@@ -73,17 +73,17 @@ int main(int argc, char **argv)
         // Read the groundtruth bbox
         groundtruth = new ifstream(path + "/groundtruth_rect.txt");
         getline(*groundtruth, s, ',');
-        f = atoi(s.c_str());
+        f = atof(s.c_str());
         getline(*groundtruth, s, ',');
-        x = atoi(s.c_str());
+        x = atof(s.c_str());
         getline(*groundtruth, s, ',');
-        y = atoi(s.c_str());
+        y = atof(s.c_str());
         getline(*groundtruth, s, ',');
-        w = atoi(s.c_str());
+        w = atof(s.c_str());
         getline(*groundtruth, s, ',');
-        h = atoi(s.c_str());
+        h = atof(s.c_str());
         getline(*groundtruth, s);
-        isLost = atoi(s.c_str());
+        isLost = atof(s.c_str());
         cout << f << " " << x << " " << y << " " << w << " " << h << " " << isLost << endl;
         // Read images in a folder
         osfile << path << "/img/" << setw(5) << setfill('0') << f << ".jpg";
@@ -96,13 +96,13 @@ int main(int argc, char **argv)
         groundtruth = new ifstream(path + "/groundtruth_rect.txt");
         f = 1;
         getline(*groundtruth, s, ',');
-        x = atoi(s.c_str());
+        x = atof(s.c_str());
         getline(*groundtruth, s, ',');
-        y = atoi(s.c_str());
+        y = atof(s.c_str());
         getline(*groundtruth, s, ',');
-        w = atoi(s.c_str());
+        w = atof(s.c_str());
         getline(*groundtruth, s);
-        h = atoi(s.c_str());
+        h = atof(s.c_str());
         cout << f << " " << x << " " << y << " " << w << " " << h << " "<< endl;
         // Read images in a folder
         osfile << path << "/img/" << setw(4) << setfill('0') << f << ".jpg";
@@ -116,13 +116,13 @@ int main(int argc, char **argv)
         groundtruth = new ifstream("/media/elab/sdd/data/UAV123/anno/UAV123/" + folderUAV + ".txt");
         f = 1;
         getline(*groundtruth, s, ',');
-        x = atoi(s.c_str());
+        x = atof(s.c_str());
         getline(*groundtruth, s, ',');
-        y = atoi(s.c_str());
+        y = atof(s.c_str());
         getline(*groundtruth, s, ',');
-        w = atoi(s.c_str());
+        w = atof(s.c_str());
         getline(*groundtruth, s);
-        h = atoi(s.c_str());
+        h = atof(s.c_str());
         cout << x << " " << y << " " << w << " " << h << endl;
         // Read images in a folder
         osfile << path << "/" << setw(6) << setfill('0') << f << ".jpg";
@@ -136,21 +136,21 @@ int main(int argc, char **argv)
         groundtruth = new ifstream("/media/elab/sdd/data/VOT/vot2017/" + folderVOT + "/groundtruth.txt");
         f = 1;
         getline(*groundtruth, s, ',');
-        x1 = atoi(s.c_str());
+        x1 = atof(s.c_str());
         getline(*groundtruth, s, ',');
-        y1 = atoi(s.c_str());
+        y1 = atof(s.c_str());
         getline(*groundtruth, s, ',');
-        x2 = atoi(s.c_str());
+        x2 = atof(s.c_str());
         getline(*groundtruth, s, ',');
-        y2 = atoi(s.c_str());
+        y2 = atof(s.c_str());
         getline(*groundtruth, s, ',');
-        x3 = atoi(s.c_str());
+        x3 = atof(s.c_str());
         getline(*groundtruth, s, ',');
-        y3 = atoi(s.c_str());
+        y3 = atof(s.c_str());
         getline(*groundtruth, s, ',');
-        x4 = atoi(s.c_str());
+        x4 = atof(s.c_str());
         getline(*groundtruth, s);
-        y4 = atoi(s.c_str());
+        y4 = atof(s.c_str());
         x = (int)std::min(x1, x4);
         y = (int)std::min(y1, y2);
         w = (int)std::max(x2, x3) - x;
@@ -305,17 +305,17 @@ int main(int argc, char **argv)
         {
             // Read the groundtruth bbox
             getline(*groundtruth, s, ',');
-            //f = atoi(s.c_str());
+            //f = atof(s.c_str());
             getline(*groundtruth, s, ',');
-            x = atoi(s.c_str());
+            x = atof(s.c_str());
             getline(*groundtruth, s, ',');
-            y = atoi(s.c_str());
+            y = atof(s.c_str());
             getline(*groundtruth, s, ',');
-            w = atoi(s.c_str());
+            w = atof(s.c_str());
             getline(*groundtruth, s, ',');
-            h = atoi(s.c_str());
+            h = atof(s.c_str());
             getline(*groundtruth, s);
-            isLost = atoi(s.c_str());
+            isLost = atof(s.c_str());
             //cout << "gt:" << f << " " << x << " " << y << " " << w << " " << h << " " << isLost << endl;
             osfile << path << "/img/" << setw(5) << setfill('0') << f << ".jpg";
             //cout << osfile.str() << endl;
@@ -323,13 +323,13 @@ int main(int argc, char **argv)
         else if (databaseType == "TB-2015")
         {
             getline(*groundtruth, s, ',');
-            x = atoi(s.c_str());
+            x = atof(s.c_str());
             getline(*groundtruth, s, ',');
-            y = atoi(s.c_str());
+            y = atof(s.c_str());
             getline(*groundtruth, s, ',');
-            w = atoi(s.c_str());
+            w = atof(s.c_str());
             getline(*groundtruth, s);
-            h = atoi(s.c_str());
+            h = atof(s.c_str());
             //cout << f << " " << x << " " << y << " " << w << " " << h << " " << isLost << endl;
             // Read images in a folder
             osfile << path << "/img/" << setw(4) << setfill('0') << f << ".jpg";
@@ -339,13 +339,13 @@ int main(int argc, char **argv)
         {
             // Read the groundtruth bbox
             getline(*groundtruth, s, ',');
-            x = atoi(s.c_str());
+            x = atof(s.c_str());
             getline(*groundtruth, s, ',');
-            y = atoi(s.c_str());
+            y = atof(s.c_str());
             getline(*groundtruth, s, ',');
-            w = atoi(s.c_str());
+            w = atof(s.c_str());
             getline(*groundtruth, s);
-            h = atoi(s.c_str());
+            h = atof(s.c_str());
             //cout << "gt:" << x << " " << y << " " << w << " " << h << endl;
             // Read images in a folder
             osfile << path << "/" << setw(6) << setfill('0') << f << ".jpg";
@@ -355,21 +355,21 @@ int main(int argc, char **argv)
         {
             // Read the groundtruth bbox
             getline(*groundtruth, s, ',');
-            x1 = atoi(s.c_str());
+            x1 = atof(s.c_str());
             getline(*groundtruth, s, ',');
-            y1 = atoi(s.c_str());
+            y1 = atof(s.c_str());
             getline(*groundtruth, s, ',');
-            x2 = atoi(s.c_str());
+            x2 = atof(s.c_str());
             getline(*groundtruth, s, ',');
-            y2 = atoi(s.c_str());
+            y2 = atof(s.c_str());
             getline(*groundtruth, s, ',');
-            x3 = atoi(s.c_str());
+            x3 = atof(s.c_str());
             getline(*groundtruth, s, ',');
-            y3 = atoi(s.c_str());
+            y3 = atof(s.c_str());
             getline(*groundtruth, s, ',');
-            x4 = atoi(s.c_str());
+            x4 = atof(s.c_str());
             getline(*groundtruth, s);
-            y4 = atoi(s.c_str());
+            y4 = atof(s.c_str());
             x = std::min(x1, x4);
             y = std::min(y1, y2);
             w = std::max(x2, x3) - x;

@@ -12,9 +12,6 @@
 #include "feature_type.h"
 #include "recttools.hpp"
 
-using FFTTools::fftd;
-
-//using namespace std;
 template<typename T>
 extern std::vector<T> operator+(const std::vector<T>& a, const std::vector<T>& b)
 {

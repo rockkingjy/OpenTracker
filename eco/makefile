@@ -1,17 +1,19 @@
 
 CC=gcc
+CXX=g++
 
-VPATH=./helper:./loader:./network:./tracker:/media/elab/sdd/caffe
+#VPATH=./helper:./loader:./network:./tracker:/media/elab/sdd/caffe
 
 LDFLAGS= `pkg-config --libs opencv` -L/media/elab/sdd/caffe/build/lib -lcaffe-nv  \
 	-L/usr/local/cuda/lib64 -lcuda -lcudart -lcublas -lcurand -lcudnn \
-	-lboost_system -lboost_filesystem -lboost_regex -lglog  -lprotobuf
+	-lboost_system -lboost_filesystem -lboost_regex -lglog  -lprotobuf \
+	-lstdc++ -lm 
 
 CXXFLAGS= -Wall `pkg-config --cflags opencv` -lstdc++ -lm -std=c++0x \
 	-I/media/elab/sdd/caffe/.build_release/src/ -I/media/elab/sdd/caffe/include/ \
-	-I/usr/local/cuda/include/
+	-I/usr/local/cuda/include/ 
 
-DEPS = $(wildcard */*.h) $(wildcard /media/elab/sdd/caffe/include/*/*.hpp)
+HEADERS = $(wildcard *.h)
 
 #$(info DEPS is: $(DEPS))
 
@@ -22,13 +24,16 @@ OBJS = fftTool.o fhog_f.o FHOG.o interpolator.o optimize_scores.o \
 all: runecotracker.bin
 
 runecotracker.bin: $(OBJS) 
-	$(CC) -o $@ $^ $(LDFLAGS) $(CXXFLAGS) 
+	$(CC) -o $@ $^ $(LDFLAGS) 
 
-%.o: %.c $(DEPS) 
-	$(CC) -c -o $@ $< 
+%.o: %.c $(HEADERS)
+	$(CC) -c -o $@ $< $(CFLAGS)
+
+%.o: %.cpp $(HEADERS)
+	$(CXX) -c -o $@ $< $(CXXFLAGS)
 
 .PHONY: clean
 
 clean:
-	rm -rf */*.o *.o *.bin
+	rm -rf ./.d */*.o *.o *.bin
 

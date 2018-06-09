@@ -13,7 +13,7 @@ std::vector<cv::Mat> optimize_scores::sample_fs(const std::vector<cv::Mat>& xf, 
 	for (size_t i = 0; i < xf.size(); ++i)
 	{
 		int area = xf[i].size().area();
-		cv::Mat tmp = fftd(fftshift(xf[i], 1, 1, 1), 1);
+		cv::Mat tmp = fftf(fftshift(xf[i], 1, 1, 1), 1);
 		sampled_scores.push_back(real(tmp * area));   // only real part shall be stored
 	}
 

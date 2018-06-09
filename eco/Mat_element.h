@@ -1,4 +1,4 @@
-#ifndef	MAT_ELEMENT_H
+#ifndef MAT_ELEMENT_H
 #define MAT_ELEMENT_H
 
 #include <iostream>
@@ -9,34 +9,32 @@
 
 inline float mat_cos1(float x)
 {
-	return(cos(x * 3.1415926));
+	return (cos(x * 3.1415926));
 }
 
 inline float mat_sin1(float x)
 {
-	return(sin(x * 3.1415926));
+	return (sin(x * 3.1415926));
 }
-
 
 inline float mat_cos2(float x)
 {
-	return(cos(2 * x * 3.1415926));
+	return (cos(2 * x * 3.1415926));
 }
 
 inline float mat_sin2(float x)
 {
-	return(sin(2 * x * 3.1415926));
+	return (sin(2 * x * 3.1415926));
 }
-
 
 inline float mat_cos4(float x)
 {
-	return(cos(4 * x * 3.1415926));
+	return (cos(4 * x * 3.1415926));
 }
 
 inline float mat_sin4(float x)
 {
-	return(sin(4 * x * 3.1415926));
+	return (sin(4 * x * 3.1415926));
 }
 
 cv::Mat precision(cv::Mat img);
@@ -68,11 +66,11 @@ inline cv::Mat precision(cv::Mat img)
 					img_v[i].at<float>(r, c) = 0.0001;
 					continue;
 				}
-
 			}
-		}//end for
-		cv::Mat result;
-		cv::merge(img_v, result);
-		return result;
+		} //end for
 	}
+
+	cv::Mat result;
+	cv::merge(img_v, result);
+	return result;
 }
