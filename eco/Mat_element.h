@@ -56,12 +56,12 @@ inline cv::Mat precision(cv::Mat img)
 		{
 			for (size_t c = 0; c < (size_t)img_v[i].cols; c++)
 			{
-				if (abs(img_v[i].at<float>(r, c)) < 0.0000499999)
+				if (std::abs(img_v[i].at<float>(r, c)) < 0.0000499999)
 				{
 					img_v[i].at<float>(r, c) = 0;
 					continue;
 				}
-				if ((abs(img_v[i].at<float>(r, c)) > 0.0000499999) && (abs(img_v[i].at<float>(r, c)) < 0.0001))
+				if ((std::abs(img_v[i].at<float>(r, c)) > 0.0000499999) && (abs(img_v[i].at<float>(r, c)) < 0.0001))
 				{
 					img_v[i].at<float>(r, c) = 0.0001;
 					continue;

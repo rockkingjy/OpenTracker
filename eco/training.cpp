@@ -1,14 +1,29 @@
 #include "training.h"
 
-eco_train::eco_train()
+void eco_train::train_init( ECO_FEATS phf, 
+							ECO_FEATS phf_inc, 
+							vector<cv::Mat> pproj_matrix, 
+							ECO_FEATS pxlf, 
+							vector<cv::Mat> pyf,
+							vector<cv::Mat> preg_filter, 
+							ECO_FEATS psample_energy, 
+							vector<float> preg_energy, 
+							vector<cv::Mat> pproj_energy,
+							eco_params& params)
 {
+	hf     = phf;
+	hf_inc = phf_inc;
+	projection_matrix = pproj_matrix;
+	xlf    = pxlf;
+	yf     = pyf;
+	reg_filter    = preg_filter;
+	sample_energy = psample_energy;
+	reg_energy    = preg_energy;
+	proj_energy   = pproj_energy;
+	params        = params;
 }
 
-eco_train::~eco_train()
-{
-}
-
-void                 eco_train::train_joint()
+void eco_train::train_joint()
 {
 	//  Initial Gauss - Newton optimization of the filter and
 	//  projection matrix.
@@ -32,7 +47,6 @@ void                 eco_train::train_joint()
 		for (size_t j = 0; j < xlf[i].size(); j++)
 		{
 			cv::Mat temp2 = xlf[i][j].t();
-			//wangsen temp2 ��һ����iscontinuous����Ҫ��֤���޸�
 			temp.push_back(cv::Mat(1, xlf[i][j].size().area(), CV_32FC2, temp2.data));
 		}
 		/*  method 2
@@ -44,7 +58,7 @@ void                 eco_train::train_joint()
 				temp.at<COMPLEX>(r, c) = xlf[i][r].at<COMPLEX>(c % height, c / height);
 			}
 		}*/
-		//wangsen mat_conj����ȡ��������ֻ������Ϊ����������ȥ�������
+		
 		init_samplesf_H.push_back(FFTTools::mat_conj(temp));	
 	}
 
@@ -100,7 +114,7 @@ void                 eco_train::train_joint()
 		{
 			deltaP.push_back(cv::Mat::zeros(projection_matrix[i].size(), projection_matrix[i].type()));
 		}
-		//������ʼ������
+		
 		joint_fp jointFP(hf, deltaP);
 
 		joint_out outPF = pcg_eco(init_samplef_proj, reg_filter, init_samplesf, init_samplesf_H, init_hf, params.projection_reg,
@@ -119,24 +133,7 @@ void                 eco_train::train_joint()
 
 }
 
-void eco_train::train_init(ECO_FEATS phf, ECO_FEATS phf_inc, vector<cv::Mat> pproj_matrix, ECO_FEATS pxlf, vector<cv::Mat> pyf,
-	vector<cv::Mat> preg_filter, ECO_FEATS psample_energy, vector<float> preg_energy, vector<cv::Mat> pproj_energy,
-	eco_params& params)
-{
-	hf     = phf;
-	hf_inc = phf_inc;
-	projection_matrix = pproj_matrix;
-	xlf    = pxlf;
-	yf     = pyf;
-	reg_filter    = preg_filter;
-	sample_energy = psample_energy;
-	reg_energy    = preg_energy;
-	proj_energy   = pproj_energy;
-	params        = params;
-}
-
-
-ECO_FEATS eco_train::project_sample( const ECO_FEATS& x, const vector<cv::Mat>& projection_matrix)
+ECO_FEATS eco_train::project_sample(const ECO_FEATS& x, const vector<cv::Mat>& projection_matrix)
 {
 	ECO_FEATS result;
 
@@ -189,29 +186,29 @@ ECO_FEATS eco_train::mtimesx(ECO_FEATS& x, vector<cv::Mat> y, bool _conj)
 	return res;
 }
 
-vector<cv::Mat>      eco_train::compute_rhs2(const vector<cv::Mat>& proj_mat, const vector<cv::Mat>& X_H, const ECO_FEATS& fyf, const vector<int>& lf_ind)
+vector<cv::Mat> eco_train::compute_rhs2(const vector<cv::Mat>& proj_mat, 
+										const vector<cv::Mat>& X_H, 
+										const ECO_FEATS& fyf, 
+										const vector<int>& lf_ind)
 {
 	vector<cv::Mat> res;
-
 	vector<cv::Mat> fyf_vec = feat_vec(fyf);
 	for (size_t i = 0; i < X_H.size(); i++)
 	{
-		cv::Mat temp;
 		cv::Mat fyf_vect = fyf_vec[i].t();
-		cv::Mat l1 = cmat_multi(X_H[i], fyf_vect), 
-			l2 = cmat_multi(X_H[i].colRange(lf_ind[i], X_H[i].cols), fyf_vect.rowRange(lf_ind[i], fyf_vect.rows));
-
+		cv::Mat l1 = cmat_multi(X_H[i], fyf_vect);
+		cv::Mat l2 = cmat_multi(X_H[i].colRange(lf_ind[i], X_H[i].cols), 
+								fyf_vect.rowRange(lf_ind[i], fyf_vect.rows));
+		cv::Mat temp;
 		temp = real2complx(2 * FFTTools::real(l1 - l2)) + params.projection_reg * proj_mat[i];
 		res.push_back(temp);
 	}
-
 	return res;
 }
 
-vector<cv::Mat>      eco_train::feat_vec(const ECO_FEATS& x)    
+vector<cv::Mat> eco_train::feat_vec(const ECO_FEATS& x)    
 {
-	if (x.empty())
-		return vector<cv::Mat>();
+	if (x.empty()) return vector<cv::Mat>();
 
 	vector<cv::Mat> res;
 	for (size_t i = 0; i < x.size(); i++)
@@ -227,11 +224,15 @@ vector<cv::Mat>      eco_train::feat_vec(const ECO_FEATS& x)
 	return res;
 }
 
-eco_train::joint_fp  eco_train::pcg_eco(
-	const ECO_FEATS& init_samplef_proj, const vector<cv::Mat>& reg_filter, const ECO_FEATS& init_samplef, const vector<cv::Mat>& init_samplesf_H, const ECO_FEATS& init_hf, float proj_reg, // right side of equation A(x)
-	const joint_out& rhs_samplef,  // the left side of the equation :b
-	const joint_out& diag_M,       // preconditionor 
-	joint_fp& hf)                  // the union of filer and projection matirx: [f+delta(f) delta(p)]
+eco_train::joint_fp  eco_train::pcg_eco(const ECO_FEATS& init_samplef_proj, 
+										const vector<cv::Mat>& reg_filter, 
+										const ECO_FEATS& init_samplef, 
+										const vector<cv::Mat>& init_samplesf_H, 
+										const ECO_FEATS& init_hf, 
+										float proj_reg, 				// right side of equation A(x)
+										const joint_out& rhs_samplef,  	// the left side of the equation :b
+										const joint_out& diag_M,       	// preconditionor 
+										joint_fp& hf) // the union of filer and projection matirx: [f+delta(f) delta(p)]
 {
 	joint_fp fpOut;
 
@@ -302,9 +303,13 @@ eco_train::joint_fp  eco_train::pcg_eco(
 	return x;
 }
 
-eco_train::joint_out  eco_train::lhs_operation_joint(joint_fp& hf, const ECO_FEATS& samplesf,
-	const vector<cv::Mat>& reg_filter, const ECO_FEATS& init_samplef, vector<cv::Mat>XH,
-	const ECO_FEATS&  init_hf, float proj_reg)
+eco_train::joint_out  eco_train::lhs_operation_joint(joint_fp& hf, 
+													 const ECO_FEATS& samplesf,
+													 const vector<cv::Mat>& reg_filter, 
+													 const ECO_FEATS& init_samplef, 
+													 vector<cv::Mat>XH,
+													 const ECO_FEATS& init_hf, 
+													 float proj_reg)
 {
 	joint_out AX;
 
@@ -482,10 +487,12 @@ void eco_train::train_filter(const vector<ECO_FEATS>& samplesf, const vector<flo
 	 
 }
  
-ECO_FEATS   eco_train::pcg_eco_filter(const vector<ECO_FEATS>& samplesf, const vector<cv::Mat>& reg_filter, const vector<float> &sample_weights,  // right side of equation A(x)
-					   const ECO_FEATS& rhs_samplef,  // the left side of the equation
-					   const ECO_FEATS& diag_M,       // preconditionor 
-					   ECO_FEATS& hf)                   // the union of filter [f+delta(f) delta(p)]
+ECO_FEATS eco_train::pcg_eco_filter(const vector<ECO_FEATS>& samplesf, 
+									const vector<cv::Mat>& reg_filter, 
+									const vector<float> &sample_weights,  // right side of equation A(x)
+					   				const ECO_FEATS& rhs_samplef,  // the left side of the equation
+					   				const ECO_FEATS& diag_M,       // preconditionor 
+					   				ECO_FEATS& hf)                   // the union of filter [f+delta(f) delta(p)]
 {
 	ECO_FEATS res;
 
@@ -534,7 +541,7 @@ ECO_FEATS   eco_train::pcg_eco_filter(const vector<ECO_FEATS>& samplesf, const v
 
 		rho1 = rho;
 		rho = inner_product(r, z);
-		if ((rho == 0) || (abs(rho) >= INT_MAX) || (rho == NAN) || std::isnan(rho))
+		if ((rho == 0) || (std::abs(rho) >= INT_MAX) || (rho == NAN) || std::isnan(rho))
 		{
 			break;
 		}
@@ -545,7 +552,7 @@ ECO_FEATS   eco_train::pcg_eco_filter(const vector<ECO_FEATS>& samplesf, const v
 			float rho2 = inner_product(r_prev, z);
 			beta = (rho - rho2) / rho1;
 
-			if ((beta == 0) || (abs(beta) >= INT_MAX) || (beta == NAN) || std::isnan(beta))
+			if ((beta == 0) || (std::abs(beta) >= INT_MAX) || (beta == NAN) || std::isnan(beta))
 				break;
 
 			beta = cv::max(0.0f, beta);
@@ -556,7 +563,7 @@ ECO_FEATS   eco_train::pcg_eco_filter(const vector<ECO_FEATS>& samplesf, const v
 		ECO_FEATS q = lhs_operation(p, samplesf, reg_filter, sample_weights);
 		float pq = inner_product(p, q);
 
-		if (pq <= 0 || (abs(pq) > INT_MAX) || (pq == NAN) || std::isnan(pq))
+		if (pq <= 0 || (std::abs(pq) > INT_MAX) || (pq == NAN) || std::isnan(pq))
 		{
 			assert("GC condition is not matched");
 			break;
@@ -564,7 +571,7 @@ ECO_FEATS   eco_train::pcg_eco_filter(const vector<ECO_FEATS>& samplesf, const v
 		else
 			alpha = rho / pq;   // standard alpha
 		
-		if ((abs(alpha) > INT_MAX) || (alpha == NAN) || std::isnan(alpha))
+		if ((std::abs(alpha) > INT_MAX) || (alpha == NAN) || std::isnan(alpha))
 		{
 			assert("GC condition alpha is not matched");
 			break;
@@ -587,7 +594,10 @@ ECO_FEATS   eco_train::pcg_eco_filter(const vector<ECO_FEATS>& samplesf, const v
 	return x;
 }
 
-ECO_FEATS   eco_train::lhs_operation(ECO_FEATS& hf, const vector<ECO_FEATS>& samplesf, const vector<cv::Mat>& reg_filter, const vector<float> &sample_weights)
+ECO_FEATS eco_train::lhs_operation(ECO_FEATS& hf, 
+								   const vector<ECO_FEATS>& samplesf, 
+								   const vector<cv::Mat>& reg_filter, 
+								   const vector<float> &sample_weights)
 {
 	ECO_FEATS res;
 	int num_features = hf.size();
@@ -664,14 +674,13 @@ ECO_FEATS   eco_train::lhs_operation(ECO_FEATS& hf, const vector<ECO_FEATS>& sam
 	return res;
 }
 
-ECO_FEATS              eco_train::conv2std(const vector<ECO_FEATS>& samplesf)const
+ECO_FEATS eco_train::conv2std(const vector<ECO_FEATS>& samplesf) const
 {
 	ECO_FEATS res;
- 
 	return res;
 }
 
-eco_train::joint_out   eco_train::joint_minus(const joint_out&a, const joint_out& b)
+eco_train::joint_out eco_train::joint_minus(const joint_out&a, const joint_out& b)
 {
 	joint_out residual;
 
@@ -687,16 +696,14 @@ eco_train::joint_out   eco_train::joint_minus(const joint_out&a, const joint_out
 		up_rs.push_back(tmp);
 		low_rs.push_back(a.low_part[i] - b.low_part[i]);
 	}
-
 	residual.up_part = up_rs;
 	residual.low_part = low_rs;
 	return residual;
 }
 
-eco_train::joint_out   eco_train::diag_precond(const joint_out&a, const joint_out& b)
+eco_train::joint_out eco_train::diag_precond(const joint_out&a, const joint_out& b)
 {
 	joint_out res;
-
 	ECO_FEATS up_rs;
 	std::vector<cv::Mat> low_rs;
 	for (size_t i = 0; i < a.up_part.size(); i++)
@@ -709,17 +716,14 @@ eco_train::joint_out   eco_train::diag_precond(const joint_out&a, const joint_ou
 		up_rs.push_back(tmp);
 		low_rs.push_back(complexDivision(a.low_part[i], b.low_part[i]));
 	}
-
 	res.up_part = up_rs;
 	res.low_part = low_rs;
-
 	return res;
 }
 
-float                  eco_train::inner_product_joint(const joint_out&a, const joint_out& b)
+float eco_train::inner_product_joint(const joint_out&a, const joint_out& b)
 {
 	float ip = 0;
-
 	for (size_t i = 0; i < a.up_part.size(); i++)
 	{
 		for (size_t j = 0; j < a.up_part[i].size(); j++)
@@ -733,7 +737,7 @@ float                  eco_train::inner_product_joint(const joint_out&a, const j
 	return ip;
 }
 
-float                  eco_train::inner_product(const ECO_FEATS& a, const ECO_FEATS& b)
+float eco_train::inner_product(const ECO_FEATS& a, const ECO_FEATS& b)
 {
 	float ip = 0;
 
@@ -743,15 +747,13 @@ float                  eco_train::inner_product(const ECO_FEATS& a, const ECO_FE
 		{
 			int clen = a[i][j].cols;
 			ip = ip + 2 * mat_sum(real(complexMultiplication(mat_conj(a[i][j].clone()), b[i][j]))) -
-				mat_sum(real(complexMultiplication(mat_conj(a[i][j].col(clen - 1).clone()), b[i][j].col(clen - 1))));
+					  mat_sum(real(complexMultiplication(mat_conj(a[i][j].col(clen - 1).clone()), b[i][j].col(clen - 1))));
 		}
 	}
-
 	return ip;
 }
 
-
-eco_train::rl_out   eco_train::rl_out::operator+(rl_out data2)                   //*** the union structure scale transformation
+eco_train::rl_out eco_train::rl_out::operator+(rl_out data2) 
 {
 	rl_out res;
 	//res.up_part = FeatAdd(up_part, data2.up_part);
@@ -761,7 +763,7 @@ eco_train::rl_out   eco_train::rl_out::operator+(rl_out data2)                  
 	return res;
 }
 
-eco_train::rl_out   eco_train::rl_out::operator*(float scale)                   //*** the union structure scale transformation
+eco_train::rl_out eco_train::rl_out::operator*(float scale) 
 {
 	rl_out res;
 	res.up_part = FeatScale(up_part, scale);
@@ -769,10 +771,9 @@ eco_train::rl_out   eco_train::rl_out::operator*(float scale)                   
 	return res;
 }
 
-eco_train::rl_out   eco_train::rl_out::operator-(rl_out data)
+eco_train::rl_out eco_train::rl_out::operator-(rl_out data)
 {
 	rl_out res;
-	
 	//res.up_part = FeatMinus(up_part, data.up_part);
 	res.up_part = up_part - data.up_part;
 	//res.low_part = ProjMinus(low_part, data.low_part);
