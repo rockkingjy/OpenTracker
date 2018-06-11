@@ -36,7 +36,7 @@ inline float mat_sin4(float x)
 {
 	return (sin(4 * x * 3.1415926));
 }
-
+/*
 cv::Mat precision(cv::Mat img);
 
 inline cv::Mat precision(cv::Mat img)
@@ -61,7 +61,7 @@ inline cv::Mat precision(cv::Mat img)
 					img_v[i].at<float>(r, c) = 0;
 					continue;
 				}
-				if ((std::abs(img_v[i].at<float>(r, c)) > 0.0000499999) && (abs(img_v[i].at<float>(r, c)) < 0.0001))
+				if ((std::abs(img_v[i].at<float>(r, c)) > 0.0000499999) && (std::abs(img_v[i].at<float>(r, c)) < 0.0001))
 				{
 					img_v[i].at<float>(r, c) = 0.0001;
 					continue;
@@ -74,3 +74,4 @@ inline cv::Mat precision(cv::Mat img)
 	cv::merge(img_v, result);
 	return result;
 }
+*/

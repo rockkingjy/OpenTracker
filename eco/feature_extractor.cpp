@@ -1,8 +1,5 @@
 #include "feature_extractor.h"
 
-#define debug(a, args...) printf("%s(%s:%d) " a "\n", __func__, __FILE__, __LINE__, ##args)
-#define ddebug(a, args...) printf("%s(%s:%d) " a "\n", __func__, __FILE__, __LINE__, ##args)
-
 ECO_FEATS feature_extractor::extractor(cv::Mat image,
 									   cv::Point2f pos,
 									   vector<float> scales,
@@ -10,11 +7,16 @@ ECO_FEATS feature_extractor::extractor(cv::Mat image,
 									   const cv::Mat &yml_mean,
 									   const boost::shared_ptr<Net<float>> &net)
 {
-	int num_features = 1, num_scales = scales.size();
-	hog_features = params.hog_features;
+	int num_features = 0, num_scales = scales.size();
+
+	if (params.useHogFeature)
+	{
+		num_features++;
+		hog_features = params.hog_features;
+	}
 	if (params.useDeepFeature)
 	{
-		num_features = 2;
+		num_features++;
 		cnn_features = params.cnn_features;
 		this->net = net;
 	}
@@ -34,15 +36,28 @@ ECO_FEATS feature_extractor::extractor(cv::Mat image,
 		}
 		img_samples.push_back(img_samples_temp);
 	}
-
-	// Extract image patches features(all kinds of features)
+	debug("img_samples - num_features:%lu scales:%lu", img_samples.size(), img_samples[0].size());
+	imgInfo(img_samples[0][0]); // 8UC3 250 x 250
+/*
+	showfeature(img_samples[0][0], 0);
+	cv::imshow("Tracking", img_samples[0][0]);
+	cv::waitKey(0);
+	assert(0);
+*/
+	// Extract feature maps for each feature in the list
 	ECO_FEATS sum_features;
 	if (params.useDeepFeature)
 	{
 		sum_features = get_cnn_layers(img_samples[0], yml_mean);
 		cnn_feature_normalization(sum_features);
 	}
-	hog_feat_maps = get_hog(img_samples[img_samples.size() - 1]);
+	hog_feat_maps = get_hog(img_samples[img_samples.size() - 1]); // the last feature is hog feature.
+
+	debug("hog_feat_maps.size():%lu", hog_feat_maps.size());
+	imgInfo(hog_feat_maps[0]); // 32FCO 62 x 62, O represents 31 channels.
+	showfeature(hog_feat_maps[0], 2);
+	assert(0);
+	//=======================================================================
 	vector<cv::Mat> hog_maps_vec = hog_feature_normalization(hog_feat_maps);
 
 	sum_features.push_back(hog_maps_vec);
@@ -55,23 +70,29 @@ cv::Mat feature_extractor::sample_patch(const cv::Mat &im,
 										cv::Size2f output_sz,
 										const eco_params &gparams)
 {
+	// Pos should be integer when input, but floor in just in case.
 	cv::Point pos(poss.operator cv::Point());
 
 	// Downsample factor
 	float resize_factor = std::min(sample_sz.width / output_sz.width, sample_sz.height / output_sz.height);
 	int df = std::max((float)floor(resize_factor - 0.1), float(1));
+	//debug("resize: %f,df: %d,sample_sz: %f x %f,output_sz: %f x %f,pos: %d %d", resize_factor, df, sample_sz.width, sample_sz.height,
+	//	output_sz.width, output_sz.height, pos.y, pos.x);
+
 	cv::Mat new_im;
 	im.copyTo(new_im);
+
 	if (df > 1)
 	{
-		cv::Point os((pos.x - 0) % df, ((pos.y - 0) % df));
+		cv::Point os((pos.x - 1) % df, ((pos.y - 1) % df));
 		pos.x = (pos.x - os.x - 1) / df + 1;
 		pos.y = (pos.y - os.y - 1) / df + 1;
 
 		sample_sz.width = sample_sz.width / df;
 		sample_sz.height = sample_sz.height / df;
 
-		int r = (im.rows - os.y) / df + 1, c = (im.cols - os.x) / df;
+		int r = (im.rows - os.y) / df + 1;
+		int c = (im.cols - os.x) / df;
 		cv::Mat new_im2(r, c, im.type());
 
 		new_im = new_im2;
@@ -84,12 +105,15 @@ cv::Mat feature_extractor::sample_patch(const cv::Mat &im,
 					new_im.at<cv::Vec3b>(m, n) = im.at<cv::Vec3b>(i, j);
 	}
 
-	// *** extract image ***
-	sample_sz.width = round(sample_sz.width);
-	sample_sz.height = round(sample_sz.height);
-	cv::Point pos2(pos.x - floor((sample_sz.width + 1) / 2) + 1, pos.y - floor((sample_sz.height + 1) / 2) + 1);
+	// make sure the size is not too small and round it
+	sample_sz.width = std::max(round(sample_sz.width), 2.0f);
+	sample_sz.height = std::max(round(sample_sz.height), 2.0f);
 
-	//debug("new_im:%d, %d, pos:%d, %d, sample_sz:%f, %f", new_im.cols, new_im.rows, pos2.x, pos2.y, sample_sz.width, sample_sz.height);
+	cv::Point pos2(pos.x - floor((sample_sz.width + 1) / 2),
+				   pos.y - floor((sample_sz.height + 1) / 2));
+	//debug("new_im:%d x %d, pos2:%d %d, sample_sz:%f x %f", new_im.rows, new_im.cols, pos2.x, pos2.y, sample_sz.width, sample_sz.height);
+	//showfeature(new_im, 0);
+
 	cv::Mat im_patch;
 	if (sample_sz.width - pos2.x > 0 && sample_sz.height - pos2.y > 0)
 	{
@@ -99,9 +123,20 @@ cv::Mat feature_extractor::sample_patch(const cv::Mat &im,
 	{
 		im_patch = RectTools::subwindow(new_im, cv::Rect(cv::Point(0, 0), new_im.size()), IPL_BORDER_REPLICATE);
 	}
-
+/*
+	imgInfo(im_patch);
+	showfeature(im_patch, 0);
+	assert(0);
+*/
 	cv::Mat resized_patch;
 	cv::resize(im_patch, resized_patch, output_sz);
+
+	/*
+	imgInfo(resized_patch);//im: 8UC3 640 x 480
+	cv::imshow("Tracking", resized_patch);
+	cv::waitKey(0);
+	assert(0);
+*/
 	return resized_patch;
 }
 
@@ -115,10 +150,23 @@ vector<cv::Mat> feature_extractor::get_hog(vector<cv::Mat> ims)
 	{
 		cv::Mat temp;
 		ims[i].convertTo(temp, CV_32FC3);
+
 		// Create object
 		HogFeature FHOG(hog_features.fparams.cell_size, 1);
-		cv::Mat features = FHOG.getFeature(temp); //*** Extract FHOG features****
-		hog_feats.push_back(features);
+		cv::Mat featuresMap = FHOG.getFeature(temp);
+		/*
+		CvLSVMFeatureMapCaskade *map_temp;
+		IplImage zz = temp;
+		getFeatureMaps(&zz, hog_features.fparams.cell_size, &map_temp);
+		normalizeAndTruncate(map_temp, 0.2f);
+		PCAFeatureMaps(map_temp);
+		cv::Mat featuresMap = cv::Mat(cv::Size(map_temp->sizeX, map_temp->sizeY),
+									  CV_32FC(map_temp->numFeatures), map_temp->map);
+		// Procedure do deal with cv::Mat multichannel bug
+		featuresMap = featuresMap.clone();
+		freeFeatureMapObject(&map_temp);
+*/
+		hog_feats.push_back(featuresMap);
 	}
 	return hog_feats;
 }

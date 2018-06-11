@@ -4,7 +4,10 @@ namespace eco
 {
 void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 {
+	//showmat3chall(im,0);
+	imgInfo(im);
 	debug("rect: %f, %f, %f, %f", rect.x, rect.y, rect.width, rect.height);
+
 	if (params.useDeepFeature)
 	{
 		yml_mean = meanMatFromYML(params.cnn_features.fparams.mean_yml);
@@ -139,7 +142,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 		//showmat2ch(interp1_fs1, 2);
 		//showmat2ch(interp2_fs1, 2);
 	}
-	
+
 	//*** Construct spatial regularization filter, refer SRDCF
 	for (size_t i = 0; i < filter_sz.size(); i++)
 	{
@@ -147,10 +150,11 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 		cv::Mat temp_f;
 		temp_d.convertTo(temp_f, CV_32FC1);
 		reg_filter.push_back(temp_f);
-		debug("reg_filter %lu:", i); showmatall(temp_f, 2);
+		debug("reg_filter %lu:", i);
+		showmatall(temp_f, 2);
 		// Compute the energy of the filter (used for preconditioner)drone_flip
-		cv::Mat_<double> t = temp_d.mul(temp_d);  //element-wise multiply
-		float energy = FFTTools::mat_sumd(t); //sum up all the values of each points of the mat
+		cv::Mat_<double> t = temp_d.mul(temp_d); //element-wise multiply
+		float energy = FFTTools::mat_sumd(t);	//sum up all the values of each points of the mat
 		reg_energy.push_back(energy);
 		debug("reg_energy %lu: %f", i, energy);
 	}
@@ -178,12 +182,13 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	{
 		debug("scaleFactor %lu: %f", i, scaleFactors[i]);
 	}
-//=========================================================================================================
+	//=========================================================================================================
 	ECO_FEATS xl, xlw, xlf, xlf_porj;
-
 	xl = feat_extrator.extractor(im, pos, vector<float>(1, currentScaleFactor), params, yml_mean, net);
 	debug("xl size: %lu, %lu, %d, %d", xl.size(), xl[0].size(), xl[0][0].cols, xl[0][0].rows);
-	//showmat(xl[0][0],2);
+	showmat(xl[0][0],2);
+	ddebug();
+	assert(0);
 	//*** Do windowing of features ***
 	xl = do_windows_x(xl, cos_window);
 
@@ -555,12 +560,14 @@ ECO_FEATS ECO::interpolate_dft(const ECO_FEATS &xlf, vector<cv::Mat> &interp1_fs
 
 	for (size_t i = 0; i < xlf.size(); i++)
 	{
-		cv::Mat interp1_fs_mat = RectTools::subwindow(interp1_fs[i], cv::Rect(cv::Point(0, 0), cv::Size(interp1_fs[i].rows, interp1_fs[i].rows)), IPL_BORDER_REPLICATE);
-		cv::Mat interp2_fs_mat = RectTools::subwindow(interp2_fs[i], cv::Rect(cv::Point(0, 0), cv::Size(interp2_fs[i].cols, interp2_fs[i].cols)), IPL_BORDER_REPLICATE);
+		cv::Mat interp1_fs_mat = RectTools::subwindow(interp1_fs[i], cv::Rect(cv::Point(0, 0), 
+								cv::Size(interp1_fs[i].rows, interp1_fs[i].rows)), IPL_BORDER_REPLICATE);
+		cv::Mat interp2_fs_mat = RectTools::subwindow(interp2_fs[i], cv::Rect(cv::Point(0, 0), 
+								cv::Size(interp2_fs[i].cols, interp2_fs[i].cols)), IPL_BORDER_REPLICATE);
 		vector<cv::Mat> temp;
 		for (size_t j = 0; j < xlf[i].size(); j++)
 		{
-			temp.push_back(precision(complexMultiplication(complexMultiplication(interp1_fs_mat, xlf[i][j]), interp2_fs_mat)));
+			temp.push_back(complexMultiplication(complexMultiplication(interp1_fs_mat, xlf[i][j]), interp2_fs_mat));
 		}
 		result.push_back(temp);
 	}
@@ -580,7 +587,9 @@ ECO_FEATS ECO::compact_fourier_coeff(const ECO_FEATS &xf)
 	return result;
 }
 
-vector<cv::Mat> ECO::init_projection_matrix(const ECO_FEATS &init_sample, const vector<int> &compressed_dim, const vector<int> &feature_dim)
+vector<cv::Mat> ECO::init_projection_matrix(const ECO_FEATS &init_sample, 
+											const vector<int> &compressed_dim, 
+											const vector<int> &feature_dim)
 {
 	vector<cv::Mat> result;
 	for (size_t i = 0; i < init_sample.size(); i++)

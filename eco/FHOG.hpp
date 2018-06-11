@@ -14,9 +14,9 @@ Contacts: joaopfaro@gmail.com
 #ifndef FHOG_H
 #define FHOG_H
 
-#include <opencv2/opencv.hpp> 
+#include <opencv2/opencv.hpp>
 #include "fhog_f.hpp"
-
+#include "debug.h"
 //typedef struct{
 //  int sizeX;
 //  int sizeY;
@@ -31,22 +31,22 @@ typedef unsigned int uint;
 //int PCAFeatureMaps(CvLSVMFeatureMapCaskade *);
 //int freeFeatureMapObject(CvLSVMFeatureMapCaskade **);
 
-class HogFeature {
-
-	public:
+class HogFeature
+{
+  public:
 	HogFeature();
-	HogFeature(uint, uint);
+	HogFeature(uint cell_size, uint scale);
 	virtual ~HogFeature();
-	virtual HogFeature* clone() const;
+	virtual HogFeature *clone() const;
 	virtual cv::Mat getFeature(cv::Mat);
 
-	private:
-		uint _cell_size;
-		uint _scale;
-		cv::Size _tmpl_sz;
-		cv::Mat _featuresMap;
-		cv::Mat _featurePaddingMat;
-		CvLSVMFeatureMapCaskade *_map;
+  private:
+	uint _cell_size;
+	uint _scale;
+	cv::Size _tmpl_sz;
+	cv::Mat _featuresMap;
+	cv::Mat _featurePaddingMat;
+	CvLSVMFeatureMapCaskade *_map;
 };
 
 #endif

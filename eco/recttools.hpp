@@ -76,14 +76,15 @@ namespace RectTools
 
 		rect.y -= rect.height * (scaley - 1.f) / 2.f;
 		rect.height *= scaley;
-
 	}
 
 	template <typename t>
 	inline void limit(cv::Rect_<t> &rect, cv::Rect_<t> limit)
 	{
-		if (rect.x + rect.width > limit.x + limit.width)rect.width = (limit.x + limit.width - rect.x);
-		if (rect.y + rect.height > limit.y + limit.height)rect.height = (limit.y + limit.height - rect.y);
+		if (rect.x + rect.width > limit.x + limit.width)
+			rect.width = (limit.x + limit.width - rect.x);
+		if (rect.y + rect.height > limit.y + limit.height)
+			rect.height = (limit.y + limit.height - rect.y);
 		if (rect.x < limit.x)
 		{
 			rect.width -= (limit.x - rect.x);
@@ -94,8 +95,8 @@ namespace RectTools
 			rect.height -= (limit.y - rect.y);
 			rect.y = limit.y;
 		}
-		if (rect.width<0)rect.width = 0;
-		if (rect.height<0)rect.height = 0;
+		if (rect.width < 0)		rect.width = 0;
+		if (rect.height < 0)	rect.height = 0;
 	}
 
 	template <typename t>

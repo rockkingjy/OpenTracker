@@ -22,6 +22,7 @@
 #include "recttools.hpp"
 #include "FHOG.hpp"
 #include "fhog_f.hpp"
+#include "debug.h"
 
 using namespace FFTTools;
 //using namespace std;

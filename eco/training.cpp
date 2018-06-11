@@ -1,5 +1,6 @@
 #include "training.h"
-
+eco_train::eco_train(){}
+eco_train::~eco_train(){}
 void eco_train::train_init( ECO_FEATS phf, 
 							ECO_FEATS phf_inc, 
 							vector<cv::Mat> pproj_matrix, 
