@@ -66,7 +66,7 @@ void drawBox(cv::Mat& image, cv::Rect box, cv::Scalar color, int thick){
 int main()
 {
     string databaseTypes[4] = {"VOT-2017", "TB-2015", "TLP", "UAV123"};
-    string databaseType = databaseTypes[0];
+    string databaseType = databaseTypes[1];
     // Read from the images ====================================================
     int f, isLost;
     float x, y, w, h;
@@ -77,7 +77,7 @@ int main()
     ostringstream osfile;
     if (databaseType == "TLP")
     {
-        path = "/media/elab/sdd/data/TLP/Bike"; //Alladin";//IceSkating";//Sam";
+        path = "/media/elab/sdd/data/TLP/Sam"; //Alladin";//IceSkating";//Sam";//Bike
         // Read the groundtruth bbox
         groundtruth = new ifstream(path + "/groundtruth_rect.txt");
         getline(*groundtruth, s, ',');
@@ -244,7 +244,7 @@ int main()
         putText(frame, "FPS: " + SSTR(float(fpseco)), Point(100, 50), FONT_HERSHEY_SIMPLEX,
                 0.75, Scalar(0, 225, 0), 2);
 
-        //imshow("Tracking", frame);
+        imshow("Tracking", frame);
 
         int c = cvWaitKey(1);
         if (c != -1)

@@ -46,7 +46,7 @@
 //#include "_lsvmc_latentsvm.h"
 //#include "_lsvmc_resizeimg.h"
 
-#include "fhog_f.hpp"
+#include "fhog.hpp"
 
 
 #ifdef HAVE_TBB
@@ -92,12 +92,12 @@ int getFeatureMaps(const IplImage* image, const int k, CvLSVMFeatureMapCaskade *
     int *nearest;
     float *w, a_x, b_x;
 
-    float kernel[3] = {-1.f, 0.f, 1.f};
-    CvMat kernel_dx = cvMat(1, 3, CV_32F, kernel);
-    CvMat kernel_dy = cvMat(3, 1, CV_32F, kernel);
+    float kernel[3] = {-1.f, 0.f, 1.f}; // difference filter
+    CvMat kernel_dx = cvMat(1, 3, CV_32F, kernel); // 1 x 3
+    CvMat kernel_dy = cvMat(3, 1, CV_32F, kernel); // 3 x 1
 
-    float * r;
-    int   * alfa;
+    float * r;      // magnitude
+    int   * alfa;   // orientation
     
     float boundary_x[NUM_SECTOR + 1];
     float boundary_y[NUM_SECTOR + 1];
@@ -110,7 +110,7 @@ int getFeatureMaps(const IplImage* image, const int k, CvLSVMFeatureMapCaskade *
     numChannels = image->nChannels;
 
     dx    = cvCreateImage(cvSize(image->width, image->height), 
-                          IPL_DEPTH_32F, 3);
+                          IPL_DEPTH_32F, 3); // single-precision floating-point, 3 channels
     dy    = cvCreateImage(cvSize(image->width, image->height), 
                           IPL_DEPTH_32F, 3);
 

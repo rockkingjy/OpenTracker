@@ -186,9 +186,9 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	ECO_FEATS xl, xlw, xlf, xlf_porj;
 	xl = feat_extrator.extractor(im, pos, vector<float>(1, currentScaleFactor), params, yml_mean, net);
 	debug("xl size: %lu, %lu, %d, %d", xl.size(), xl[0].size(), xl[0][0].cols, xl[0][0].rows);
-	showmat(xl[0][0],2);
+	//showmat(xl[0][0],2);
 	ddebug();
-	assert(0);
+	//assert(0);
 	//*** Do windowing of features ***
 	xl = do_windows_x(xl, cos_window);
 
@@ -241,7 +241,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	SampleUpdate.replace_sample(xlf_porj, 0);
 
 	//  Find the norm of the reprojected sample
-	float new_sample_norm = FeatEnergy(xlf_porj); // equal to matlab
+	float new_sample_norm = FeatEnergy(xlf_porj); 
 	SampleUpdate.set_gram_matrix(0, 0, 2 * new_sample_norm);
 
 	frames_since_last_train = 0;
@@ -266,10 +266,10 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	ddebug();
 	// 1: Extract features at multiple resolutions
 	ECO_FEATS xt = feat_extrator.extractor(frame, sample_pos, det_samples_pos, params, yml_mean, net);
-	debug("xt size: %lu, %lu, %d, %d", xt.size(), xt[0].size(), xt[0][0].cols, xt[0][0].rows);
+	//debug("xt size: %lu, %lu, %d, %d", xt.size(), xt[0].size(), xt[0][0].cols, xt[0][0].rows);
 	// 2:  project sample *****
 	ECO_FEATS xt_proj = FeatProjMultScale(xt, projection_matrix);
-	debug("xt_proj size: %lu, %lu, %d, %d", xt_proj.size(), xt_proj[0].size(), xt_proj[0][0].cols, xt_proj[0][0].rows);
+//	debug("xt_proj size: %lu, %lu, %d, %d", xt_proj.size(), xt_proj[0].size(), xt_proj[0][0].cols, xt_proj[0][0].rows);
 
 	// 3: Do windowing of features ***
 	xt_proj = do_windows_x(xt_proj, cos_window);
@@ -279,7 +279,7 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 
 	// 5: Interpolate features to the continuous domain
 	xt_proj = interpolate_dft(xt_proj, interp1_fs, interp2_fs);
-	debug("xt_proj size: %lu, %lu, %d, %d", xt_proj.size(), xt_proj[0].size(), xt_proj[0][0].cols, xt_proj[0][0].rows);
+//	debug("xt_proj size: %lu, %lu, %d, %d", xt_proj.size(), xt_proj[0].size(), xt_proj[0][0].cols, xt_proj[0][0].rows);
 
 	// 6: compute the scores for different scales of target
 	// Compute convolution for each feature block in the Fourier domain and the sum over all blocks.
@@ -313,7 +313,7 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 			   currentScaleFactor * scaleFactors[scale_change_factor];
 	float dy = scores.get_disp_row() * (img_support_sz.height / output_sz) *
 			   currentScaleFactor * scaleFactors[scale_change_factor];
-	debug("get_disp_col: %f, get_disp_row: %f, dx: %f, dy: %f", scores.get_disp_col(), scores.get_disp_row(), dx, dy);
+//	debug("get_disp_col: %f, get_disp_row: %f, dx: %f, dy: %f", scores.get_disp_col(), scores.get_disp_row(), dx, dy);
 	// 9: Update position
 	pos = cv::Point2f(sample_pos) + cv::Point2f(dx, dy);
 
@@ -329,7 +329,7 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	{
 		currentScaleFactor = params.max_scale_factor;
 	}
-
+/*
 	// Visualization
 	cv::Mat resframe = frame.clone();
 	cv::rectangle(resframe, roi, cv::Scalar(0, 255, 0));
@@ -346,7 +346,7 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 			   cv::Size(img_support_sz.width, img_support_sz.height),
 			   0, 0, cv::INTER_NEAREST);
 	cv::applyColorMap(cm_img, cm_img, cv::COLORMAP_JET);
-
+*/
 	//cv::imshow("cm_img", cm_img);
 	//cv::waitKey(1);
 	//*****************************************************************************

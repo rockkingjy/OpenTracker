@@ -53,7 +53,7 @@ inline void imgInfo(cv::Mat mat)
 	r += "C";
 	r += (chans + '0');
 
-	debug("imageInfo: %s %d x %d", r.c_str(), mat.cols, mat.rows );
+	debug("imageInfo: %s %d x %d", r.c_str(), mat.cols, mat.rows);
 	//return r;
 }
 
@@ -282,8 +282,8 @@ inline void showmat2ch(cv::Mat mat, int type)
 }
 
 // Attention!!!! opencv: BGR, matlab: RGB, different order!!!
-void showfeature(cv::Mat mat, int type);
-inline void showfeature(cv::Mat mat, int type)
+void printImage(cv::Mat mat, int type);
+inline void printImage(cv::Mat mat, int type)
 {
 	std::vector<cv::Mat> splitmat;
 	cv::split(mat, splitmat);
@@ -291,10 +291,10 @@ inline void showfeature(cv::Mat mat, int type)
 	debug("channels: %lu", splitmat.size());
 
 	printf("First row of channel 0: \n");
-	for (int j = 0; j < mat.cols; j+=1)
+	for (int j = 0; j < mat.cols; j += 1)
 	{
 		if (type == 0)
-		{ 
+		{
 			printf("%d ", splitmat[2].at<uchar>(0, j));
 		}
 		else if (type == 1)
@@ -314,7 +314,7 @@ inline void showfeature(cv::Mat mat, int type)
 
 	printf("\n");
 	printf("First col of  channel 0: \n");
-	for (int i = 0; i < mat.rows; i+=1)
+	for (int i = 0; i < mat.rows; i += 1)
 	{
 		if (type == 0)
 		{ // first row
@@ -336,4 +336,112 @@ inline void showfeature(cv::Mat mat, int type)
 	printf("\n\n");
 
 	printf("End of feature mat\n");
+}
+
+// Attention!!!! opencv: BGR, matlab: RGB, different order!!!
+void printFeature(cv::Mat mat, int type);
+inline void printFeature(cv::Mat mat, int type)
+{
+	std::vector<cv::Mat> splitmat;
+	cv::split(mat, splitmat);
+
+	debug("channels: %lu", splitmat.size());
+
+	printf("First row of channel 0: \n");
+	for (int j = 0; j < mat.cols; j += 1)
+	{
+		if (type == 0)
+		{
+			printf("%d ", splitmat[0].at<uchar>(0, j));
+		}
+		else if (type == 1)
+		{ // first row
+			printf("%d ", splitmat[0].at<int>(0, j));
+		}
+		else if (type == 2)
+		{ // first row
+			printf("%f ", splitmat[0].at<float>(0, j));
+		}
+		else if (type == 3)
+		{ // first row
+			printf("%lf ", splitmat[0].at<double>(0, j));
+		}
+	}
+	printf("\n\n");
+
+	printf("\n");
+	printf("First col of  channel 0: \n");
+	for (int i = 0; i < mat.rows; i += 1)
+	{
+		if (type == 0)
+		{ // first row
+			printf("%d ", splitmat[0].at<uchar>(i, 0));
+		}
+		else if (type == 1)
+		{ // first row
+			printf("%d ", splitmat[0].at<int>(i, 0));
+		}
+		else if (type == 2)
+		{ // first row
+			printf("%f ", splitmat[0].at<float>(i, 0));
+		}
+		else if (type == 3)
+		{ // first col
+			printf("%lf ", splitmat[0].at<double>(i, 0));
+		}
+	}
+	printf("\n\n");
+
+	printf("End of feature mat\n");
+}
+
+// Simple test of the structure of mat in opencv;
+void opencvtest();
+inline void opencvtest()
+{
+	printf("opencvtest\n");
+	float *newdata = (float *)malloc(sizeof(float) * (2 * 3 * 4));
+
+	for (int i = 0; i < 2 * 3 * 4; i++)
+	{
+		newdata[i] = i;
+	}
+
+	cv::Mat mat = cv::Mat(cv::Size(3, 4), CV_32FC(2), newdata);
+
+	printf("\nInfo of original mat:");
+	imgInfo(mat);
+	for (int i = 0; i < 2 * 3 * 4; i++)
+	{
+		printf("%f ",mat.at<float>(0,i));
+	}
+	printf("\n");
+	
+	std::vector<cv::Mat> splitmat;
+	cv::split(mat, splitmat);
+
+	printf("\nInfo of splited mat:");
+	imgInfo(splitmat[0]);
+
+	printf("channel 0:\n");
+	for (int j = 0; j < mat.rows; j++)
+	{
+		for (int i = 0; i < mat.cols; i++)
+		{
+			printf("%f ", splitmat[0].at<float>(j, i));
+		}
+		printf("\n");
+	}
+	printf("\n");
+	printf("channel 1:\n");
+	for (int j = 0; j < mat.rows; j++)
+	{
+		for (int i = 0; i < mat.cols; i++)
+		{
+			printf("%f ", splitmat[1].at<float>(j, i));
+		}
+		printf("\n");
+	}
+
+	printf("\n\n");
 }

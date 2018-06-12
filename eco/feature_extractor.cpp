@@ -20,6 +20,9 @@ ECO_FEATS feature_extractor::extractor(cv::Mat image,
 		cnn_features = params.cnn_features;
 		this->net = net;
 	}
+	if (params.useCnFeature)
+	{
+	}
 
 	// extract image path for different kinds of feautures
 	vector<vector<cv::Mat>> img_samples;
@@ -36,10 +39,12 @@ ECO_FEATS feature_extractor::extractor(cv::Mat image,
 		}
 		img_samples.push_back(img_samples_temp);
 	}
+/*	
 	debug("img_samples - num_features:%lu scales:%lu", img_samples.size(), img_samples[0].size());
+	ddebug();
 	imgInfo(img_samples[0][0]); // 8UC3 250 x 250
-/*
-	showfeature(img_samples[0][0], 0);
+															
+	printImage(img_samples[0][0], 0);
 	cv::imshow("Tracking", img_samples[0][0]);
 	cv::waitKey(0);
 	assert(0);
@@ -51,16 +56,20 @@ ECO_FEATS feature_extractor::extractor(cv::Mat image,
 		sum_features = get_cnn_layers(img_samples[0], yml_mean);
 		cnn_feature_normalization(sum_features);
 	}
-	hog_feat_maps = get_hog(img_samples[img_samples.size() - 1]); // the last feature is hog feature.
+	if (params.useHogFeature)
+	{
+		hog_feat_maps = get_hog(img_samples[img_samples.size() - 1]); // the last feature is hog feature.
 
-	debug("hog_feat_maps.size():%lu", hog_feat_maps.size());
-	imgInfo(hog_feat_maps[0]); // 32FCO 62 x 62, O represents 31 channels.
-	showfeature(hog_feat_maps[0], 2);
-	assert(0);
-	//=======================================================================
-	vector<cv::Mat> hog_maps_vec = hog_feature_normalization(hog_feat_maps);
+//		debug("hog_feat_maps.size():%lu", hog_feat_maps.size());
 
-	sum_features.push_back(hog_maps_vec);
+		vector<cv::Mat> hog_maps_vec = hog_feature_normalization(hog_feat_maps);
+
+		sum_features.push_back(hog_maps_vec);
+	}
+	if (params.useCnFeature)
+	{
+	}
+
 	return sum_features;
 }
 
@@ -123,7 +132,7 @@ cv::Mat feature_extractor::sample_patch(const cv::Mat &im,
 	{
 		im_patch = RectTools::subwindow(new_im, cv::Rect(cv::Point(0, 0), new_im.size()), IPL_BORDER_REPLICATE);
 	}
-/*
+	/*
 	imgInfo(im_patch);
 	showfeature(im_patch, 0);
 	assert(0);
@@ -148,23 +157,71 @@ vector<cv::Mat> feature_extractor::get_hog(vector<cv::Mat> ims)
 	vector<cv::Mat> hog_feats;
 	for (unsigned int i = 0; i < ims.size(); i++)
 	{
-		cv::Mat temp;
-		ims[i].convertTo(temp, CV_32FC3);
+		cv::Mat ims_f;
+		ims[i].convertTo(ims_f, CV_32FC3);
+	/*
+		ddebug();
+		imgInfo(ims_f);
+	
+		printImage(ims_f, 2);
+		assert(0);
+*/
+		cv::Size _tmpl_sz;
+		_tmpl_sz.width = ims_f.cols;
+		_tmpl_sz.height = ims_f.rows;
 
-		// Create object
-		HogFeature FHOG(hog_features.fparams.cell_size, 1);
-		cv::Mat featuresMap = FHOG.getFeature(temp);
-		/*
+//		debug("%d, %d", _tmpl_sz.width, _tmpl_sz.height);
+
+		int _cell_size = hog_features.fparams.cell_size;
+		// Round to cell size and also make it even
+		if (int(_tmpl_sz.width / (_cell_size)) % 2 == 0)
+		{
+			_tmpl_sz.width = ((int)(_tmpl_sz.width / (2 * _cell_size)) * 2 * _cell_size) + _cell_size * 2;
+			_tmpl_sz.height = ((int)(_tmpl_sz.height / (2 * _cell_size)) * 2 * _cell_size) + _cell_size * 2;
+		}
+		else
+		{
+			_tmpl_sz.width = ((int)(_tmpl_sz.width / (2 * _cell_size)) * 2 * _cell_size) + _cell_size * 3;
+			_tmpl_sz.height = ((int)(_tmpl_sz.height / (2 * _cell_size)) * 2 * _cell_size) + _cell_size * 3;
+		}
+
+//		debug("%d, %d", _tmpl_sz.width, _tmpl_sz.height);
+
+		// Add extra cell filled with zeros around the image
+		cv::Mat featurePaddingMat(_tmpl_sz.height + _cell_size * 2,
+								  _tmpl_sz.width + _cell_size * 2,
+								  CV_32FC3, cvScalar(0, 0, 0));
+
+		if (ims_f.cols != _tmpl_sz.width || ims_f.rows != _tmpl_sz.height)
+		{
+			resize(ims_f, ims_f, _tmpl_sz);
+		}
+		ims_f.copyTo(featurePaddingMat);
+/*
+		ddebug();
+		imgInfo(featurePaddingMat);
+		assert(0);
+*/
+		IplImage zz = featurePaddingMat;
 		CvLSVMFeatureMapCaskade *map_temp;
-		IplImage zz = temp;
-		getFeatureMaps(&zz, hog_features.fparams.cell_size, &map_temp);
-		normalizeAndTruncate(map_temp, 0.2f);
-		PCAFeatureMaps(map_temp);
-		cv::Mat featuresMap = cv::Mat(cv::Size(map_temp->sizeX, map_temp->sizeY),
+		getFeatureMaps(&zz, _cell_size, &map_temp); // dimension: 27
+
+		normalizeAndTruncate(map_temp, 0.2f); // dimension: 108
+
+		PCAFeatureMaps(map_temp); // dimension: 31
+
+		cv::Mat featuresMap = cv::Mat(cv::Size(map_temp->sizeX, map_temp->sizeY), // Procedure do deal with cv::Mat multichannel bug
 									  CV_32FC(map_temp->numFeatures), map_temp->map);
-		// Procedure do deal with cv::Mat multichannel bug
-		featuresMap = featuresMap.clone();
+
+		// clone because map_temp will be free.
+		featuresMap = featuresMap.clone(); 
+
 		freeFeatureMapObject(&map_temp);
+		/*
+		ddebug();
+		imgInfo(featuresMap);
+		printFeature(featuresMap, 2);
+		assert(0);
 */
 		hog_feats.push_back(featuresMap);
 	}

@@ -40,11 +40,13 @@ extern ECO_FEATS   featDotMul(const ECO_FEATS& a, const ECO_FEATS& b);     // tw
 
 extern ECO_FEATS   project_sample(const ECO_FEATS& x, const std::vector<cv::Mat>& projection_matrix);
 
+extern float 	   feat_dis_compute(ECO_FEATS&feat1, ECO_FEATS &feat2);
 extern float       FeatEnergy(ECO_FEATS& feat);
 
 extern ECO_FEATS   feats_pow2(const ECO_FEATS& feats);
 
 extern ECO_FEATS   do_dft(const ECO_FEATS& xlw);
+
 extern  ECO_FEATS  featDotMul(const ECO_FEATS& a, const ECO_FEATS& b);   // two features dot multiplication
 extern  ECO_FEATS  FeatDotDivide(ECO_FEATS data1, ECO_FEATS data2);
 
@@ -54,7 +56,7 @@ extern  ECO_FEATS              computerFeatScores2(const ECO_FEATS& x, const ECO
 extern  ECO_FEATS  FeatScale(ECO_FEATS data, float scale);
 
 extern  void       symmetrize_filter(ECO_FEATS& hf);
-extern  float      FeatEnergy(ECO_FEATS& feat);
+
 extern  std::vector<cv::Mat>      FeatVec(const ECO_FEATS& x);   // vectorize features
 
 extern  ECO_FEATS  FeatProjMultScale(const ECO_FEATS& x, const std::vector<cv::Mat>& projection_matrix);

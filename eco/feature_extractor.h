@@ -20,8 +20,7 @@
 #include "feature_type.h"
 #include "fftTool.h"
 #include "recttools.hpp"
-#include "FHOG.hpp"
-#include "fhog_f.hpp"
+#include "fhog.hpp"
 #include "debug.h"
 
 using namespace FFTTools;

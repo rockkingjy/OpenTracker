@@ -1,7 +1,6 @@
 #include "feature_operator.h"
 
-
-ECO_FEATS featDotMul(const ECO_FEATS& a, const ECO_FEATS& b)
+ECO_FEATS featDotMul(const ECO_FEATS &a, const ECO_FEATS &b)
 {
 	ECO_FEATS res;
 	if (a.size() != b.size())
@@ -19,7 +18,7 @@ ECO_FEATS featDotMul(const ECO_FEATS& a, const ECO_FEATS& b)
 	return res;
 }
 
-ECO_FEATS do_dft(const ECO_FEATS& xlw)
+ECO_FEATS do_dft(const ECO_FEATS &xlw)
 {
 	ECO_FEATS xlf;
 	for (size_t i = 0; i < xlw.size(); i++)
@@ -38,7 +37,6 @@ ECO_FEATS do_dft(const ECO_FEATS& xlw)
 				{
 					xf_pad.at<cv::Vec<float, 2>>(size, k) = xf_pad.at<cv::Vec<float, 2>>(size - 1, k).conj();
 					xf_pad.at<cv::Vec<float, 2>>(k, size) = xf_pad.at<cv::Vec<float, 2>>(k, size - 1).conj();
-
 				}
 				temp.push_back(xf_pad);
 			}
@@ -47,10 +45,9 @@ ECO_FEATS do_dft(const ECO_FEATS& xlw)
 		xlf.push_back(temp);
 	}
 	return xlf;
-
 }
- 
-ECO_FEATS project_sample(const ECO_FEATS& x, const std::vector<cv::Mat>& projection_matrix)
+
+ECO_FEATS project_sample(const ECO_FEATS &x, const std::vector<cv::Mat> &projection_matrix)
 {
 	ECO_FEATS result;
 
@@ -73,35 +70,44 @@ ECO_FEATS project_sample(const ECO_FEATS& x, const std::vector<cv::Mat>& project
 		for (size_t j = 0; j < (size_t)res_temp.cols; j++)
 		{
 			cv::Mat temp2 = res_temp.col(j);
-			cv::Mat tt; 
-			temp2.copyTo(tt);                                 // the memory should be continous!!!!!!!!!! 
+			cv::Mat tt;
+			temp2.copyTo(tt);											  // the memory should be continous!!!!!!!!!!
 			cv::Mat temp3(x[i][0].cols, x[i][0].rows, CV_32FC2, tt.data); //(x[i][0].cols, x[i][0].rows, CV_32FC2, temp2.data) int size[2] = { x[i][0].cols, x[i][0].rows };cv::Mat temp3 = temp2.reshape(2, 2, size)
 			temp.push_back(temp3.t());
 		}
 		result.push_back(temp);
 	}
 	return result;
-
 }
 
-float FeatEnergy(ECO_FEATS& feat)
-{ 
+float feat_dis_compute(ECO_FEATS&feat1, ECO_FEATS &feat2)
+{
+	if (feat1.size() != feat2.size())
+		return 0;
+
+	float dist = 0;
+	for (size_t i = 0; i < feat1.size(); i++)
+	{
+		for (size_t j = 0; j < feat1[i].size(); j++)
+		{
+			cv::Mat feat2_conj = FFTTools::mat_conj(feat2[i][j]);
+			dist += FFTTools::mat_sum(FFTTools::real(FFTTools::complexMultiplication(feat1[i][j], feat2_conj)));
+		}
+	}
+	return dist;
+}
+
+float FeatEnergy(ECO_FEATS &feat)
+{
 	float res = 0;
 	if (feat.empty())
 		return res;
 
-	for (size_t i = 0; i < feat.size(); i++)
-	{
-		for (size_t j = 0; j < feat[i].size(); j++)
-		{
-			res += FFTTools::mat_sum(FFTTools::real(FFTTools::complexMultiplication(
-											FFTTools::mat_conj(feat[i][j]), feat[i][j])));
-		}
-	} 
-	return res;  
+	res = feat_dis_compute(feat, feat);
+	return res;
 }
 
-ECO_FEATS feats_pow2(const ECO_FEATS& feats)
+ECO_FEATS feats_pow2(const ECO_FEATS &feats)
 {
 	ECO_FEATS result;
 
@@ -112,7 +118,7 @@ ECO_FEATS feats_pow2(const ECO_FEATS& feats)
 
 	for (size_t i = 0; i < feats.size(); i++)
 	{
-		std::vector<cv::Mat> feat_vec; //*** locate memory **** 
+		std::vector<cv::Mat> feat_vec; //*** locate memory ****
 		for (size_t j = 0; j < (size_t)feats[i].size(); j++)
 		{
 			cv::Mat temp(feats[i][0].size(), CV_32FC2);
@@ -131,10 +137,9 @@ ECO_FEATS feats_pow2(const ECO_FEATS& feats)
 	}
 
 	return result;
-
 }
 
-ECO_FEATS  FeatDotDivide(ECO_FEATS a, ECO_FEATS b)
+ECO_FEATS FeatDotDivide(ECO_FEATS a, ECO_FEATS b)
 {
 	ECO_FEATS res;
 
@@ -151,10 +156,9 @@ ECO_FEATS  FeatDotDivide(ECO_FEATS a, ECO_FEATS b)
 		res.push_back(temp);
 	}
 	return res;
-
 }
 
-std::vector<cv::Mat>    computeFeatSores(const ECO_FEATS& x, const ECO_FEATS& f)
+std::vector<cv::Mat> computeFeatSores(const ECO_FEATS &x, const ECO_FEATS &f)
 {
 	std::vector<cv::Mat> res;
 
@@ -174,7 +178,7 @@ std::vector<cv::Mat>    computeFeatSores(const ECO_FEATS& x, const ECO_FEATS& f)
 
 ///**** features operation **************
 
-ECO_FEATS  FeatScale(ECO_FEATS data, float scale)
+ECO_FEATS FeatScale(ECO_FEATS data, float scale)
 {
 	ECO_FEATS res;
 
@@ -190,8 +194,7 @@ ECO_FEATS  FeatScale(ECO_FEATS data, float scale)
 	return res;
 }
 
-
-ECO_FEATS  FeatAdd(ECO_FEATS data1, ECO_FEATS data2)
+ECO_FEATS FeatAdd(ECO_FEATS data1, ECO_FEATS data2)
 {
 	ECO_FEATS res;
 
@@ -206,10 +209,9 @@ ECO_FEATS  FeatAdd(ECO_FEATS data1, ECO_FEATS data2)
 	}
 
 	return res;
-
 }
 
-ECO_FEATS  FeatMinus(ECO_FEATS data1, ECO_FEATS data2)
+ECO_FEATS FeatMinus(ECO_FEATS data1, ECO_FEATS data2)
 {
 	ECO_FEATS res;
 
@@ -224,10 +226,9 @@ ECO_FEATS  FeatMinus(ECO_FEATS data1, ECO_FEATS data2)
 	}
 
 	return res;
-
 }
 
-void       symmetrize_filter(ECO_FEATS& hf)
+void symmetrize_filter(ECO_FEATS &hf)
 {
 
 	for (size_t i = 0; i < hf.size(); i++)
@@ -242,11 +243,10 @@ void       symmetrize_filter(ECO_FEATS& hf)
 				hf[i][j].at<COMPLEX>(r, c) = hf[i][j].at<COMPLEX>(2 * dc_ind - r - 2, c).conj();
 			}
 		}
-
 	}
 }
 
-ECO_FEATS  FeatProjMultScale(const ECO_FEATS& x, const std::vector<cv::Mat>& projection_matrix)
+ECO_FEATS FeatProjMultScale(const ECO_FEATS &x, const std::vector<cv::Mat> &projection_matrix)
 {
 	ECO_FEATS result;
 	//vector<cv::Mat> featsVec = FeatVec(x);
@@ -256,7 +256,7 @@ ECO_FEATS  FeatProjMultScale(const ECO_FEATS& x, const std::vector<cv::Mat>& pro
 		int numScales = x[i].size() / org_dim;
 		std::vector<cv::Mat> temp;
 
-		for (size_t s = 0; s < (size_t)numScales; s++)   // for every scale 
+		for (size_t s = 0; s < (size_t)numScales; s++) // for every scale
 		{
 			cv::Mat x_mat;
 			for (size_t j = s * org_dim; j < (s + 1) * org_dim; j++)
@@ -273,7 +273,8 @@ ECO_FEATS  FeatProjMultScale(const ECO_FEATS& x, const std::vector<cv::Mat>& pro
 			for (size_t j = 0; j < (size_t)res_temp.cols; j++)
 			{
 				cv::Mat temp2 = res_temp.col(j);
-				cv::Mat tt; temp2.copyTo(tt);                                 // the memory should be continous!!!!!!!!!! 
+				cv::Mat tt;
+				temp2.copyTo(tt);											  // the memory should be continous!!!!!!!!!!
 				cv::Mat temp3(x[i][0].cols, x[i][0].rows, CV_32FC1, tt.data); //(x[i][0].cols, x[i][0].rows, CV_32FC2, temp2.data) int size[2] = { x[i][0].cols, x[i][0].rows };cv::Mat temp3 = temp2.reshape(2, 2, size)
 				temp.push_back(temp3.t());
 			}
@@ -283,7 +284,7 @@ ECO_FEATS  FeatProjMultScale(const ECO_FEATS& x, const std::vector<cv::Mat>& pro
 	return result;
 }
 
-std::vector<cv::Mat>      FeatVec(const ECO_FEATS& x)
+std::vector<cv::Mat> FeatVec(const ECO_FEATS &x)
 {
 	if (x.empty())
 		return std::vector<cv::Mat>();
@@ -303,7 +304,7 @@ std::vector<cv::Mat>      FeatVec(const ECO_FEATS& x)
 }
 
 ///**** projection operation **************
-std::vector<cv::Mat>  ProjScale(std::vector<cv::Mat> data, float scale)
+std::vector<cv::Mat> ProjScale(std::vector<cv::Mat> data, float scale)
 {
 	std::vector<cv::Mat> res;
 	for (size_t i = 0; i < data.size(); i++)
@@ -313,7 +314,7 @@ std::vector<cv::Mat>  ProjScale(std::vector<cv::Mat> data, float scale)
 	return res;
 }
 
-std::vector<cv::Mat>  ProjAdd(std::vector<cv::Mat> data1, std::vector<cv::Mat> data2)
+std::vector<cv::Mat> ProjAdd(std::vector<cv::Mat> data1, std::vector<cv::Mat> data2)
 {
 	std::vector<cv::Mat> res;
 	for (size_t i = 0; i < data1.size(); i++)
@@ -323,7 +324,7 @@ std::vector<cv::Mat>  ProjAdd(std::vector<cv::Mat> data1, std::vector<cv::Mat> d
 	return res;
 }
 
-std::vector<cv::Mat>  ProjMinus(std::vector<cv::Mat> data1, std::vector<cv::Mat> data2)
+std::vector<cv::Mat> ProjMinus(std::vector<cv::Mat> data1, std::vector<cv::Mat> data2)
 {
 	std::vector<cv::Mat> res;
 	for (size_t i = 0; i < data1.size(); i++)

@@ -18,30 +18,68 @@ namespace eco_sample_update{
 	{
 	public:
 		sample_update(){};
+		virtual ~sample_update(){};
 
-		virtual    ~sample_update(){};
+		void init(const std::vector<cv::Size>& filter, const std::vector<int>& feature_dim, size_t max_samples);
+		void update_sample_space_model( ECO_FEATS& new_train_sample);
+		void update_distance_matrix(cv::Mat& gram_vector, float new_sample_norm, 
+										  int id1, int id2, float w1, float w2);
 
-		void       init(const std::vector<cv::Size>& filter, const std::vector<int>& feature_dim, size_t max_samples);
+		inline cv::Mat find_gram_vector( ECO_FEATS& new_train_sample) 
+		{
+			cv::Mat result(cv::Size(1, nSamples), CV_32FC2);
+			for (size_t i = 0; i < (size_t)result.rows; i++) // init to INF;
+				result.at<cv::Vec<float, 2>>(i, 0) = cv::Vec<float, 2>(INF, 0);
 
-		void       update_sample_space_model( ECO_FEATS& new_train_sample);
+			std::vector<float> dist_vec;
+			for (size_t i = 0; i < num_training_samples; i++) // calculate the distance;
+				dist_vec.push_back(2 * feat_dis_compute(samples_f[i], new_train_sample));
 
-		cv::Mat    find_gram_vector( ECO_FEATS& new_train_sample) ;
+			for (size_t i = 0; i < dist_vec.size(); i++)
+				result.at<cv::Vec<float, 2>>(i, 0) = cv::Vec<float, 2>(dist_vec[i], 0);
+			return result;
+		};
 
-		float      feat_dis_compute(std::vector<std::vector<cv::Mat> >& feat1, std::vector<std::vector<cv::Mat> >& feat2);
+		inline void findMin(float& min_w, size_t index) const
+		{
+			std::vector<float>::const_iterator pos = std::min_element(prior_weights.begin(), prior_weights.end());
+			min_w = *pos;
+			index = pos - prior_weights.begin();
+		};
 
-		void       update_distance_matrix(cv::Mat& gram_vector, float new_sample_norm, int id1, int id2, float w1, float w2);
+		inline ECO_FEATS merge_samples(ECO_FEATS& sample1, ECO_FEATS& sample2, float w1, float w2, 
+									std::string sample_merge_type = "merge")
+		{
+			float alpha1 = w1 / (w1 + w2);
+			float alpha2 = 1 - alpha1;
 
-		void       findMin(float& min_w, size_t index)const;
+			ECO_FEATS merged_sample = sample1;
 
-		ECO_FEATS  merge_samples(ECO_FEATS& sample1, ECO_FEATS& sample2, float w1, float w2, std::string sample_merge_type = "merge");
+			if (sample_merge_type == std::string("replace"))
+			{
+			}
+			else if (sample_merge_type == std::string("merge"))
+			{
+			for (size_t i = 0; i < sample1.size(); i++)
+				for (size_t j = 0; j < sample1[i].size(); j++)
+					merged_sample[i][j] = alpha1 * sample1[i][j] + alpha2 * sample2[i][j];
+			}
+			return merged_sample;
+		};
 
-		void       replace_sample(ECO_FEATS& new_sample, size_t idx);
+		inline void replace_sample(ECO_FEATS& new_sample, size_t idx)
+		{
+			samples_f[idx] = new_sample;
+		};
 
-		void       set_gram_matrix(int r, int c, float val);
+		inline void set_gram_matrix(int r, int c, float val)
+		{
+			gram_matrix.at<float>(r, c) = val;
+		};
 
-		int        get_merge_id()const { return merged_sample_id; }
+		int get_merge_id()const { return merged_sample_id; }
 
-		int        get_new_id()const   { return new_sample_id; }
+		int get_new_id()const   { return new_sample_id; }
 
 		std::vector<float>      get_samples_weight()const { return prior_weights; }
 
