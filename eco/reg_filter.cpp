@@ -14,8 +14,8 @@ cv::Mat get_reg_filter(cv::Size sz, cv::Size2f target_sz, const eco_params &para
 			for (double y = -0.5 * (sz.width - 1), counter2 = 0; counter2 < sz.width; y += 1, ++counter2)
 			{	// use abs() directly will cause error because it returns int!!! 
 				reg_window.at<double>(counter1, counter2) = (params.reg_window_edge - params.reg_window_min) *
-															   (pow(std::abs(x / reg_scale.height), params.reg_window_power) +
-																pow(std::abs(y / reg_scale.width), params.reg_window_power)) +
+															   (std::pow(std::abs(x / reg_scale.height), params.reg_window_power) +
+																std::pow(std::abs(y / reg_scale.width), params.reg_window_power)) +
 														   params.reg_window_min;
 			}
 		//debug("%f %f", reg_scale.height, reg_scale.width);

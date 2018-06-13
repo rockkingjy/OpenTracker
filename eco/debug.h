@@ -1,11 +1,14 @@
 #pragma once
 
+#include <stdio.h>
 #include <string>
 #include <vector>
 #include <opencv2/opencv.hpp>
 
+#define getName(var) #var
+
 #define debug(a, args...) printf("%s(%s:%d) " a "\n", __func__, __FILE__, __LINE__, ##args)
-#define ddebug(a, args...) printf("%s(%s:%d) " a "\n", __func__, __FILE__, __LINE__, ##args)
+#define ddebug(a, args...) //printf("%s(%s:%d) " a "\n", __func__, __FILE__, __LINE__, ##args)
 
 using namespace std;
 
@@ -53,14 +56,13 @@ inline void imgInfo(cv::Mat mat)
 	r += "C";
 	r += (chans + '0');
 
-	debug("imageInfo: %s %d x %d", r.c_str(), mat.cols, mat.rows);
+	debug("%s %d x %d", r.c_str(), mat.rows, mat.cols);
 	//return r;
 }
 
-void showmatall(cv::Mat mat, int type);
-inline void showmatall(cv::Mat mat, int type)
+void showmat1chall(cv::Mat mat, int type);
+inline void showmat1chall(cv::Mat mat, int type)
 {
-
 	for (int i = 0; i < mat.rows; i++)
 	{
 		for (int j = 0; j < mat.cols; j++)
@@ -87,6 +89,7 @@ void showmat2chall(cv::Mat mat, int type);
 
 inline void showmat2chall(cv::Mat mat, int type)
 {
+	debug("channels: %d, just print the 1st channel:", mat.channels());
 	for (int k = 0; k < mat.channels(); k++)
 	{
 		for (int i = 0; i < mat.rows; i++)
@@ -395,11 +398,12 @@ inline void printFeature(cv::Mat mat, int type)
 	printf("End of feature mat\n");
 }
 
+//=============================================================================================
 // Simple test of the structure of mat in opencv;
-void opencvtest();
-inline void opencvtest()
+void opencvTest();
+inline void opencvTest()
 {
-	printf("opencvtest\n");
+	printf("opencvTest begin=======================================\n");
 	float *newdata = (float *)malloc(sizeof(float) * (2 * 3 * 4));
 
 	for (int i = 0; i < 2 * 3 * 4; i++)
@@ -413,10 +417,10 @@ inline void opencvtest()
 	imgInfo(mat);
 	for (int i = 0; i < 2 * 3 * 4; i++)
 	{
-		printf("%f ",mat.at<float>(0,i));
+		printf("%f ", mat.at<float>(0, i));
 	}
 	printf("\n");
-	
+
 	std::vector<cv::Mat> splitmat;
 	cv::split(mat, splitmat);
 
@@ -442,6 +446,37 @@ inline void opencvtest()
 		}
 		printf("\n");
 	}
+	printf("opencvTest end=======================================\n");
+}
 
-	printf("\n\n");
+void absTest();
+inline void absTest()
+{
+	printf("absTest begin=======================================\n");
+	std::vector<float> v{0.1, 0.2};
+	//sometimes this works:
+	//```
+	//float abs = abs(1.23f);
+	//```
+	//but it use a different liberay from eigen, cause error
+	//so remember to add `std::` before!
+	float abs = std::abs(1.23f);
+	debug("False abs:%f", abs);
+
+	abs = std::abs(1.23f);
+	debug("True abs:%f", abs);
+	printf("absTest end=======================================\n");
+}
+
+void accumulateTest();
+inline void accumulateTest()
+{
+	printf("accumulateTest begin=======================================\n");
+	std::vector<float> v{0.1, 0.2};
+	float sum = std::accumulate(v.begin(), v.end(), 0);
+	debug("False sum:%f", sum);
+
+	sum = std::accumulate(v.begin(), v.end(), 0.0f);
+	debug("True sum:%f", sum);
+	printf("accumulateTest end=======================================\n");
 }

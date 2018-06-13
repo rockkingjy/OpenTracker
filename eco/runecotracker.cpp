@@ -66,7 +66,7 @@ void drawBox(cv::Mat& image, cv::Rect box, cv::Scalar color, int thick){
 int main()
 {
     string databaseTypes[4] = {"VOT-2017", "TB-2015", "TLP", "UAV123"};
-    string databaseType = databaseTypes[1];
+    string databaseType = databaseTypes[0];
     // Read from the images ====================================================
     int f, isLost;
     float x, y, w, h;
@@ -258,7 +258,7 @@ int main()
         // Read next image
         f++;
         osfile.str("");
-        cout << f << " FPS:" << fpseco << endl;
+        cout << "Frame:" << f << " FPS:" << fpseco << endl;
         if (databaseType == "TLP")
         {
             // Read the groundtruth bbox

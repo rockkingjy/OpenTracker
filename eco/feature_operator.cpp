@@ -58,7 +58,7 @@ ECO_FEATS project_sample(const ECO_FEATS &x, const std::vector<cv::Mat> &project
 		for (size_t j = 0; j < x[i].size(); j++)
 		{
 			cv::Mat t = x[i][j].t();
-			//wangsen ��ȷ��t�ǲ���iscontinuous
+			
 			x_mat.push_back(cv::Mat(1, x[i][j].size().area(), CV_32FC2, t.data));
 		}
 		x_mat = x_mat.t();
@@ -127,7 +127,7 @@ ECO_FEATS feats_pow2(const ECO_FEATS &feats)
 			{
 				for (size_t c = 0; c < (size_t)feats[i][j].cols; c++)
 				{
-					temp.at<COMPLEX>(r, c)[0] = pow(temp.at<COMPLEX>(r, c)[0], 2) + pow(temp.at<COMPLEX>(r, c)[1], 2);
+					temp.at<COMPLEX>(r, c)[0] = std::pow(temp.at<COMPLEX>(r, c)[0], 2) + std::pow(temp.at<COMPLEX>(r, c)[1], 2);
 					temp.at<COMPLEX>(r, c)[1] = 0;
 				}
 			}

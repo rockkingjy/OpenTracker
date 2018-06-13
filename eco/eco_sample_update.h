@@ -37,6 +37,7 @@ namespace eco_sample_update{
 
 			for (size_t i = 0; i < dist_vec.size(); i++)
 				result.at<cv::Vec<float, 2>>(i, 0) = cv::Vec<float, 2>(dist_vec[i], 0);
+
 			return result;
 		};
 
@@ -92,7 +93,7 @@ namespace eco_sample_update{
 
 		 const float                learning_rate = 0.009;
 
-		 const float                minmum_sample_weight = 0.0036;
+		 const float                _minmum_sample_weight = 0.0036;
 
 		 std::vector<float>         sample_weight;
 

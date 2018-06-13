@@ -7,7 +7,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	//showmat3chall(im,0);
 	imgInfo(im);
 	debug("rect: %f, %f, %f, %f", rect.x, rect.y, rect.width, rect.height);
-
+	
 	if (params.useDeepFeature)
 	{
 		yml_mean = meanMatFromYML(params.cnn_features.fparams.mean_yml);
@@ -54,7 +54,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	debug("pos:%f, %f", pos.y, pos.x);
 
 	// *** Calculate search area and initial scale factor
-	float search_area = rect.area() * pow(params.search_area_scale, 2);
+	float search_area = rect.area() * std::pow(params.search_area_scale, 2);
 	debug("search_area:%f", search_area);
 	if (search_area > params.max_image_sample_size)
 		currentScaleFactor = sqrt((float)search_area / params.max_image_sample_size);
@@ -68,7 +68,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	base_target_sz = cv::Size2f(rect.size().width / currentScaleFactor, rect.size().height / currentScaleFactor);
 	debug("base_target_sz:%f x %f", base_target_sz.height, base_target_sz.width);
 	// *** window size, taking padding into account
-	float img_sample_sz_tmp = sqrt(base_target_sz.area() * pow(params.search_area_scale, 2));
+	float img_sample_sz_tmp = sqrt(base_target_sz.area() * std::pow(params.search_area_scale, 2));
 	img_sample_sz = cv::Size2i(img_sample_sz_tmp, img_sample_sz_tmp);
 	debug("img_sample_sz: %d x %d", img_sample_sz.height, img_sample_sz.width);
 
@@ -151,7 +151,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 		temp_d.convertTo(temp_f, CV_32FC1);
 		reg_filter.push_back(temp_f);
 		debug("reg_filter %lu:", i);
-		showmatall(temp_f, 2);
+		showmat1chall(temp_f, 2);
 		// Compute the energy of the filter (used for preconditioner)drone_flip
 		cv::Mat_<double> t = temp_d.mul(temp_d); //element-wise multiply
 		float energy = FFTTools::mat_sumd(t);	//sum up all the values of each points of the mat
@@ -163,7 +163,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	int scalemax = floor(((float)params.number_of_scales - 1.0) / 2.0);
 	for (int i = scalemin; i <= scalemax; i++)
 	{
-		scaleFactors.push_back(pow(params.scale_step, i));
+		scaleFactors.push_back(std::pow(params.scale_step, i));
 	}
 	if (params.number_of_scales > 0)
 	{
@@ -178,14 +178,16 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	}
 	debug("scale:%d, %d", scalemin, scalemax);
 	debug("scalefactor min: %f max: %f", params.min_scale_factor, params.max_scale_factor);
+	debug("ScaleFactors:");
 	for (size_t i = 0; i < params.number_of_scales; i++)
 	{
-		debug("scaleFactor %lu: %f", i, scaleFactors[i]);
+		printf("%lu:%f; ", i, scaleFactors[i]);
 	}
+	printf("\n");
 	//=========================================================================================================
 	ECO_FEATS xl, xlw, xlf, xlf_porj;
 	xl = feat_extrator.extractor(im, pos, vector<float>(1, currentScaleFactor), params, yml_mean, net);
-	debug("xl size: %lu, %lu, %d, %d", xl.size(), xl[0].size(), xl[0][0].cols, xl[0][0].rows);
+	debug("xl size: %lu, %lu, %d x %d", xl.size(), xl[0].size(), xl[0][0].rows, xl[0][0].cols);
 	//showmat(xl[0][0],2);
 	ddebug();
 	//assert(0);
@@ -200,13 +202,13 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	ddebug();
 	//*** New sample to be added
 	xlf = compact_fourier_coeff(xlf);
-	debug("xlf size: %lu, %lu, %d, %d", xlf.size(), xlf[0].size(), xlf[0][0].cols, xlf[0][0].rows);
+	debug("xlf size: %lu, %lu, %d x %d", xlf.size(), xlf[0].size(), xlf[0][0].rows, xlf[0][0].cols);
 	//*** Compress feature dementional projection matrix
 	projection_matrix = init_projection_matrix(xl, compressed_dim, feature_dim); //*** EXACT EQUAL TO MATLAB
 
 	//*** project sample *****
 	xlf_porj = project_sample(xlf, projection_matrix);
-	debug("xlf_porj size: %lu, %lu, %d, %d", xlf_porj.size(), xlf_porj[0].size(), xlf_porj[0][0].cols, xlf_porj[0][0].rows);
+	debug("xlf_porj size: %lu, %lu, %d x %d", xlf_porj.size(), xlf_porj[0].size(), xlf_porj[0][0].rows, xlf_porj[0][0].cols);
 
 	//*** Update the samples to include the new sample.
 	// The distance matrix, kernel matrix and prior weight are also updated
@@ -219,7 +221,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	sample_energy = new_sample_energy;
 
 	vector<cv::Mat> proj_energy = project_mat_energy(projection_matrix, yf);
-
+	
 	ECO_FEATS hf, hf_inc;
 	for (size_t i = 0; i < xlf.size(); i++)
 	{
@@ -236,7 +238,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	projection_matrix = eco_trainer.get_proj(); //*** exect to matlab tracker
 
 	xlf_porj = project_sample(xlf, projection_matrix);
-	debug("xlf_porj size: %lu, %lu, %d, %d", xlf_porj.size(), xlf_porj[0].size(), xlf_porj[0][0].cols, xlf_porj[0][0].rows);
+	debug("xlf_porj size: %lu, %lu, %d x %d", xlf_porj.size(), xlf_porj[0].size(), xlf_porj[0][0].rows, xlf_porj[0][0].cols);
 
 	SampleUpdate.replace_sample(xlf_porj, 0);
 
@@ -249,7 +251,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	hf_full = full_fourier_coeff(eco_trainer.get_hf());
 	for (size_t i = 0; i < hf_full.size(); i++)
 	{
-		debug("hf_full: %lu, %lu, %d x %d", i, hf_full[i].size(), hf_full[i][0].cols, hf_full[i][0].rows);
+		debug("hf_full: %lu, %lu, %d x %d", i, hf_full[i].size(), hf_full[i][0].rows, hf_full[i][0].cols);
 	}
 	//showmat(hf_full[0][0], 2);
 	//assert(0);
@@ -266,10 +268,10 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	ddebug();
 	// 1: Extract features at multiple resolutions
 	ECO_FEATS xt = feat_extrator.extractor(frame, sample_pos, det_samples_pos, params, yml_mean, net);
-	//debug("xt size: %lu, %lu, %d, %d", xt.size(), xt[0].size(), xt[0][0].cols, xt[0][0].rows);
+	//debug("xt size: %lu, %lu, %d x %d", xt.size(), xt[0].size(), xt[0][0].rows, xt[0][0].cols);
 	// 2:  project sample *****
 	ECO_FEATS xt_proj = FeatProjMultScale(xt, projection_matrix);
-//	debug("xt_proj size: %lu, %lu, %d, %d", xt_proj.size(), xt_proj[0].size(), xt_proj[0][0].cols, xt_proj[0][0].rows);
+	//debug("xt_proj size: %lu, %lu, %d x %d", xt_proj.size(), xt_proj[0].size(), xt_proj[0][0].rows, xt_proj[0][0].cols);
 
 	// 3: Do windowing of features ***
 	xt_proj = do_windows_x(xt_proj, cos_window);
@@ -630,7 +632,7 @@ vector<cv::Mat> ECO::project_mat_energy(vector<cv::Mat> proj, vector<cv::Mat> yf
 	for (size_t i = 0; i < yf.size(); i++)
 	{
 		cv::Mat temp(proj[i].size(), CV_32FC1), temp_compelx;
-		float sum_dim = std::accumulate(feature_dim.begin(), feature_dim.end(), 0);
+		float sum_dim = std::accumulate(feature_dim.begin(), feature_dim.end(), 0.0f);
 		cv::Mat x = yf[i].mul(yf[i]);
 		temp = 2 * FFTTools::mat_sum(x) / sum_dim * cv::Mat::ones(proj[i].size(), CV_32FC1);
 		result.push_back(temp);

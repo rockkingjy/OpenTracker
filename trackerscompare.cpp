@@ -1,7 +1,7 @@
 
 #include "kcf/kcftracker.hpp"
-//#include "goturn/network/regressor.h"
-//#include "goturn/tracker/tracker.h"
+#include "goturn/network/regressor.h"
+#include "goturn/tracker/tracker.h"
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/tracking.hpp>
@@ -24,7 +24,7 @@ int main(int argc, char **argv)
 //int trackercompare()
 {
     string databaseTypes[4] = {"VOT-2017", "TB-2015", "TLP", "UAV123"};
-    string databaseType = databaseTypes[0];
+    string databaseType = databaseTypes[2];
     // Create KCFTracker:
     bool HOG = true, FIXEDWINDOW = true, MULTISCALE = true, LAB = true, DSST = false; //LAB color space features
     KCFTracker kcftracker(HOG, FIXEDWINDOW, MULTISCALE, LAB, DSST);
@@ -50,15 +50,15 @@ int main(int argc, char **argv)
         opencvtracker = cv::TrackerMedianFlow::create();
     if (trackerType == "GOTURN")
         opencvtracker = cv::TrackerGOTURN::create();
-    /*
-// Create GOTURN tracker:
+    
+    // Create GOTURN tracker:
     const string model_file = "goturn/nets/deploy.prototxt";
     const string pretrain_file = "goturn/nets/goturun_tracker.caffemodel";
     int gpu_id = 0;
 
     Regressor regressor(model_file,pretrain_file,gpu_id, false);
     goturn::Tracker goturntracker(false);
-*/
+
     // Read from the images ====================================================
     int f, isLost;
     float x, y, w, h;
@@ -199,13 +199,12 @@ int main(int argc, char **argv)
 
     Rect2d opencvbbox(x, y, w, h);
     opencvtracker->init(frame, opencvbbox);
-    /*
+    
     cv::Rect goturnbbox(x,y,w,h);
     BoundingBox bbox_gt;
     BoundingBox bbox_estimate_uncentered;
     bbox_gt.getRect(goturnbbox);
     goturntracker.Init(frame,bbox_gt,&regressor);
-*/
 
     while (frame.data)
     {
@@ -223,12 +222,6 @@ int main(int argc, char **argv)
                     0.75, Scalar(255, 0, 0), 2);
         }
 
-        // Update the GOTURN tracking result--------------------------
-        /*        goturntracker.Track(frame, &regressor, &bbox_estimate_uncentered);
-        bbox_estimate_uncentered.putRect(goturnbbox);
-        // draw goturn bbox
-        rectangle(frame, goturnbbox, Scalar(0, 0, 255), 2, 1); //red
-*/
         //DSST=============================
         double timerdsst = (double)getTickCount();
         bool okdsst = dssttracker.update(frame, dsstbbox);
@@ -255,6 +248,14 @@ int main(int argc, char **argv)
             putText(frame, "Opencv tracking failure detected", cv::Point(100, 110), FONT_HERSHEY_SIMPLEX,
                     0.75, Scalar(0, 225, 0), 2);
         }
+        //GOTURN========================
+        double timergoturn = (double)getTickCount();
+        goturntracker.Track(frame, &regressor, &bbox_estimate_uncentered);
+        bbox_estimate_uncentered.putRect(goturnbbox);
+        float fpsgoturn = getTickFrequency() / ((double)getTickCount() - timergoturn);
+        // draw goturn bbox
+        rectangle(frame, goturnbbox, Scalar(100, 100, 100), 2, 1); 
+
 
         // Draw ground truth box===========================================
         if (databaseType == "TLP")
@@ -278,7 +279,7 @@ int main(int argc, char **argv)
         }
 
         // Display FPS on frame
-        putText(frame, "FPS in total: " + SSTR(long(fpskcf)), Point(100, 50), FONT_HERSHEY_SIMPLEX,
+        putText(frame, "FPS: " + SSTR(long(fpsgoturn)), Point(100, 50), FONT_HERSHEY_SIMPLEX,
                 0.75, Scalar(0, 0, 0), 2);
         // Display tracker type on frame
         putText(frame, "Black:GT; Blue: KCF; Red: DSST; Green: opencv " + trackerType + ";",
