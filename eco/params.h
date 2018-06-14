@@ -15,7 +15,7 @@ struct hog_params
 	int           cell_size 	 = 4;
 	int           compressed_dim = 10;	// Compressed dimensionality of each output layer (ECO Paper Table 1)
 	int           nOrients		 = 9;
-	size_t        nDim			 = 31; 	// Original dimension of feature
+	size_t        nDim			 = 31; 	// Original dimension of feature	
 	float         penalty		 = 0;
 };
 
@@ -27,12 +27,12 @@ struct cnn_params{
     string 	mean_yml  = "model/mean.yml";
 
 	string 			nn_name = "imagenet-vgg-m-2048.mat"; 
+	vector<int>	    cell_size 		  = { 4, 16 };
 	vector<int>		output_layer 	  = { 3, 14 };	// Which layers to use	
 	vector<int>		downsample_factor = { 2, 1 }; 	// How much to downsample each output layer
-	vector<int>	    compressed_dim 	  = { 16, 64 };	// Compressed dimensionality of each output layer (ECO Paper Table 1)
 	int             input_size_scale  = 1;			// Extra scale factor of the input samples to the network (1 is no scaling)
 	vector<int>	    nDim 			  = { 96, 512 };// Original dimension of features (ECO Paper Table 1)
-	vector<int>	    cell_size 		  = { 4, 16 };
+	vector<int>	    compressed_dim 	  = { 16, 64 };	// Compressed dimensionality of each output layer (ECO Paper Table 1)
 	vector<float>   penalty			  = { 0, 0 };
 
 	vector<int>     start_ind		  = {3, 3, 1, 1};   	// sample feature start index 
@@ -65,7 +65,7 @@ struct eco_params
 	hog_feature 		hog_features; 
 
 	// Features
-	bool 	useDeepFeature 		 = false;
+	bool 	useDeepFeature 		 = true;
 	bool	useHogFeature		 = true;		// Not used yet, add later.......
 	bool	useCnFeature		 = false;		// Not used yet, add later.......
 

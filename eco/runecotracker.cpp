@@ -66,7 +66,7 @@ void drawBox(cv::Mat& image, cv::Rect box, cv::Scalar color, int thick){
 int main()
 {
     string databaseTypes[4] = {"VOT-2017", "TB-2015", "TLP", "UAV123"};
-    string databaseType = databaseTypes[0];
+    string databaseType = databaseTypes[3];
     // Read from the images ====================================================
     int f, isLost;
     float x, y, w, h;

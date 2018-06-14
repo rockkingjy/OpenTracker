@@ -82,7 +82,7 @@ inline void showmat1chall(cv::Mat mat, int type)
 		}
 		printf("\n");
 	}
-	printf("End of mat\n");
+	//printf("End of mat\n");
 }
 
 void showmat2chall(cv::Mat mat, int type);

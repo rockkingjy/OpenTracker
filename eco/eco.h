@@ -90,7 +90,7 @@ class ECO
 
 	//cv::Size 			target_sz;		// Original target size
 	cv::Size2f 			base_target_sz; // target size without scale
-	cv::Size2i			img_sample_sz;  // size of original sampling size
+	cv::Size2i			img_sample_sz;  // base_target_sz * sarch_area_scale
 	cv::Size2i			img_support_sz;	// the corresponding size in the image
 
 	vector<cv::Size> 	feature_sz, filter_sz;
