@@ -156,9 +156,8 @@ inline void showmat3chall(cv::Mat mat, int type)
 	printf("End of 3 channel mat\n");
 }
 
-void showmat(cv::Mat mat, int type);
-
-inline void showmat(cv::Mat mat, int type)
+void showmat1ch(cv::Mat mat, int type);
+inline void showmat1ch(cv::Mat mat, int type)
 {
 	printf("\nFirst row: \n");
 	for (int j = 0; j < mat.cols; j++)
@@ -284,9 +283,9 @@ inline void showmat2ch(cv::Mat mat, int type)
 	printf("End of 2 channel mat\n");
 }
 
-// Attention!!!! opencv: BGR, matlab: RGB, different order!!!
-void printImage(cv::Mat mat, int type);
-inline void printImage(cv::Mat mat, int type)
+// Attention!!!! opencv/caffe: BGR, matlab: RGB, different order!!!
+void showmat3ch(cv::Mat mat, int type);
+inline void showmat3ch(cv::Mat mat, int type)
 {
 	std::vector<cv::Mat> splitmat;
 	cv::split(mat, splitmat);
@@ -306,7 +305,7 @@ inline void printImage(cv::Mat mat, int type)
 		}
 		else if (type == 2)
 		{ // first row
-			printf("%f ", splitmat[2].at<float>(0, j));
+			printf("%f ", splitmat[0].at<float>(0, j));
 		}
 		else if (type == 3)
 		{ // first row
@@ -341,9 +340,8 @@ inline void printImage(cv::Mat mat, int type)
 	printf("End of feature mat\n");
 }
 
-// Attention!!!! opencv: BGR, matlab: RGB, different order!!!
-void printFeature(cv::Mat mat, int type);
-inline void printFeature(cv::Mat mat, int type)
+void showmatNch(cv::Mat mat, int type);
+inline void showmatNch(cv::Mat mat, int type)
 {
 	std::vector<cv::Mat> splitmat;
 	cv::split(mat, splitmat);
@@ -398,7 +396,7 @@ inline void printFeature(cv::Mat mat, int type)
 	printf("End of feature mat\n");
 }
 
-//=============================================================================================
+//TEST=============================================================================================
 // Simple test of the structure of mat in opencv;
 void opencvTest();
 inline void opencvTest()

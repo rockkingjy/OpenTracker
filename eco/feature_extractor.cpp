@@ -4,21 +4,21 @@ ECO_FEATS feature_extractor::extractor(cv::Mat image,
 									   cv::Point2f pos,
 									   vector<float> scales,
 									   const eco_params &params,
-									   const cv::Mat &yml_mean,
+									   const cv::Mat &deep_mean_mat,
 									   const boost::shared_ptr<Net<float>> &net)
 {
 	int num_features = 0, num_scales = scales.size();
 
-	if (params.useHogFeature)
-	{
-		num_features++;
-		hog_features = params.hog_features;
-	}
 	if (params.useDeepFeature)
 	{
 		num_features++;
 		cnn_features = params.cnn_features;
 		this->net = net;
+	}
+	if (params.useHogFeature)
+	{
+		num_features++;
+		hog_features = params.hog_features;
 	}
 	if (params.useCnFeature)
 	{
@@ -49,11 +49,14 @@ ECO_FEATS feature_extractor::extractor(cv::Mat image,
 	cv::waitKey(0);
 	assert(0);
 */
+
 	// Extract feature maps for each feature in the list
 	ECO_FEATS sum_features;
 	if (params.useDeepFeature)
 	{
-		sum_features = get_cnn_layers(img_samples[0], yml_mean);
+		debug();
+		sum_features = get_cnn_layers(img_samples[0], deep_mean_mat);
+		debug();
 		cnn_feature_normalization(sum_features);
 	}
 	if (params.useHogFeature)
@@ -228,17 +231,18 @@ vector<cv::Mat> feature_extractor::get_hog(vector<cv::Mat> ims)
 	return hog_feats;
 }
 
-ECO_FEATS feature_extractor::get_cnn_layers(vector<cv::Mat> im, const cv::Mat &yml_mean)
+ECO_FEATS feature_extractor::get_cnn_layers(vector<cv::Mat> im, const cv::Mat &deep_mean_mat)
 {
 	for (unsigned int i = 0; i < im.size(); ++i)
 	{
 		im[i].convertTo(im[i], CV_32FC3);
 		cv::cvtColor(im[i], im[i], CV_BGR2RGB);
 		im[i] = im[i].t();
-		im[i] = im[i] - yml_mean;
+		im[i] = im[i] - deep_mean_mat;
 	}
 	cv::Mat input_imgs;
 	cv::merge(im, input_imgs);
+
 	//**** forward computation and exrtract cnn1 and output data ***************
 	Blob<float> *input_layer = net->input_blobs()[0];
 
@@ -266,6 +270,7 @@ ECO_FEATS feature_extractor::get_cnn_layers(vector<cv::Mat> im, const cv::Mat &y
 			pstart = output_layer->cpu_data();
 			shape = output_layer->shape();
 		}
+		debug();
 		vector<cv::Mat> merge_feature;
 		for (size_t i = 0; i < (size_t)(shape[0] * shape[1]); i++) //  CNN into single channel******
 		{
@@ -283,6 +288,7 @@ ECO_FEATS feature_extractor::get_cnn_layers(vector<cv::Mat> im, const cv::Mat &y
 			extract_map = (cnn_features.fparams.downsample_factor[idx] == 1) ? extract_map : sample_pool(extract_map, 2, 2);
 			merge_feature.push_back(extract_map);
 		} //end for
+		debug();
 		feature_map.push_back(merge_feature);
 	}
 	return feature_map;
@@ -334,9 +340,9 @@ void feature_extractor::cnn_feature_normalization(ECO_FEATS &cnn_feat_maps)
 		//*** the normalization para ****
 		float para = 0.0f;
 		if (i == 0)
-			para = cnn_features.data_sz_block1.area() * cnn_features.fparams.nDim[i];
+			para = cnn_features.data_sz_block0.area() * cnn_features.fparams.nDim[i];
 		else
-			para = cnn_features.data_sz_block2.area() * cnn_features.fparams.nDim[i];
+			para = cnn_features.data_sz_block1.area() * cnn_features.fparams.nDim[i];
 
 		for (unsigned int k = 0; k < temp.size(); k++) //*** normalization ****
 			cnn_feat_maps[i][k] /= sqrt(sum_scales[k / cnn_features.fparams.nDim[i]] / para);
@@ -356,7 +362,7 @@ vector<cv::Mat> feature_extractor::hog_feature_normalization(vector<cv::Mat> &ho
 		cv::split(temp, temp_vec);
 		for (int j = 0; j < temp.channels(); j++)
 			sum += cv::sum(temp_vec[j].mul(temp_vec[j]))[0];
-		float para = hog_features.data_sz_block1.area() * hog_features.fparams.nDim;
+		float para = hog_features.data_sz_block0.area() * hog_features.fparams.nDim;
 		hog_feat_maps[i] /= sqrt(sum / para);
 
 		cv::split(hog_feat_maps[i], result_vec);

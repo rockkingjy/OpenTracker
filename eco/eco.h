@@ -51,9 +51,7 @@ class ECO
 
 	void init_features(); // *** init the ECO features include deep feature or non-deep feature
 
-	cv::Mat meanMatFromYML(string path);
-
-	cv::Mat deep_mean(const string &mean_file);
+	void read_deep_mean(const string &mean_file);
 
 	void yf_gaussian(); //***** the desired outputs of features, real part of (9) in paper C-COT
 
@@ -80,7 +78,7 @@ class ECO
   private:
 	eco_params 			params;
 	boost::shared_ptr<Net<float>> 	net;
-	cv::Mat 			deep_mean_mat, yml_mean;
+	cv::Mat 			deep_mean_mat, deep_mean_mean_mat;
 
 	cv::Point2f 		pos; 			// final result
 	size_t 				frames_since_last_train; 	 // used for update;

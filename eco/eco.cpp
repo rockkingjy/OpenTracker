@@ -4,53 +4,12 @@ namespace eco
 {
 void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 {
-	// Read Deep Feature paramters.
-	if (params.useDeepFeature)
-	{
-		yml_mean = meanMatFromYML(params.cnn_features.fparams.mean_yml);
-		if (params.cnn_features.fparams.proto.empty() || params.cnn_features.fparams.model.empty())
-			assert("the proto or model is empty");
-
-		if (params.use_gpu)
-		{
-			printf("Setting up Caffe in GPU mode with ID: %d\n", params.gpu_id);
-			caffe::Caffe::set_mode(caffe::Caffe::GPU);
-			caffe::Caffe::SetDevice(params.gpu_id);
-		}
-		else
-		{
-			printf("Setting up Caffe in CPU mode\n");
-			caffe::Caffe::set_mode(caffe::Caffe::CPU);
-		}
-
-		net.reset(new Net<float>(params.cnn_features.fparams.proto, TEST));
-		net->CopyTrainedLayersFrom(params.cnn_features.fparams.model);
-
-		// read mean file
-		Blob<float> image_mean;
-		BlobProto blob_proto;
-		//const float *mean_ptr;
-		//unsigned int num_pixel;
-		bool succeed = ReadProtoFromBinaryFile(params.cnn_features.fparams.mean_file, &blob_proto);
-		if (succeed)
-		{
-			image_mean.FromProto(blob_proto);
-			//num_pixel = image_mean.count(); /* NCHW=1x3x224x224=196608 */
-			//mean_ptr = (const float *)image_mean.cpu_data();
-		}
-		deep_mean_mat = deep_mean(params.cnn_features.fparams.mean_file);
-	}
-	else
-	{
-		net = boost::shared_ptr<Net<float>>();
-	}
-
 	printf("\n=========================================================\n");
 	// Image infomations
 	imgInfo(im);
 	debug("rect: %f, %f, %f, %f", rect.x, rect.y, rect.width, rect.height);
 
-	// get the ini position
+	// Get the ini position
 	pos.x = rect.x + (rect.width - 1.0) / 2.0;
 	pos.y = rect.y + (rect.height - 1.0) / 2.0;
 	debug("pos:%f, %f", pos.y, pos.x);
@@ -74,29 +33,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	img_sample_sz = cv::Size2i(img_sample_sz_tmp, img_sample_sz_tmp);
 	debug("img_sample_sz: %d x %d", img_sample_sz.height, img_sample_sz.width);
 
-	// *** features setting
 	init_features();
-	if (params.useDeepFeature)
-	{
-		feature_sz.push_back(params.cnn_features.data_sz_block1);
-		feature_sz.push_back(params.cnn_features.data_sz_block2);
-		feature_dim = params.cnn_features.fparams.nDim;
-		compressed_dim = params.cnn_features.fparams.compressed_dim;
-	}
-	if (params.useHogFeature)
-	{
-		feature_sz.push_back(params.hog_features.data_sz_block1);			  //=62x62
-		feature_dim.push_back(params.hog_features.fparams.nDim);			  //=31
-		compressed_dim.push_back(params.hog_features.fparams.compressed_dim); //=10
-	}
-	if (params.useCnFeature)
-	{
-
-	}
-	for (size_t i = 0; i < feature_sz.size(); i++)
-	{
-		debug("features %lu: %d %d %d x %d", i, feature_dim[i], compressed_dim[i], feature_sz[i].height, feature_sz[i].width);
-	}
 
 	// *** Number of Fourier coefficients to save for each filter layer. This will be an odd number.
 	max_output_index = 0;
@@ -135,13 +72,13 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 			  ky[i].size().height, ky[i].size().width, kx[i].size().height, kx[i].size().width);
 	}
 
-	// *** construct the Gaussian label function using Poisson formula
+	// *** Construct the Gaussian label function using Poisson formula
 	yf_gaussian();
 
-	// *** construct cosine window
+	// *** Construct cosine window
 	cos_wind();
 
-	//*** Compute Fourier series of interpolation function, refer C-COT
+	// *** Compute Fourier series of interpolation function, refer C-COT
 	for (size_t i = 0; i < filter_sz.size(); ++i)
 	{
 		cv::Mat interp1_fs1, interp2_fs1;
@@ -168,6 +105,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 		reg_energy.push_back(energy);
 		debug("reg_energy %lu: %f", i, energy);
 	}
+
 	//*** scale factor, 5 scales, refer SAMF
 	int scalemin = floor((1.0 - (float)params.number_of_scales) / 2.0);
 	int scalemax = floor(((float)params.number_of_scales - 1.0) / 2.0);
@@ -196,7 +134,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	printf("\n=========================================================\n");
 	//=========================================================================================================
 	ECO_FEATS xl, xlw, xlf, xlf_porj;
-	xl = feat_extrator.extractor(im, pos, vector<float>(1, currentScaleFactor), params, yml_mean, net);
+	xl = feat_extrator.extractor(im, pos, vector<float>(1, currentScaleFactor), params, deep_mean_mat, net);
 	debug("xl size: %lu, %lu, %d x %d", xl.size(), xl[0].size(), xl[0][0].rows, xl[0][0].cols);
 	//showmat(xl[0][0],2);
 	ddebug();
@@ -277,7 +215,7 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	}
 	ddebug();
 	// 1: Extract features at multiple resolutions
-	ECO_FEATS xt = feat_extrator.extractor(frame, sample_pos, det_samples_pos, params, yml_mean, net);
+	ECO_FEATS xt = feat_extrator.extractor(frame, sample_pos, det_samples_pos, params, deep_mean_mat, net);
 	//debug("xt size: %lu, %lu, %d x %d", xt.size(), xt[0].size(), xt[0][0].rows, xt[0][0].cols);
 	// 2:  project sample *****
 	ECO_FEATS xt_proj = FeatProjMultScale(xt, projection_matrix);
@@ -425,61 +363,115 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 
 void ECO::init_features()
 {
+	// Init features parameters---------------------------------------
 	if (params.useDeepFeature)
 	{
-		//params.cnn_features.img_input_sz   = img_sample_sz;
-		params.cnn_features.img_sample_sz = img_sample_sz;
+		if (params.use_gpu)
+		{
+			printf("Setting up Caffe in GPU mode with ID: %d\n", params.gpu_id);
+			caffe::Caffe::set_mode(caffe::Caffe::GPU);
+			caffe::Caffe::SetDevice(params.gpu_id);
+		}
+		else
+		{
+			printf("Setting up Caffe in CPU mode\n");
+			caffe::Caffe::set_mode(caffe::Caffe::CPU);
+		}
 
-		std::vector<cv::Size> cnn_output_sz;
-		cnn_output_sz.push_back(cv::Size(208 / 2, 208 / 2));   //**** the size of conv1, 109x109;
-		cnn_output_sz.push_back(cv::Size(208 / 16, 208 / 16)); //**** the size of conv5, 13x13;
-		params.cnn_features.data_sz_block1 = cv::Size(cnn_output_sz[0].width / params.cnn_features.fparams.downsample_factor[0],
-													  cnn_output_sz[0].height / params.cnn_features.fparams.downsample_factor[0]);
-		params.cnn_features.data_sz_block2 = cv::Size(cnn_output_sz[1].width / params.cnn_features.fparams.downsample_factor[1],
-													  cnn_output_sz[1].height / params.cnn_features.fparams.downsample_factor[1]);
-		params.cnn_features.mean = deep_mean_mat;
+		net.reset(new Net<float>(params.cnn_features.fparams.proto, TEST)); // Read prototxt
+		net->CopyTrainedLayersFrom(params.cnn_features.fparams.model);		// Read model
+		read_deep_mean(params.cnn_features.fparams.mean_file);				// Read mean file
 
-		img_support_sz = cv::Size(round((float)208 * img_sample_sz.width / params.cnn_features.img_input_sz.width),
-								  round((float)208 * img_sample_sz.height / params.cnn_features.img_input_sz.height));
+		//	showmat3ch(deep_mean_mat, 2);
+		//	showmat3ch(deep_mean_mean_mat, 2);
+
+		params.cnn_features.img_input_sz  = img_sample_sz;		//250
+		params.cnn_features.img_sample_sz = img_sample_sz;	
+
+		// Calculate the output size of the 2 output layer;
+		int cnn_output_sz0 = (int)((img_sample_sz.width - 7 + 0 + 0) / 2) + 1;  //122
+		int cnn_output_sz1 = (int)((cnn_output_sz0 - 3 + 0 + 1) / 2) + 1; 		//61	
+		cnn_output_sz1 = (int)((cnn_output_sz1 - 3 + 1 + 1) / 2) + 1;	 		//15
+		cnn_output_sz1 = (int)((cnn_output_sz1 - 3 + 0 + 1) / 2) + 1;	 		//15
+		int total_feature_sz0 = cnn_output_sz0;
+		int total_feature_sz1 = cnn_output_sz1;
+		debug("total_feature_sz: %d %d", total_feature_sz0, total_feature_sz1);
+		// Re-calculate the output size of the 1st output layer;
+		int support_sz = params.cnn_features.fparams.stride[1] * cnn_output_sz1; // 16 x 15 = 240
+		cnn_output_sz0 = (int)(support_sz / params.cnn_features.fparams.stride[0]); // 240 / 2 = 120
+		debug("cnn_output_sz: %d %d", cnn_output_sz0, cnn_output_sz1);
+
+		int start_ind0 = (int)((total_feature_sz0 - cnn_output_sz0) / 2) + 1; // 2
+		int start_ind1 = (int)((total_feature_sz1 - cnn_output_sz1) / 2) + 1; // 1
+		int end_ind0 = start_ind0 + cnn_output_sz0 - 1;	// 121
+		int end_ind1 = start_ind1 + cnn_output_sz1 - 1; // 15
+		//debug("ind: %d %d %d %d", start_ind0, start_ind1, end_ind0, end_ind1);
+
+		params.cnn_features.fparams.start_ind = {start_ind0, start_ind0, start_ind1, start_ind1};
+	
+		params.cnn_features.fparams.end_ind = {end_ind0, end_ind0, end_ind1, end_ind1};
+
+		params.cnn_features.data_sz_block0 = cv::Size(cnn_output_sz0 / params.cnn_features.fparams.downsample_factor[0],
+													  cnn_output_sz0 / params.cnn_features.fparams.downsample_factor[0]);
+		params.cnn_features.data_sz_block1 = cv::Size(cnn_output_sz1 / params.cnn_features.fparams.downsample_factor[1],
+													  cnn_output_sz1 / params.cnn_features.fparams.downsample_factor[1]);
+
+		params.cnn_features.mean = deep_mean_mean_mat;
+
+		img_support_sz = cv::Size(support_sz, support_sz);
+
+		debug("cnn parameters--------------:");
+		debug("img_input_sz: %d, img_sample_sz: %d",params.cnn_features.img_input_sz.width, params.cnn_features.img_sample_sz.width);
+		debug("data_sz_block0: %d, data_sz_block1: %d",params.cnn_features.data_sz_block0.width, params.cnn_features.data_sz_block1.width);
+		debug("start_ind0: %d, start_ind1: %d, end_ind0: %d, end_ind1: %d",params.cnn_features.fparams.start_ind[0],
+		params.cnn_features.fparams.start_ind[2],params.cnn_features.fparams.end_ind[0], params.cnn_features.fparams.end_ind[2]);
+	}
+	else
+	{
+		net = boost::shared_ptr<Net<float>>();
+		img_support_sz = img_sample_sz;
 	}
 	if (params.useHogFeature) // just HOG feature;
 	{
-		//int new_sample_sz = (1 + img_sample_sz.width / params.hog_features.fparams.cell_size) * params.hog_features.fparams.cell_size;
-		img_support_sz = img_sample_sz; //cv::Size(img_sample_sz.width;, img_sample_sz.hight);
-		params.hog_features.img_input_sz = img_support_sz;
+		params.hog_features.img_input_sz  = img_support_sz;
 		params.hog_features.img_sample_sz = img_support_sz;
-		params.hog_features.data_sz_block1 = cv::Size(img_support_sz.width / params.hog_features.fparams.cell_size,
-													  img_support_sz.height / params.hog_features.fparams.cell_size);
+		params.hog_features.data_sz_block0 = cv::Size(params.hog_features.img_sample_sz.width / params.hog_features.fparams.cell_size,
+													  params.hog_features.img_sample_sz.height / params.hog_features.fparams.cell_size);
+		
+		debug("HOG parameters---------------:");
+		debug("img_input_sz: %d, img_sample_sz: %d",params.hog_features.img_input_sz.width, params.hog_features.img_sample_sz.width);
+		debug("data_sz_block0: %d",params.hog_features.data_sz_block0.width);		
+		debug("-----------------------------");									  
 	}
-
 	if (params.useCnFeature)
 	{
 	}
-
 	debug("img_support_sz:%d x %d", img_support_sz.width, img_support_sz.height);
+
+	// features setting-----------------------------------------------------
+	if (params.useDeepFeature)
+	{
+		feature_sz.push_back(params.cnn_features.data_sz_block0);
+		feature_sz.push_back(params.cnn_features.data_sz_block1);
+		feature_dim = params.cnn_features.fparams.nDim;
+		compressed_dim = params.cnn_features.fparams.compressed_dim;
+	}
+	if (params.useHogFeature)
+	{
+		feature_sz.push_back(params.hog_features.data_sz_block0);			  //=62x62
+		feature_dim.push_back(params.hog_features.fparams.nDim);			  //=31
+		compressed_dim.push_back(params.hog_features.fparams.compressed_dim); //=10
+	}
+	if (params.useCnFeature)
+	{
+	}
+	for (size_t i = 0; i < feature_sz.size(); i++)
+	{
+		debug("features %lu: %d %d %d x %d", i, feature_dim[i], compressed_dim[i], feature_sz[i].height, feature_sz[i].width);
+	}
 }
 
-cv::Mat ECO::meanMatFromYML(string path)
-{
-	vector<cv::Mat> resmat;
-	string maen1 = path;
-	cv::FileStorage fsDemo(maen1, cv::FileStorage::READ);
-
-	cv::Mat mean1, mean2, mean3;
-	fsDemo["x1"] >> mean1;
-	fsDemo["x2"] >> mean2;
-	fsDemo["x3"] >> mean3;
-	resmat.push_back(mean1);
-	resmat.push_back(mean2);
-	resmat.push_back(mean3);
-
-	cv::Mat res;
-	cv::merge(resmat, res);
-
-	return res;
-}
-
-cv::Mat ECO::deep_mean(const string &mean_file)
+void ECO::read_deep_mean(const string &mean_file)
 {
 	BlobProto blob_proto;
 	ReadProtoFromBinaryFileOrDie(mean_file.c_str(), &blob_proto);
@@ -502,12 +494,11 @@ cv::Mat ECO::deep_mean(const string &mean_file)
 		data += mean_blob.height() * mean_blob.width();
 	}
 
-	//  Merge the separate channels into a single image.
-	cv::Mat mean;
-	cv::merge(channels, mean);
+	// Merge the separate channels into a single image.
+	cv::merge(channels, deep_mean_mat);
 
-	cv::Scalar channel_mean = cv::mean(mean); //get the mean for each channel.
-	return cv::Mat(cv::Size(224, 224), mean.type(), channel_mean);
+	// Get the mean for each channel.
+	deep_mean_mean_mat = cv::Mat(cv::Size(224, 224), deep_mean_mat.type(), cv::mean(deep_mean_mat));
 }
 
 void ECO::yf_gaussian() // real part of (9) in paper C-COT

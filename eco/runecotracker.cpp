@@ -63,8 +63,10 @@ void drawBox(cv::Mat& image, cv::Rect box, cv::Scalar color, int thick){
 }
 */
 
-int main()
+int main(int argc, char** argv)
 {
+	::google::InitGoogleLogging(argv[0]);
+    
     string databaseTypes[4] = {"VOT-2017", "TB-2015", "TLP", "UAV123"};
     string databaseType = databaseTypes[3];
     // Read from the images ====================================================

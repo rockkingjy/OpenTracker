@@ -38,7 +38,7 @@ class feature_extractor
 						cv::Point2f 		pos,
 						vector<float> 		scales,
 						const eco_params 	&params,
-						const cv::Mat 		&yml_mean,
+						const cv::Mat 		&deep_mean_mat,
 						const boost::shared_ptr<Net<float>> &net = boost::shared_ptr<Net<float>>());
 
 	cv::Mat sample_patch(const cv::Mat &im, 
@@ -51,7 +51,7 @@ class feature_extractor
 
 	vector<cv::Mat> hog_feature_normalization(vector<cv::Mat> &feature);
 
-	ECO_FEATS get_cnn_layers(vector<cv::Mat> im, const cv::Mat &yml_mean);
+	ECO_FEATS get_cnn_layers(vector<cv::Mat> im, const cv::Mat &deep_mean_mat);
 
 	void cnn_feature_normalization(ECO_FEATS &feature);
 

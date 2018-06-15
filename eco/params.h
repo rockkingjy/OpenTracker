@@ -24,10 +24,11 @@ struct cnn_params{
     string 	proto 	= "model/imagenet-vgg-m-2048.prototxt";
     string 	model	= "model/VGG_CNN_M_2048.caffemodel";
     string 	mean_file = "model/VGG_mean.binaryproto";
-    string 	mean_yml  = "model/mean.yml";
+    //string 	mean_yml  = "model/mean.yml";
 
 	string 			nn_name = "imagenet-vgg-m-2048.mat"; 
-	vector<int>	    cell_size 		  = { 4, 16 };
+	vector<int>     stride            = { 2, 16 };  // stride in total 
+	vector<int>	    cell_size 		  = { 4, 16 };  // downsample_factor
 	vector<int>		output_layer 	  = { 3, 14 };	// Which layers to use	
 	vector<int>		downsample_factor = { 2, 1 }; 	// How much to downsample each output layer
 	int             input_size_scale  = 1;			// Extra scale factor of the input samples to the network (1 is no scaling)
@@ -44,17 +45,17 @@ struct hog_feature
 	hog_params      fparams;
 
 	cv::Size		img_input_sz;	 // input sample size 
-	cv::Size        img_sample_sz;   // the size of sample in the image
-	cv::Size        data_sz_block1;			   
+	cv::Size        img_sample_sz;   // the size of sample
+	cv::Size        data_sz_block0;			   
 };
 
 struct cnn_feature
 {
 	cnn_params	    fparams;
 
-	cv::Size		img_input_sz = cv::Size(224, 224);  // VGG input sample size
+	cv::Size		img_input_sz = cv::Size(224, 224);  // VGG default input sample size
 	cv::Size        img_sample_sz;              		// the size of sample
-	cv::Size        data_sz_block1, data_sz_block2;
+	cv::Size        data_sz_block0, data_sz_block1;
 	cv::Mat         mean;                       
 };
 
