@@ -85,8 +85,9 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 		interpolator::get_interp_fourier(filter_sz[i], interp1_fs1, interp2_fs1, params.interpolation_bicubic_a);
 		interp1_fs.push_back(interp1_fs1);
 		interp2_fs.push_back(interp2_fs1);
-		//showmat2ch(interp1_fs1, 2);
-		//showmat2ch(interp2_fs1, 2);
+		//imgInfo(interp1_fs1);
+		//showmat2chall(interp1_fs1, 2);
+		//showmat2chall(interp2_fs1, 2);
 	}
 
 	//*** Construct spatial regularization filter, refer SRDCF
@@ -541,7 +542,7 @@ void ECO::cos_wind()
 		cv::Mat hann2d = hann2t * hann1t;
 		cos_window.push_back(hann2d(cv::Range(1, hann2d.rows - 1), cv::Range(1, hann2d.cols - 1)));
 
-		//showmat(cos_window[i],2);
+		//showmat1ch(cos_window[i],2);
 	}
 }
 

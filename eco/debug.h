@@ -116,7 +116,7 @@ inline void showmat2chall(cv::Mat mat, int type)
 			printf("\n");
 		}
 		printf("\n\n");
-		break;
+		//break;
 	}
 	printf("End of 2 channel mat\n");
 }
