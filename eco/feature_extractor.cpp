@@ -8,42 +8,45 @@ ECO_FEATS feature_extractor::extractor(cv::Mat image,
 									   const boost::shared_ptr<Net<float>> &net)
 {
 	int num_features = 0, num_scales = scales.size();
-
+	cv::Mat new_deep_mean_mat;
 	if (params.useDeepFeature)
 	{
+		cnn_feat_ind = num_features;
 		num_features++;
 		cnn_features = params.cnn_features;
 		this->net = net;
+		resize(deep_mean_mat, new_deep_mean_mat, params.cnn_features.img_input_sz, 0, 0, cv::INTER_CUBIC);
 	}
 	if (params.useHogFeature)
 	{
+		hog_feat_ind = num_features;
 		num_features++;
 		hog_features = params.hog_features;
 	}
 	if (params.useCnFeature)
 	{
 	}
-
 	// extract image path for different kinds of feautures
 	vector<vector<cv::Mat>> img_samples;
 	for (int i = 0; i < num_features; ++i)
 	{
+		cv::Size2f img_sample_sz = (i == 0) && params.useDeepFeature ? cnn_features.img_sample_sz : hog_features.img_sample_sz;
+		cv::Size2f img_input_sz = (i == 0) && params.useDeepFeature ? cnn_features.img_input_sz : hog_features.img_input_sz;
 		vector<cv::Mat> img_samples_temp(num_scales);
 		for (unsigned int j = 0; j < scales.size(); ++j) //for different scales
 		{
-			cv::Size2f img_sample_sz = (i == 0) && params.useDeepFeature ? cnn_features.img_sample_sz : hog_features.img_sample_sz;
-			cv::Size2f img_input_sz = (i == 0) && params.useDeepFeature ? cnn_features.img_input_sz : hog_features.img_input_sz;
 			img_sample_sz.width *= scales[j];
 			img_sample_sz.height *= scales[j];
 			img_samples_temp[j] = sample_patch(image, pos, img_sample_sz, img_input_sz, params);
 		}
 		img_samples.push_back(img_samples_temp);
 	}
-/*	
-	debug("img_samples - num_features:%lu scales:%lu", img_samples.size(), img_samples[0].size());
-	ddebug();
-	imgInfo(img_samples[0][0]); // 8UC3 250 x 250
-															
+	for (unsigned int i = 0; i < img_samples.size(); ++i)
+	{
+		debug("img_sample for feature: %d, scales:%lu", i, img_samples[i].size());
+		imgInfo(img_samples[i][0]); // 8UC3 250 x 250
+	}
+	/*															
 	printImage(img_samples[0][0], 0);
 	cv::imshow("Tracking", img_samples[0][0]);
 	cv::waitKey(0);
@@ -55,15 +58,15 @@ ECO_FEATS feature_extractor::extractor(cv::Mat image,
 	if (params.useDeepFeature)
 	{
 		debug();
-		sum_features = get_cnn_layers(img_samples[0], deep_mean_mat);
+		sum_features = get_cnn_layers(img_samples[cnn_feat_ind], new_deep_mean_mat);
 		debug();
 		cnn_feature_normalization(sum_features);
 	}
 	if (params.useHogFeature)
 	{
-		hog_feat_maps = get_hog(img_samples[img_samples.size() - 1]); // the last feature is hog feature.
+		hog_feat_maps = get_hog(img_samples[hog_feat_ind]);
 
-//		debug("hog_feat_maps.size():%lu", hog_feat_maps.size());
+		debug("hog_feat_maps.size():%lu", hog_feat_maps.size());
 
 		vector<cv::Mat> hog_maps_vec = hog_feature_normalization(hog_feat_maps);
 
@@ -77,19 +80,19 @@ ECO_FEATS feature_extractor::extractor(cv::Mat image,
 }
 
 cv::Mat feature_extractor::sample_patch(const cv::Mat &im,
-										const cv::Point2f &poss,
+										const cv::Point2f &posf,
 										cv::Size2f sample_sz,
-										cv::Size2f output_sz,
+										cv::Size2f input_sz,
 										const eco_params &gparams)
 {
 	// Pos should be integer when input, but floor in just in case.
-	cv::Point pos(poss.operator cv::Point());
+	cv::Point pos(posf.operator cv::Point());
 
 	// Downsample factor
-	float resize_factor = std::min(sample_sz.width / output_sz.width, sample_sz.height / output_sz.height);
+	float resize_factor = std::min(sample_sz.width / input_sz.width, sample_sz.height / input_sz.height);
 	int df = std::max((float)floor(resize_factor - 0.1), float(1));
-	//debug("resize: %f,df: %d,sample_sz: %f x %f,output_sz: %f x %f,pos: %d %d", resize_factor, df, sample_sz.width, sample_sz.height,
-	//	output_sz.width, output_sz.height, pos.y, pos.x);
+	//debug("resize: %f,df: %d,sample_sz: %f x %f,input_sz: %f x %f,pos: %d %d", resize_factor, df, sample_sz.width, sample_sz.height,
+	//	input_sz.width, input_sz.height, pos.y, pos.x);
 
 	cv::Mat new_im;
 	im.copyTo(new_im);
@@ -141,10 +144,11 @@ cv::Mat feature_extractor::sample_patch(const cv::Mat &im,
 	assert(0);
 */
 	cv::Mat resized_patch;
-	cv::resize(im_patch, resized_patch, output_sz);
-
+	cv::resize(im_patch, resized_patch, input_sz);
 	/*
-	imgInfo(resized_patch);//im: 8UC3 640 x 480
+	debug();
+	imgInfo(resized_patch);
+
 	cv::imshow("Tracking", resized_patch);
 	cv::waitKey(0);
 	assert(0);
@@ -162,7 +166,7 @@ vector<cv::Mat> feature_extractor::get_hog(vector<cv::Mat> ims)
 	{
 		cv::Mat ims_f;
 		ims[i].convertTo(ims_f, CV_32FC3);
-	/*
+		/*
 		ddebug();
 		imgInfo(ims_f);
 	
@@ -173,7 +177,7 @@ vector<cv::Mat> feature_extractor::get_hog(vector<cv::Mat> ims)
 		_tmpl_sz.width = ims_f.cols;
 		_tmpl_sz.height = ims_f.rows;
 
-//		debug("%d, %d", _tmpl_sz.width, _tmpl_sz.height);
+		//		debug("%d, %d", _tmpl_sz.width, _tmpl_sz.height);
 
 		int _cell_size = hog_features.fparams.cell_size;
 		// Round to cell size and also make it even
@@ -188,7 +192,7 @@ vector<cv::Mat> feature_extractor::get_hog(vector<cv::Mat> ims)
 			_tmpl_sz.height = ((int)(_tmpl_sz.height / (2 * _cell_size)) * 2 * _cell_size) + _cell_size * 3;
 		}
 
-//		debug("%d, %d", _tmpl_sz.width, _tmpl_sz.height);
+		//		debug("%d, %d", _tmpl_sz.width, _tmpl_sz.height);
 
 		// Add extra cell filled with zeros around the image
 		cv::Mat featurePaddingMat(_tmpl_sz.height + _cell_size * 2,
@@ -200,7 +204,7 @@ vector<cv::Mat> feature_extractor::get_hog(vector<cv::Mat> ims)
 			resize(ims_f, ims_f, _tmpl_sz);
 		}
 		ims_f.copyTo(featurePaddingMat);
-/*
+		/*
 		ddebug();
 		imgInfo(featurePaddingMat);
 		assert(0);
@@ -217,7 +221,7 @@ vector<cv::Mat> feature_extractor::get_hog(vector<cv::Mat> ims)
 									  CV_32FC(map_temp->numFeatures), map_temp->map);
 
 		// clone because map_temp will be free.
-		featuresMap = featuresMap.clone(); 
+		featuresMap = featuresMap.clone();
 
 		freeFeatureMapObject(&map_temp);
 		/*
@@ -238,12 +242,14 @@ ECO_FEATS feature_extractor::get_cnn_layers(vector<cv::Mat> im, const cv::Mat &d
 		im[i].convertTo(im[i], CV_32FC3);
 		cv::cvtColor(im[i], im[i], CV_BGR2RGB);
 		im[i] = im[i].t();
+		//imgInfo(im[i]);
+		//imgInfo(deep_mean_mat);
 		im[i] = im[i] - deep_mean_mat;
 	}
 	cv::Mat input_imgs;
 	cv::merge(im, input_imgs);
 
-	//**** forward computation and exrtract cnn1 and output data ***************
+	// forward computation and exrtract cnn1 and output data
 	Blob<float> *input_layer = net->input_blobs()[0];
 
 	input_layer->Reshape(im.size(), im[0].channels(), 224, 224);
@@ -251,28 +257,28 @@ ECO_FEATS feature_extractor::get_cnn_layers(vector<cv::Mat> im, const cv::Mat &d
 	std::vector<cv::Mat> input_channels;
 	WrapInputLayer(&input_channels);
 	cv::split(input_imgs, input_channels);
-
+	debug();
 	net->Forward();
 	ECO_FEATS feature_map;
 	for (size_t idx = 0; idx < cnn_features.fparams.output_layer.size(); ++idx)
 	{
 		const float *pstart = NULL;
 		vector<int> shape;
-		if (cnn_features.fparams.downsample_factor[idx] == 2)
+		if (cnn_features.fparams.output_layer[idx] == 3)
 		{
 			boost::shared_ptr<caffe::Blob<float>> layerData = net->blob_by_name("norm1");
 			pstart = layerData->cpu_data();
 			shape = layerData->shape();
 		}
-		else
+		else if  (cnn_features.fparams.output_layer[idx] == 14)
 		{
-			Blob<float> *output_layer = net->output_blobs()[0];
-			pstart = output_layer->cpu_data();
-			shape = output_layer->shape();
+			boost::shared_ptr<caffe::Blob<float>> layerData = net->blob_by_name("relu5");
+			pstart = layerData->cpu_data();
+			shape = layerData->shape();
 		}
-		debug();
+		debug("shape: %d, %d, %d, %d", shape[0], shape[1], shape[2], shape[3]);
 		vector<cv::Mat> merge_feature;
-		for (size_t i = 0; i < (size_t)(shape[0] * shape[1]); i++) //  CNN into single channel******
+		for (size_t i = 0; i < (size_t)(shape[0] * shape[1]); i++) //  CNN into single channel
 		{
 			cv::Mat feat_map(shape[2], shape[3], CV_32FC(1), (void *)pstart);
 			feat_map = feat_map.t();

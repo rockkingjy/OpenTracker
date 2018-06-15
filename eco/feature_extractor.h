@@ -44,7 +44,7 @@ class feature_extractor
 	cv::Mat sample_patch(const cv::Mat &im, 
 						 const cv::Point2f &pos, 
 						 cv::Size2f sample_sz,
-						 cv::Size2f output_sz, 
+						 cv::Size2f input_sz, 
 						 const eco_params &gparams);
 
 	vector<cv::Mat> get_hog(vector<cv::Mat> im);
@@ -66,6 +66,10 @@ class feature_extractor
   private:
 	cnn_feature cnn_features;
 	hog_feature hog_features;
+
+	int cnn_feat_ind = -1;
+	int hog_feat_ind = -1;
+	int cn_feat_ind  = -1;
 
 	ECO_FEATS cnn_feat_maps;
 	vector<cv::Mat> hog_feat_maps;
