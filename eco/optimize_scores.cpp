@@ -6,7 +6,6 @@ void optimize_scores::compute_scores()
 	sample_fs(scores_fs);
 }
 
-
 std::vector<cv::Mat> optimize_scores::sample_fs(const std::vector<cv::Mat>& xf, cv::Size grid_sz)
 {
 	std::vector<cv::Mat> sampled_scores;
@@ -59,7 +58,7 @@ std::vector<cv::Mat> optimize_scores::sample_fs(const std::vector<cv::Mat>& xf, 
 		for (int y = 0; y < h; ++y)
 			tempy.at<cv::Vec<float, 2>>(0, y) = cv::Vec<float, 2>(cos(ky[y] * max_pos_y[i]), sin(ky[y] * max_pos_y[i]));
 		for (int x = 0; x < w; ++x)
-			tempx.at<cv::Vec<float, 2>>(x,0) = cv::Vec<float, 2>(cos(kx[x] * max_pos_x[i]), sin(kx[x] * max_pos_x[i]));
+			tempx.at<cv::Vec<float, 2>>(x, 0) = cv::Vec<float, 2>(cos(kx[x] * max_pos_x[i]), sin(kx[x] * max_pos_x[i]));
 		exp_iky.push_back(tempy);
 		exp_ikx.push_back(tempx);
 	}
@@ -117,7 +116,7 @@ std::vector<cv::Mat> optimize_scores::sample_fs(const std::vector<cv::Mat>& xf, 
 	for (size_t i = 0; i < sampled_scores.size(); ++i)
 	{
 		float new_scores = real(exp_iky[i] * scores_fs[i] * exp_ikx[i]).at<float>(0, 0);
-		if (new_scores > init_max_score[i])  // org: new_scores > init_max_score[i]
+		if (new_scores > init_max_score[i])
 		{
 			max_score.push_back(new_scores);
 		}

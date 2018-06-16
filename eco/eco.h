@@ -84,7 +84,7 @@ class ECO
 	size_t 				frames_since_last_train; 	 // used for update;
 
 	// The max size of feature and its index, output_sz is T in (9) of C-COT paper
-	size_t 				output_sz, max_output_index; 	
+	size_t 				output_sz, output_index; 	
 
 	//cv::Size 			target_sz;		// Original target size
 	cv::Size2f 			base_target_sz; // target size without scale

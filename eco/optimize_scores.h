@@ -6,8 +6,6 @@
 
 #include "fftTool.h"
 
-#define MOD(m, n) m % n
-
 using namespace FFTTools;
 
 class optimize_scores
@@ -24,7 +22,7 @@ class optimize_scores
 	std::vector<cv::Mat> sample_fs(const std::vector<cv::Mat> &xf,
 								   cv::Size grid_sz = cv::Size(0, 0));
 
-	inline int get_scale_ind() const { return scale_ind; }
+	inline int  get_scale_ind() const { return scale_ind; }
 	inline float get_disp_row() const { return disp_row; }
 	inline float get_disp_col() const { return disp_col; }
 

@@ -52,24 +52,17 @@ ECO_FEATS feature_extractor::extractor(cv::Mat image,
 	cv::waitKey(0);
 	assert(0);
 */
-
 	// Extract feature maps for each feature in the list
 	ECO_FEATS sum_features;
 	if (params.useDeepFeature)
 	{
-		debug();
 		sum_features = get_cnn_layers(img_samples[cnn_feat_ind], new_deep_mean_mat);
-		debug();
 		cnn_feature_normalization(sum_features);
 	}
 	if (params.useHogFeature)
 	{
 		hog_feat_maps = get_hog(img_samples[hog_feat_ind]);
-
-		debug("hog_feat_maps.size():%lu", hog_feat_maps.size());
-
 		vector<cv::Mat> hog_maps_vec = hog_feature_normalization(hog_feat_maps);
-
 		sum_features.push_back(hog_maps_vec);
 	}
 	if (params.useCnFeature)
@@ -260,7 +253,6 @@ ECO_FEATS feature_extractor::get_cnn_layers(vector<cv::Mat> im, const cv::Mat &d
 	ECO_FEATS feature_map;
 	for (size_t idx = 0; idx < cnn_features.fparams.output_layer.size(); ++idx)
 	{
-		debug();
 		const float *pstart = NULL;
 		vector<int> shape;
 		if (cnn_features.fparams.output_layer[idx] == 3)
@@ -294,7 +286,7 @@ ECO_FEATS feature_extractor::get_cnn_layers(vector<cv::Mat> im, const cv::Mat &d
 			extract_map = (cnn_features.fparams.downsample_factor[idx] == 1) ? extract_map : sample_pool(extract_map, 2, 2);
 			merge_feature.push_back(extract_map);
 		} //end for
-		debug();
+		
 		feature_map.push_back(merge_feature);
 	}
 	return feature_map;

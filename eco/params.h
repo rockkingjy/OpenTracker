@@ -66,7 +66,7 @@ struct eco_params
 	hog_feature 		hog_features; 
 
 	// Features
-	bool 	useDeepFeature 		 = true;
+	bool 	useDeepFeature 		 = false;
 	bool	useHogFeature		 = true;		// Not used yet, add later.......
 	bool	useCnFeature		 = false;		// Not used yet, add later.......
 

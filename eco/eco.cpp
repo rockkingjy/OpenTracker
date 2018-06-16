@@ -36,7 +36,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	init_features();
 
 	// *** Number of Fourier coefficients to save for each filter layer. This will be an odd number.
-	max_output_index = 0;
+	output_index = 0;
 	output_sz = 0;
 	// The size of the label function DFT. Equal to the maximum filter size
 	for (size_t i = 0; i != feature_sz.size(); ++i)
@@ -45,10 +45,10 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 		filter_sz.push_back(cv::Size(size, size));
 		debug("filter_sz %lu: %d x %d", i, filter_sz[i].height, filter_sz[i].width);
 		// get the largest feature and it's index;
-		max_output_index = size > output_sz ? i : max_output_index;
+		output_index = size > output_sz ? i : output_index;
 		output_sz = std::max(size, output_sz);
 	}
-	debug("max_output_index:%lu, output_sz:%lu", max_output_index, output_sz);
+	debug("output_index:%lu, output_sz:%lu", output_index, output_sz);
 
 	// *** Compute the Fourier series indices k.
 	for (size_t i = 0; i < filter_sz.size(); ++i) // for each filter
@@ -132,14 +132,11 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	{
 		printf("%lu:%f; ", i, scaleFactors[i]);
 	}
-	printf("\n=========================================================\n");
-	//=========================================================================================================
+	printf("\n======================================================================\n");
 	ECO_FEATS xl, xlw, xlf, xlf_porj;
 	xl = feat_extrator.extractor(im, pos, vector<float>(1, currentScaleFactor), params, deep_mean_mat, net);
 	debug("xl size: %lu, %lu, %d x %d", xl.size(), xl[0].size(), xl[0][0].rows, xl[0][0].cols);
-	//showmat(xl[0][0],2);
-	ddebug();
-	//assert(0);
+
 	//*** Do windowing of features ***
 	xl = do_windows_x(xl, cos_window);
 
@@ -153,7 +150,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	xlf = compact_fourier_coeff(xlf);
 	debug("xlf size: %lu, %lu, %d x %d", xlf.size(), xlf[0].size(), xlf[0][0].rows, xlf[0][0].cols);
 	//*** Compress feature dementional projection matrix
-	projection_matrix = init_projection_matrix(xl, compressed_dim, feature_dim); //*** EXACT EQUAL TO MATLAB
+	projection_matrix = init_projection_matrix(xl, compressed_dim, feature_dim); 
 
 	//*** project sample *****
 	xlf_porj = project_sample(xlf, projection_matrix);
@@ -209,15 +206,16 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 {
 	cv::Point sample_pos = cv::Point(pos);
-	vector<float> det_samples_pos;
+	vector<float> samples_scales;
 	for (size_t i = 0; i < scaleFactors.size(); ++i)
 	{
-		det_samples_pos.push_back(currentScaleFactor * scaleFactors[i]);
+		samples_scales.push_back(currentScaleFactor * scaleFactors[i]);
 	}
 	ddebug();
 	// 1: Extract features at multiple resolutions
-	ECO_FEATS xt = feat_extrator.extractor(frame, sample_pos, det_samples_pos, params, deep_mean_mat, net);
+	ECO_FEATS xt = feat_extrator.extractor(frame, sample_pos, samples_scales, params, deep_mean_mat, net);
 	//debug("xt size: %lu, %lu, %d x %d", xt.size(), xt[0].size(), xt[0][0].rows, xt[0][0].cols);
+
 	// 2:  project sample *****
 	ECO_FEATS xt_proj = FeatProjMultScale(xt, projection_matrix);
 	//debug("xt_proj size: %lu, %lu, %d x %d", xt_proj.size(), xt_proj[0].size(), xt_proj[0][0].rows, xt_proj[0][0].cols);
@@ -237,11 +235,11 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	// Also sum over all feature blocks. Gives the fourier coefficients of the convolution response.
 	vector<cv::Mat> scores_fs_sum;
 	for (size_t i = 0; i < scaleFactors.size(); i++)
-		scores_fs_sum.push_back(cv::Mat::zeros(filter_sz[max_output_index], CV_32FC2));
+		scores_fs_sum.push_back(cv::Mat::zeros(filter_sz[output_index], CV_32FC2));
 
 	for (size_t i = 0; i < xt_proj.size(); i++)
 	{
-		int pad = (filter_sz[max_output_index].height - xt_proj[i][0].rows) / 2;
+		int pad = (filter_sz[output_index].height - xt_proj[i][0].rows) / 2;
 		cv::Rect temp_roi = cv::Rect(pad, pad, xt_proj[i][0].cols, xt_proj[i][0].rows);
 
 		for (size_t j = 0; j < xt_proj[i].size(); j++)
