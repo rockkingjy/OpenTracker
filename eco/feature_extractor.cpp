@@ -251,17 +251,16 @@ ECO_FEATS feature_extractor::get_cnn_layers(vector<cv::Mat> im, const cv::Mat &d
 
 	// forward computation and exrtract cnn1 and output data
 	Blob<float> *input_layer = net->input_blobs()[0];
-
-	input_layer->Reshape(im.size(), im[0].channels(), 224, 224);
+	input_layer->Reshape(im.size(), im[0].channels(), im[0].rows, im[0].cols);//224, 224);
 	net->Reshape();
 	std::vector<cv::Mat> input_channels;
 	WrapInputLayer(&input_channels);
 	cv::split(input_imgs, input_channels);
-	debug();
 	net->Forward();
 	ECO_FEATS feature_map;
 	for (size_t idx = 0; idx < cnn_features.fparams.output_layer.size(); ++idx)
 	{
+		debug();
 		const float *pstart = NULL;
 		vector<int> shape;
 		if (cnn_features.fparams.output_layer[idx] == 3)
@@ -272,7 +271,8 @@ ECO_FEATS feature_extractor::get_cnn_layers(vector<cv::Mat> im, const cv::Mat &d
 		}
 		else if  (cnn_features.fparams.output_layer[idx] == 14)
 		{
-			boost::shared_ptr<caffe::Blob<float>> layerData = net->blob_by_name("relu5");
+			boost::shared_ptr<caffe::Blob<float>> layerData = net->blob_by_name("conv5");
+			//Blob<float>* layerData = net->output_blobs()[0]; // read "relu5" in the method above will cause error 
 			pstart = layerData->cpu_data();
 			shape = layerData->shape();
 		}
