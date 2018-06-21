@@ -150,7 +150,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	xlf = compact_fourier_coeff(xlf);
 	debug("xlf size: %lu, %lu, %d x %d", xlf.size(), xlf[0].size(), xlf[0][0].rows, xlf[0][0].cols);
 	//*** Compress feature dementional projection matrix
-	projection_matrix = init_projection_matrix(xl, compressed_dim, feature_dim); 
+	projection_matrix = init_projection_matrix(xl, compressed_dim, feature_dim);
 
 	//*** project sample *****
 	xlf_porj = project_sample(xlf, projection_matrix);
@@ -260,10 +260,10 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 
 	// 8: Compute the translation vector in pixel-coordinates and round to the closest integer pixel.
 	int scale_change_factor = scores.get_scale_ind();
-	float dx = scores.get_disp_col() * (img_support_sz.width / output_sz) *
-			   currentScaleFactor * scaleFactors[scale_change_factor];
-	float dy = scores.get_disp_row() * (img_support_sz.height / output_sz) *
-			   currentScaleFactor * scaleFactors[scale_change_factor];
+	float resize_scores_width = (img_support_sz.width / output_sz) * currentScaleFactor * scaleFactors[scale_change_factor];
+	float resize_scores_height = (img_support_sz.height / output_sz) * currentScaleFactor * scaleFactors[scale_change_factor];
+	float dx = scores.get_disp_col() * resize_scores_width;
+	float dy = scores.get_disp_row() * resize_scores_height;
 	//	debug("get_disp_col: %f, get_disp_row: %f, dx: %f, dy: %f", scores.get_disp_col(), scores.get_disp_row(), dx, dy);
 	// 9: Update position
 	pos = cv::Point2f(sample_pos) + cv::Point2f(dx, dy);
@@ -280,30 +280,78 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	{
 		currentScaleFactor = params.max_scale_factor;
 	}
-	/*
-	// Visualization
-	cv::Mat resframe = frame.clone();
-	cv::rectangle(resframe, roi, cv::Scalar(0, 255, 0));
-	cv::imshow("Tracking", resframe);
-	cv::waitKey(1);
+	//*****************************************************************************
+	//*****                     Model Visualization
+	//*****************************************************************************
+	if (DEBUG == 1)
+	{
+		ddebug();
+		cv::Mat resframe = frame.clone();
+		cv::rectangle(resframe, roi, cv::Scalar(0, 255, 0));
 
-	// Apply the colormap:
-	cv::Mat cm_tmp, cm_img;
-	FFTTools::magnitude(scores_fs_sum[scale_change_factor]).convertTo(cm_tmp, CV_8U);
+		// Apply the colormap
+		cv::Mat cm_tmp, cm_img;
+		cm_tmp = FFTTools::magnitude(scores_fs_sum[scale_change_factor]) * 100000;
+		cm_tmp.convertTo(cm_tmp, CV_8U);
 
-	//showmat(cm_tmp, 1);
+		cv::resize(cm_tmp, cm_img, cv::Size(cm_tmp.cols * resize_scores_width, cm_tmp.rows * resize_scores_height),
+				   0, 0, cv::INTER_NEAREST);
+		cv::applyColorMap(cm_img, cm_img, cv::COLORMAP_JET);
 
-	cv::resize(cm_tmp, cm_img,
-			   cv::Size(img_support_sz.width, img_support_sz.height),
-			   0, 0, cv::INTER_NEAREST);
-	cv::applyColorMap(cm_img, cm_img, cv::COLORMAP_JET);
-*/
-	//cv::imshow("cm_img", cm_img);
-	//cv::waitKey(1);
+		ddebug();
+		// Merge these two images
+		float alpha_vis = 0.3;
+		int x_vis = std::max(0, sample_pos.x - cm_img.cols / 2);
+		int y_vis = std::max(0, sample_pos.y - cm_img.rows / 2);
+		int w_vis = 0;
+		int h_vis = 0;
+		if (sample_pos.x + cm_img.cols / 2 > resframe.cols)
+		{
+			w_vis = resframe.cols - x_vis;
+		}
+		else
+		{
+			w_vis = sample_pos.x + cm_img.cols / 2 - x_vis;
+		}
+		if (sample_pos.y + cm_img.rows / 2 > resframe.rows)
+		{
+			h_vis = resframe.rows - y_vis;
+		}
+		else
+		{
+			h_vis = sample_pos.y + cm_img.rows / 2 - y_vis;
+		}
+		//debug("%d %d %d %d",x_vis, y_vis, w_vis, h_vis);
+		cv::Mat roi_vis = resframe(cv::Rect(x_vis, y_vis, w_vis, h_vis));
+		ddebug();
+		if (x_vis == 0)
+		{
+			x_vis = cm_img.cols / 2 - sample_pos.x;
+		}
+		else
+		{
+			x_vis = 0;
+		}
+		if (y_vis == 0)
+		{
+			y_vis = cm_img.rows / 2 - sample_pos.y;
+		}
+		else
+		{
+			y_vis = 0;
+		}
+		//debug("%d %d %d %d",x_vis, y_vis, w_vis, h_vis);
+		cv::Mat cm_img_vis = cm_img(cv::Rect(x_vis, y_vis, w_vis, h_vis));
+		ddebug();
+		cv::addWeighted(cm_img_vis, alpha_vis, roi_vis, 1.0 - alpha_vis, 0.0, roi_vis);
+
+		cv::imshow("Tracking", resframe);
+		cv::waitKey(1);
+	}
 	//*****************************************************************************
 	//*****                     Model update step
 	//*****************************************************************************
-
+	ddebug();
 	// 1: Use the sample that was used for detection
 	ECO_FEATS xlf_proj;
 	for (size_t i = 0; i < xt_proj.size(); ++i)
@@ -318,7 +366,7 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 		xlf_proj.push_back(tmp);
 	}
 	ddebug();
-	// 2: Shift the sample so that the target is centered, 
+	// 2: Shift the sample so that the target is centered,
 	//  A shift in spatial domain means multiply by exp(i pi L k), according to shift property of Fourier transformation.
 	cv::Point2f shift_samp = 2.0f * CV_PI * cv::Point2f(pos - cv::Point2f(sample_pos)) * (1.0f / (currentScaleFactor * img_support_sz.width));
 	xlf_proj = shift_sample(xlf_proj, shift_samp, kx, ky);
@@ -387,30 +435,30 @@ void ECO::init_features()
 		//	showmat3ch(deep_mean_mat, 2);
 		//	showmat3ch(deep_mean_mean_mat, 2);
 
-		params.cnn_features.img_input_sz  = img_sample_sz;		//250
-		params.cnn_features.img_sample_sz = img_sample_sz;	
+		params.cnn_features.img_input_sz = img_sample_sz; //250
+		params.cnn_features.img_sample_sz = img_sample_sz;
 
 		// Calculate the output size of the 2 output layer;
-		int cnn_output_sz0 = (int)((img_sample_sz.width - 7 + 0 + 0) / 2) + 1;  //122
-		int cnn_output_sz1 = (int)((cnn_output_sz0 - 3 + 0 + 1) / 2) + 1; 		//61	
-		cnn_output_sz1 = (int)((cnn_output_sz1 - 3 + 1 + 1) / 2) + 1;	 		//15
-		cnn_output_sz1 = (int)((cnn_output_sz1 - 3 + 0 + 1) / 2) + 1;	 		//15
+		int cnn_output_sz0 = (int)((img_sample_sz.width - 7 + 0 + 0) / 2) + 1; //122
+		int cnn_output_sz1 = (int)((cnn_output_sz0 - 3 + 0 + 1) / 2) + 1;	  //61
+		cnn_output_sz1 = (int)((cnn_output_sz1 - 3 + 1 + 1) / 2) + 1;		   //15
+		cnn_output_sz1 = (int)((cnn_output_sz1 - 3 + 0 + 1) / 2) + 1;		   //15
 		int total_feature_sz0 = cnn_output_sz0;
 		int total_feature_sz1 = cnn_output_sz1;
 		debug("total_feature_sz: %d %d", total_feature_sz0, total_feature_sz1);
 		// Re-calculate the output size of the 1st output layer;
-		int support_sz = params.cnn_features.fparams.stride[1] * cnn_output_sz1; // 16 x 15 = 240
+		int support_sz = params.cnn_features.fparams.stride[1] * cnn_output_sz1;	// 16 x 15 = 240
 		cnn_output_sz0 = (int)(support_sz / params.cnn_features.fparams.stride[0]); // 240 / 2 = 120
 		debug("cnn_output_sz: %d %d", cnn_output_sz0, cnn_output_sz1);
 
 		int start_ind0 = (int)((total_feature_sz0 - cnn_output_sz0) / 2) + 1; // 2
 		int start_ind1 = (int)((total_feature_sz1 - cnn_output_sz1) / 2) + 1; // 1
-		int end_ind0 = start_ind0 + cnn_output_sz0 - 1;	// 121
-		int end_ind1 = start_ind1 + cnn_output_sz1 - 1; // 15
+		int end_ind0 = start_ind0 + cnn_output_sz0 - 1;						  // 121
+		int end_ind1 = start_ind1 + cnn_output_sz1 - 1;						  // 15
 		//debug("ind: %d %d %d %d", start_ind0, start_ind1, end_ind0, end_ind1);
 
 		params.cnn_features.fparams.start_ind = {start_ind0, start_ind0, start_ind1, start_ind1};
-	
+
 		params.cnn_features.fparams.end_ind = {end_ind0, end_ind0, end_ind1, end_ind1};
 
 		params.cnn_features.data_sz_block0 = cv::Size(cnn_output_sz0 / params.cnn_features.fparams.downsample_factor[0],
@@ -423,10 +471,10 @@ void ECO::init_features()
 		img_support_sz = cv::Size(support_sz, support_sz);
 
 		debug("cnn parameters--------------:");
-		debug("img_input_sz: %d, img_sample_sz: %d",params.cnn_features.img_input_sz.width, params.cnn_features.img_sample_sz.width);
-		debug("data_sz_block0: %d, data_sz_block1: %d",params.cnn_features.data_sz_block0.width, params.cnn_features.data_sz_block1.width);
-		debug("start_ind0: %d, start_ind1: %d, end_ind0: %d, end_ind1: %d",params.cnn_features.fparams.start_ind[0],
-		params.cnn_features.fparams.start_ind[2],params.cnn_features.fparams.end_ind[0], params.cnn_features.fparams.end_ind[2]);
+		debug("img_input_sz: %d, img_sample_sz: %d", params.cnn_features.img_input_sz.width, params.cnn_features.img_sample_sz.width);
+		debug("data_sz_block0: %d, data_sz_block1: %d", params.cnn_features.data_sz_block0.width, params.cnn_features.data_sz_block1.width);
+		debug("start_ind0: %d, start_ind1: %d, end_ind0: %d, end_ind1: %d", params.cnn_features.fparams.start_ind[0],
+			  params.cnn_features.fparams.start_ind[2], params.cnn_features.fparams.end_ind[0], params.cnn_features.fparams.end_ind[2]);
 	}
 	else
 	{
@@ -435,15 +483,15 @@ void ECO::init_features()
 	}
 	if (params.useHogFeature) // just HOG feature;
 	{
-		params.hog_features.img_input_sz  = img_support_sz;
+		params.hog_features.img_input_sz = img_support_sz;
 		params.hog_features.img_sample_sz = img_support_sz;
 		params.hog_features.data_sz_block0 = cv::Size(params.hog_features.img_sample_sz.width / params.hog_features.fparams.cell_size,
 													  params.hog_features.img_sample_sz.height / params.hog_features.fparams.cell_size);
-		
+
 		debug("HOG parameters---------------:");
-		debug("img_input_sz: %d, img_sample_sz: %d",params.hog_features.img_input_sz.width, params.hog_features.img_sample_sz.width);
-		debug("data_sz_block0: %d",params.hog_features.data_sz_block0.width);		
-		debug("-----------------------------");									  
+		debug("img_input_sz: %d, img_sample_sz: %d", params.hog_features.img_input_sz.width, params.hog_features.img_sample_sz.width);
+		debug("data_sz_block0: %d", params.hog_features.data_sz_block0.width);
+		debug("-----------------------------");
 	}
 	if (params.useCnFeature)
 	{
@@ -523,7 +571,7 @@ void ECO::yf_gaussian() // real part of (9) in paper C-COT
 		tempx = sqrt(2 * CV_PI) * sig_y / output_sz * tempx;
 
 		yf.push_back(cv::Mat(tempy * tempx)); // matrix multiplication
-/*
+											  /*
 		showmat1chall(tempy, 2);
 		showmat1chall(tempx, 2);
 		showmat1chall(yf[i], 2);
@@ -543,7 +591,7 @@ void ECO::cos_wind()
 			hann2t.at<float>(i, 0) = 0.5 * (1 - std::cos(2 * 3.14159265358979323846 * i / (hann2t.rows - 1)));
 		cv::Mat hann2d = hann2t * hann1t;
 		cos_window.push_back(hann2d(cv::Range(1, hann2d.rows - 1), cv::Range(1, hann2d.cols - 1)));
-/*
+		/*
 		showmat1ch(cos_window[i],2);
 		assert(0);
 		*/
@@ -680,7 +728,7 @@ ECO_FEATS ECO::shift_sample(ECO_FEATS &xf, cv::Point2f shift, std::vector<cv::Ma
 		{
 			shift_exp_x.at<COMPLEX>(0, j) = COMPLEX(cos(shift.x * kx[i].at<float>(0, j)), sin(shift.x * kx[i].at<float>(0, j)));
 		}
-/*
+		/*
 		debug("shift_exp_y:");
 		showmat2chall(shift_exp_y, 2);
 		debug("shift_exp_x:");
@@ -692,7 +740,7 @@ ECO_FEATS ECO::shift_sample(ECO_FEATS &xf, cv::Point2f shift, std::vector<cv::Ma
 
 		vector<cv::Mat> tmp;
 		for (size_t j = 0; j < xf[i].size(); j++) // for each dimension of the feature, do complex element-wise multiplication
-		{	
+		{
 			tmp.push_back(complexMultiplication(complexMultiplication(shift_exp_y_mat, xf[i][j]), shift_exp_x_mat));
 		}
 		res.push_back(tmp);

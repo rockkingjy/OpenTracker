@@ -13,7 +13,7 @@
 
 #include "head.h" //****** caffe C++ problem solution *******   !!!just be careful
 #include "eco.h"
-
+#include "debug.h"
 //#define USE_VIDEO
 
 using namespace std;
@@ -68,7 +68,7 @@ int main(int argc, char** argv)
 	::google::InitGoogleLogging(argv[0]);
     
     string databaseTypes[4] = {"VOT-2017", "TB-2015", "TLP", "UAV123"};
-    string databaseType = databaseTypes[2];
+    string databaseType = databaseTypes[1];
     // Read from the images ====================================================
     int f, isLost;
     float x, y, w, h;
@@ -245,8 +245,11 @@ int main(int argc, char** argv)
         // Display FPS on frame
         putText(frame, "FPS: " + SSTR(float(fpseco)), Point(100, 50), FONT_HERSHEY_SIMPLEX,
                 0.75, Scalar(0, 225, 0), 2);
-
-        imshow("Tracking", frame);
+        
+        if (DEBUG == 0)
+        {
+            imshow("Tracking", frame);
+        }
 
         int c = cvWaitKey(1);
         if (c != -1)

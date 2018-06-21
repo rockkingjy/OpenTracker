@@ -44,11 +44,13 @@ ECO_FEATS feature_extractor::extractor(cv::Mat image,
 		}
 		img_samples.push_back(img_samples_temp);
 	}
+/*	
 	for (unsigned int i = 0; i < img_samples.size(); ++i)
 	{
 		debug("img_sample for feature: %d, scales:%lu", i, img_samples[i].size());
 		imgInfo(img_samples[i][0]); // 8UC3 250 x 250
 	}
+	*/
 	/*															
 	printImage(img_samples[0][0], 0);
 	cv::imshow("Tracking", img_samples[0][0]);
@@ -88,12 +90,12 @@ cv::Mat feature_extractor::sample_patch(const cv::Mat &im,
 	// Downsample factor
 	float resize_factor = std::min(sample_sz.width / input_sz.width, sample_sz.height / input_sz.height);
 	int df = std::max((float)floor(resize_factor - 0.1), float(1));
-	debug("resize_factor: %f,df: %d,sample_sz: %f x %f,input_sz: %f x %f,pos: %d %d", resize_factor, df, sample_sz.width, sample_sz.height,
-		  input_sz.width, input_sz.height, pos.y, pos.x);
+	//debug("resize_factor: %f,df: %d,sample_sz: %f x %f,input_sz: %f x %f,pos: %d %d", resize_factor, df, sample_sz.width, sample_sz.height,
+	//	  input_sz.width, input_sz.height, pos.y, pos.x);
 
 	cv::Mat new_im;
 	im.copyTo(new_im);
-	debug("new_im:%d x %d", new_im.rows, new_im.cols);
+	//debug("new_im:%d x %d", new_im.rows, new_im.cols);
 	if (df > 1)
 	{
 		cv::Point os((pos.x - 1) % df, ((pos.y - 1) % df));
@@ -123,7 +125,7 @@ cv::Mat feature_extractor::sample_patch(const cv::Mat &im,
 
 	cv::Point pos2(pos.x - floor((sample_sz.width + 1) / 2),
 				   pos.y - floor((sample_sz.height + 1) / 2));
-	debug("new_im:%d x %d, pos2:%d %d, sample_sz:%f x %f", new_im.rows, new_im.cols, pos2.x, pos2.y, sample_sz.width, sample_sz.height);
+	//debug("new_im:%d x %d, pos2:%d %d, sample_sz:%f x %f", new_im.rows, new_im.cols, pos2.x, pos2.y, sample_sz.width, sample_sz.height);
 	//showfeature(new_im, 0);
 
 	cv::Mat im_patch;
@@ -272,7 +274,7 @@ ECO_FEATS feature_extractor::get_cnn_layers(vector<cv::Mat> im, const cv::Mat &d
 			pstart = layerData->cpu_data();
 			shape = layerData->shape();
 		}
-		debug("shape: %d, %d, %d, %d", shape[0], shape[1], shape[2], shape[3]);
+		//debug("shape: %d, %d, %d, %d", shape[0], shape[1], shape[2], shape[3]);
 		vector<cv::Mat> merge_feature;
 		for (size_t i = 0; i < (size_t)(shape[0] * shape[1]); i++) //  CNN into single channel
 		{

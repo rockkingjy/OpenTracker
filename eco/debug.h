@@ -5,6 +5,7 @@
 #include <vector>
 #include <opencv2/opencv.hpp>
 
+#define DEBUG 1
 #define getName(var) #var
 
 #define debug(a, args...) printf("%s(%s:%d) " a "\n", __func__, __FILE__, __LINE__, ##args)
@@ -67,7 +68,11 @@ inline void showmat1chall(cv::Mat mat, int type)
 	{
 		for (int j = 0; j < mat.cols; j++)
 		{
-			if (type == 1)
+			if (type == 0)
+			{ // char
+				printf("%d ", mat.at<unsigned char>(i, j));
+			}
+			else if (type == 1)
 			{ // int
 				printf("%d ", mat.at<int>(i, j));
 			}
@@ -98,7 +103,7 @@ inline void showmat2chall(cv::Mat mat, int type)
 			{
 				if (type == 0)
 				{ // char
-					printf("%d ", mat.at<cv::Vec3b>(i, j)[k]);
+					printf("%d ", mat.at<cv::Vec2b>(i, j)[k]);
 				}
 				else if (type == 1)
 				{ // int
