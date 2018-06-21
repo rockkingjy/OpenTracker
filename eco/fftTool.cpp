@@ -65,7 +65,7 @@ namespace FFTTools
 		else assert(0);
 		return res;
 	}
-
+	// complex element-wise multiplication 
 	cv::Mat complexMultiplication(cv::Mat a, cv::Mat b)
 	{
 		if (a.channels() == 1)     // for single channel image s

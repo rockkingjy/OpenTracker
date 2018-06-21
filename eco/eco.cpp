@@ -50,19 +50,19 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	}
 	debug("output_index:%lu, output_sz:%lu", output_index, output_sz);
 
-	// *** Compute the Fourier series indices k.
+	// *** Compute the 2d Fourier series indices by kx and ky.
 	for (size_t i = 0; i < filter_sz.size(); ++i) // for each filter
 	{
 		cv::Mat_<float> tempy(filter_sz[i].height, 1, CV_32FC1);
 		cv::Mat_<float> tempx(1, filter_sz[i].height / 2 + 1, CV_32FC1); // why 1/2 in x?===========????
 
-		// ky in [-(N-1)/2, (N-1)/2], because N = filter_sz[i].height is odd (check above), 63x1
+		// ky in [-(N-1)/2, (N-1)/2], because N = filter_sz[i].height is odd (check above), N x 1;
 		for (int j = 0; j < tempy.rows; j++)
 		{
 			tempy.at<float>(j, 0) = j - (tempy.rows / 2); // y index
 		}
 		ky.push_back(tempy);
-		// kx in [-N/2, 0], 1x32
+		// kx in [-N/2, 0], 1 x (N / 2 + 1)
 		for (int j = 0; j < tempx.cols; j++)
 		{
 			tempx.at<float>(0, j) = j - (filter_sz[i].height / 2);
@@ -199,12 +199,14 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	{
 		debug("hf_full: %lu, %lu, %d x %d", i, hf_full[i].size(), hf_full[i][0].rows, hf_full[i][0].cols);
 	}
+	ddebug();
 	//showmat(hf_full[0][0], 2);
 	//assert(0);
 }
 
 bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 {
+	ddebug();
 	cv::Point sample_pos = cv::Point(pos);
 	vector<float> samples_scales;
 	for (size_t i = 0; i < scaleFactors.size(); ++i)
@@ -215,21 +217,21 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	// 1: Extract features at multiple resolutions
 	ECO_FEATS xt = feat_extrator.extractor(frame, sample_pos, samples_scales, params, deep_mean_mat, net);
 	//debug("xt size: %lu, %lu, %d x %d", xt.size(), xt[0].size(), xt[0][0].rows, xt[0][0].cols);
-
+	ddebug();
 	// 2:  project sample *****
 	ECO_FEATS xt_proj = FeatProjMultScale(xt, projection_matrix);
 	//debug("xt_proj size: %lu, %lu, %d x %d", xt_proj.size(), xt_proj[0].size(), xt_proj[0][0].rows, xt_proj[0][0].cols);
-
+	ddebug();
 	// 3: Do windowing of features ***
 	xt_proj = do_windows_x(xt_proj, cos_window);
-
+	ddebug();
 	// 4: Compute the fourier series ***
 	xt_proj = do_dft(xt_proj);
-
+	ddebug();
 	// 5: Interpolate features to the continuous domain
 	xt_proj = interpolate_dft(xt_proj, interp1_fs, interp2_fs);
 	//	debug("xt_proj size: %lu, %lu, %d, %d", xt_proj.size(), xt_proj[0].size(), xt_proj[0][0].cols, xt_proj[0][0].rows);
-
+	ddebug();
 	// 6: compute the scores for different scales of target
 	// Compute convolution for each feature block in the Fourier domain and the sum over all blocks.
 	// Also sum over all feature blocks. Gives the fourier coefficients of the convolution response.
@@ -316,8 +318,9 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 		xlf_proj.push_back(tmp);
 	}
 	ddebug();
-	// 2: Shift the sample so that the target is centered
-	cv::Point2f shift_samp = 2 * CV_PI * cv::Point2f(pos - cv::Point2f(sample_pos)) * (1 / (currentScaleFactor * img_support_sz.width));
+	// 2: Shift the sample so that the target is centered, 
+	//  A shift in spatial domain means multiply by exp(i pi L k), according to shift property of Fourier transformation.
+	cv::Point2f shift_samp = 2.0f * CV_PI * cv::Point2f(pos - cv::Point2f(sample_pos)) * (1.0f / (currentScaleFactor * img_support_sz.width));
 	xlf_proj = shift_sample(xlf_proj, shift_samp, kx, ky);
 	ddebug();
 	// 3: Update the samples to include the new sample, the distance matrix,
@@ -519,11 +522,12 @@ void ECO::yf_gaussian() // real part of (9) in paper C-COT
 		cv::exp(-2 * tempx.mul(tempx), tempx);
 		tempx = sqrt(2 * CV_PI) * sig_y / output_sz * tempx;
 
-		yf.push_back(cv::Mat(tempy * tempx));
-
-		//showmat(tempy, 2);
-		//showmat(tempx, 2);
-		//showmat(yf[i], 2);
+		yf.push_back(cv::Mat(tempy * tempx)); // matrix multiplication
+/*
+		showmat1chall(tempy, 2);
+		showmat1chall(tempx, 2);
+		showmat1chall(yf[i], 2);
+		*/
 	}
 }
 
@@ -539,18 +543,21 @@ void ECO::cos_wind()
 			hann2t.at<float>(i, 0) = 0.5 * (1 - std::cos(2 * 3.14159265358979323846 * i / (hann2t.rows - 1)));
 		cv::Mat hann2d = hann2t * hann1t;
 		cos_window.push_back(hann2d(cv::Range(1, hann2d.rows - 1), cv::Range(1, hann2d.cols - 1)));
-
-		//showmat1ch(cos_window[i],2);
+/*
+		showmat1ch(cos_window[i],2);
+		assert(0);
+		*/
 	}
 }
-
+// Do the element-wise multiplication for the two matrix.
 ECO_FEATS ECO::do_windows_x(const ECO_FEATS &xl, vector<cv::Mat> &cos_win)
 {
 	ECO_FEATS xlw;
-	for (size_t i = 0; i < xl.size(); i++)
+	for (size_t i = 0; i < xl.size(); i++) // for each feature
 	{
 		vector<cv::Mat> temp;
-		for (size_t j = 0; j < xl[i].size(); j++)
+		//debug("xl[%lu]: %lu", i, xl[i].size()); //96, 512, 31
+		for (size_t j = 0; j < xl[i].size(); j++) // for the dimensions fo the feature
 			temp.push_back(cos_win[i].mul(xl[i][j]));
 		xlw.push_back(temp);
 	}
@@ -657,30 +664,35 @@ ECO_FEATS ECO::full_fourier_coeff(const ECO_FEATS &xf)
 
 	return res;
 }
-
+// Shift a sample in the Fourier domain. The shift should be normalized to the range [-pi, pi]
 ECO_FEATS ECO::shift_sample(ECO_FEATS &xf, cv::Point2f shift, std::vector<cv::Mat> kx, std::vector<cv::Mat> ky)
 {
 	ECO_FEATS res;
 
-	for (size_t i = 0; i < xf.size(); ++i)
+	for (size_t i = 0; i < xf.size(); ++i) // for each feature
 	{
 		cv::Mat shift_exp_y(ky[i].size(), CV_32FC2), shift_exp_x(kx[i].size(), CV_32FC2);
 		for (size_t j = 0; j < (size_t)ky[i].rows; j++)
 		{
 			shift_exp_y.at<COMPLEX>(j, 0) = COMPLEX(cos(shift.y * ky[i].at<float>(j, 0)), sin(shift.y * ky[i].at<float>(j, 0)));
 		}
-
 		for (size_t j = 0; j < (size_t)kx[i].cols; j++)
 		{
 			shift_exp_x.at<COMPLEX>(0, j) = COMPLEX(cos(shift.x * kx[i].at<float>(0, j)), sin(shift.x * kx[i].at<float>(0, j)));
 		}
-
+/*
+		debug("shift_exp_y:");
+		showmat2chall(shift_exp_y, 2);
+		debug("shift_exp_x:");
+		showmat2chall(shift_exp_x, 2);
+		assert(0);
+		*/
 		cv::Mat shift_exp_y_mat = RectTools::subwindow(shift_exp_y, cv::Rect(cv::Point(0, 0), xf[i][0].size()), IPL_BORDER_REPLICATE);
 		cv::Mat shift_exp_x_mat = RectTools::subwindow(shift_exp_x, cv::Rect(cv::Point(0, 0), xf[i][0].size()), IPL_BORDER_REPLICATE);
 
 		vector<cv::Mat> tmp;
-		for (size_t j = 0; j < xf[i].size(); j++)
-		{
+		for (size_t j = 0; j < xf[i].size(); j++) // for each dimension of the feature, do complex element-wise multiplication
+		{	
 			tmp.push_back(complexMultiplication(complexMultiplication(shift_exp_y_mat, xf[i][j]), shift_exp_x_mat));
 		}
 		res.push_back(tmp);

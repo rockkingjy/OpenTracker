@@ -26,17 +26,20 @@ ECO_FEATS feature_extractor::extractor(cv::Mat image,
 	if (params.useCnFeature)
 	{
 	}
+	ddebug();
 	// extract image path for different kinds of feautures
 	vector<vector<cv::Mat>> img_samples;
-	for (int i = 0; i < num_features; ++i)
+	for (int i = 0; i < num_features; ++i) // for each feature
 	{
-		cv::Size2f img_sample_sz = (i == 0) && params.useDeepFeature ? cnn_features.img_sample_sz : hog_features.img_sample_sz;
-		cv::Size2f img_input_sz = (i == 0) && params.useDeepFeature ? cnn_features.img_input_sz : hog_features.img_input_sz;
 		vector<cv::Mat> img_samples_temp(num_scales);
-		for (unsigned int j = 0; j < scales.size(); ++j) //for different scales
+
+		for (unsigned int j = 0; j < scales.size(); ++j) // for each scale
 		{
+			cv::Size2f img_sample_sz = (i == 0) && params.useDeepFeature ? cnn_features.img_sample_sz : hog_features.img_sample_sz;
+			cv::Size2f img_input_sz = (i == 0) && params.useDeepFeature ? cnn_features.img_input_sz : hog_features.img_input_sz;
 			img_sample_sz.width *= scales[j];
 			img_sample_sz.height *= scales[j];
+			//debug("img_sample_sz: %f x %f", img_sample_sz.height, img_sample_sz.width);
 			img_samples_temp[j] = sample_patch(image, pos, img_sample_sz, img_input_sz, params);
 		}
 		img_samples.push_back(img_samples_temp);
@@ -52,6 +55,7 @@ ECO_FEATS feature_extractor::extractor(cv::Mat image,
 	cv::waitKey(0);
 	assert(0);
 */
+	ddebug();
 	// Extract feature maps for each feature in the list
 	ECO_FEATS sum_features;
 	if (params.useDeepFeature)
@@ -84,12 +88,12 @@ cv::Mat feature_extractor::sample_patch(const cv::Mat &im,
 	// Downsample factor
 	float resize_factor = std::min(sample_sz.width / input_sz.width, sample_sz.height / input_sz.height);
 	int df = std::max((float)floor(resize_factor - 0.1), float(1));
-	//debug("resize: %f,df: %d,sample_sz: %f x %f,input_sz: %f x %f,pos: %d %d", resize_factor, df, sample_sz.width, sample_sz.height,
-	//	input_sz.width, input_sz.height, pos.y, pos.x);
+	debug("resize_factor: %f,df: %d,sample_sz: %f x %f,input_sz: %f x %f,pos: %d %d", resize_factor, df, sample_sz.width, sample_sz.height,
+		  input_sz.width, input_sz.height, pos.y, pos.x);
 
 	cv::Mat new_im;
 	im.copyTo(new_im);
-
+	debug("new_im:%d x %d", new_im.rows, new_im.cols);
 	if (df > 1)
 	{
 		cv::Point os((pos.x - 1) % df, ((pos.y - 1) % df));
@@ -119,7 +123,7 @@ cv::Mat feature_extractor::sample_patch(const cv::Mat &im,
 
 	cv::Point pos2(pos.x - floor((sample_sz.width + 1) / 2),
 				   pos.y - floor((sample_sz.height + 1) / 2));
-	//debug("new_im:%d x %d, pos2:%d %d, sample_sz:%f x %f", new_im.rows, new_im.cols, pos2.x, pos2.y, sample_sz.width, sample_sz.height);
+	debug("new_im:%d x %d, pos2:%d %d, sample_sz:%f x %f", new_im.rows, new_im.cols, pos2.x, pos2.y, sample_sz.width, sample_sz.height);
 	//showfeature(new_im, 0);
 
 	cv::Mat im_patch;
@@ -244,7 +248,7 @@ ECO_FEATS feature_extractor::get_cnn_layers(vector<cv::Mat> im, const cv::Mat &d
 
 	// forward computation and exrtract cnn1 and output data
 	Blob<float> *input_layer = net->input_blobs()[0];
-	input_layer->Reshape(im.size(), im[0].channels(), im[0].rows, im[0].cols);//224, 224);
+	input_layer->Reshape(im.size(), im[0].channels(), im[0].rows, im[0].cols); //224, 224);
 	net->Reshape();
 	std::vector<cv::Mat> input_channels;
 	WrapInputLayer(&input_channels);
@@ -261,10 +265,10 @@ ECO_FEATS feature_extractor::get_cnn_layers(vector<cv::Mat> im, const cv::Mat &d
 			pstart = layerData->cpu_data();
 			shape = layerData->shape();
 		}
-		else if  (cnn_features.fparams.output_layer[idx] == 14)
+		else if (cnn_features.fparams.output_layer[idx] == 14)
 		{
 			boost::shared_ptr<caffe::Blob<float>> layerData = net->blob_by_name("conv5");
-			//Blob<float>* layerData = net->output_blobs()[0]; // read "relu5" in the method above will cause error 
+			//Blob<float>* layerData = net->output_blobs()[0]; // read "relu5" in the method above will cause error
 			pstart = layerData->cpu_data();
 			shape = layerData->shape();
 		}
@@ -286,7 +290,7 @@ ECO_FEATS feature_extractor::get_cnn_layers(vector<cv::Mat> im, const cv::Mat &d
 			extract_map = (cnn_features.fparams.downsample_factor[idx] == 1) ? extract_map : sample_pool(extract_map, 2, 2);
 			merge_feature.push_back(extract_map);
 		} //end for
-		
+
 		feature_map.push_back(merge_feature);
 	}
 	return feature_map;

@@ -116,7 +116,7 @@ namespace RectTools
 		assert(res.x >= 0 && res.y >= 0 && res.width >= 0 && res.height >= 0);
 		return res;
 	}
-
+	// cut "window" out from "in".
 	inline cv::Mat subwindow(const cv::Mat &in, const cv::Rect & window, int borderType = cv::BORDER_CONSTANT)
 	{
 		cv::Rect cutWindow = window;
