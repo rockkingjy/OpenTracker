@@ -5,6 +5,7 @@
 #include <opencv2/opencv.hpp>
 
 #include "fftTool.h"
+#include "debug.h"
 
 using namespace FFTTools;
 

@@ -8,12 +8,15 @@ void optimize_scores::compute_scores()
 
 std::vector<cv::Mat> optimize_scores::sample_fs(const std::vector<cv::Mat>& xf, cv::Size grid_sz)
 {
+	//debug("xf: %lu, %d x %d", xf.size(), xf[0].rows, xf[0].cols);
 	std::vector<cv::Mat> sampled_scores;
+	// Do inverse fft to the scores in the Fourier domain back to the spacial domain
 	for (size_t i = 0; i < xf.size(); ++i)
 	{
 		int area = xf[i].size().area();
-		cv::Mat tmp = fftf(fftshift(xf[i], 1, 1, 1), 1);
-		sampled_scores.push_back(real(tmp * area));   // only real part shall be stored
+		// debug("area: %d", area);
+		cv::Mat tmp = fftf(fftshift(xf[i], 1, 1, 1), 1);// inverse dft
+		sampled_scores.push_back(real(tmp * area));   	// spacial domain only contains real part
 	}
 
 	// to store the position of maximum value of response
@@ -22,10 +25,12 @@ std::vector<cv::Mat> optimize_scores::sample_fs(const std::vector<cv::Mat>& xf, 
 	for (size_t i = 0; i < xf.size(); ++i)
 	{
 		cv::Point pos;
-		cv::minMaxLoc(sampled_scores[i], NULL, NULL, NULL, &pos);
+		double maxValue = 0, minValue = 0;
+		cv::minMaxLoc(sampled_scores[i], &minValue, &maxValue, NULL, &pos);
 		row.push_back(pos.y);
 		col.push_back(pos.x);
 		init_max_score.push_back(sampled_scores[i].at<float>(pos.y, pos.x));
+		//debug("init_max_score %lu: value: %lf %lf y:%d x:%d", i, minValue, maxValue, pos.y, pos.x);
 	}
 
 	// Shift and rescale the coordinate system to [-pi, pi]
@@ -39,6 +44,7 @@ std::vector<cv::Mat> optimize_scores::sample_fs(const std::vector<cv::Mat>& xf, 
 		max_pos_x[i] *= 2 * CV_PI / w;
 	}
 	init_pos_y = max_pos_y; init_pos_x = max_pos_x;
+	// Construct grid
 	std::vector<float> ky, kx, ky2, kx2;
 	for (int i = 0; i < h; ++i)
 	{
@@ -50,7 +56,7 @@ std::vector<cv::Mat> optimize_scores::sample_fs(const std::vector<cv::Mat>& xf, 
 		kx.push_back(i - (w - 1) / 2);
 		kx2.push_back(kx[i] * kx[i]);
 	}
-
+	// Pre-compute complex exponential 
 	std::vector<cv::Mat> exp_iky, exp_ikx;
 	for (unsigned int i = 0; i < xf.size(); ++i)
 	{
@@ -111,11 +117,12 @@ std::vector<cv::Mat> optimize_scores::sample_fs(const std::vector<cv::Mat>& xf, 
 			exp_ikx[i] = tempx;
 		}
 	}
-
+	// Evaluate the Fourier series at the estimated locations to find the corresponding scores.
 	std::vector<float> max_score;
 	for (size_t i = 0; i < sampled_scores.size(); ++i)
 	{
 		float new_scores = real(exp_iky[i] * scores_fs[i] * exp_ikx[i]).at<float>(0, 0);
+		// check for scales that have not increased in score
 		if (new_scores > init_max_score[i])
 		{
 			max_score.push_back(new_scores);
@@ -129,10 +136,11 @@ std::vector<cv::Mat> optimize_scores::sample_fs(const std::vector<cv::Mat>& xf, 
 			
 	}
 	 
-	//float max_scale; 
+	// Find the scale with the maximum response 
 	std::vector<float>::iterator pos = max_element(max_score.begin(), max_score.end());
 	scale_ind = pos - max_score.begin();
 
+	// Scale the coordinate system to output_sz
 	disp_row = (fmod(max_pos_y[scale_ind] + CV_PI, CV_PI * 2.0) - CV_PI) / (CV_PI * 2.0) * h;
 	disp_col = (fmod(max_pos_x[scale_ind] + CV_PI, CV_PI * 2.0) - CV_PI) / (CV_PI * 2.0) * w;
 	return sampled_scores;

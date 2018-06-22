@@ -44,7 +44,14 @@ ECO_FEATS feature_extractor::extractor(cv::Mat image,
 		}
 		img_samples.push_back(img_samples_temp);
 	}
-/*	
+	/*
+	for (size_t i = 0; i < img_samples[0].size(); ++i)
+	{
+		double maxValue = 0, minValue = 0;
+		cv::minMaxLoc(img_samples[0][i], &minValue, &maxValue, NULL, NULL);
+		debug("img_samples %lu: value: %lf %lf", i, minValue, maxValue);
+	}*/
+	/*	
 	for (unsigned int i = 0; i < img_samples.size(); ++i)
 	{
 		debug("img_sample for feature: %d, scales:%lu", i, img_samples[i].size());
@@ -65,6 +72,7 @@ ECO_FEATS feature_extractor::extractor(cv::Mat image,
 		sum_features = get_cnn_layers(img_samples[cnn_feat_ind], new_deep_mean_mat);
 		cnn_feature_normalization(sum_features);
 	}
+	ddebug();
 	if (params.useHogFeature)
 	{
 		hog_feat_maps = get_hog(img_samples[hog_feat_ind]);
@@ -90,8 +98,8 @@ cv::Mat feature_extractor::sample_patch(const cv::Mat &im,
 	// Downsample factor
 	float resize_factor = std::min(sample_sz.width / input_sz.width, sample_sz.height / input_sz.height);
 	int df = std::max((float)floor(resize_factor - 0.1), float(1));
-	//debug("resize_factor: %f,df: %d,sample_sz: %f x %f,input_sz: %f x %f,pos: %d %d", resize_factor, df, sample_sz.width, sample_sz.height,
-	//	  input_sz.width, input_sz.height, pos.y, pos.x);
+	//	debug("resize_factor: %f,df: %d,sample_sz: %f x %f,input_sz: %f x %f,pos: %d %d", resize_factor, df,
+	//			sample_sz.width, sample_sz.height, input_sz.width, input_sz.height, pos.y, pos.x);
 
 	cv::Mat new_im;
 	im.copyTo(new_im);
@@ -125,10 +133,12 @@ cv::Mat feature_extractor::sample_patch(const cv::Mat &im,
 
 	cv::Point pos2(pos.x - floor((sample_sz.width + 1) / 2),
 				   pos.y - floor((sample_sz.height + 1) / 2));
-	//debug("new_im:%d x %d, pos2:%d %d, sample_sz:%f x %f", new_im.rows, new_im.cols, pos2.x, pos2.y, sample_sz.width, sample_sz.height);
+	//debug("new_im:%d x %d, pos2:%d %d, sample_sz:%f x %f", new_im.rows, new_im.cols, pos2.y, pos2.x,
+	//	  sample_sz.height, sample_sz.width);
 	//showfeature(new_im, 0);
-
+	ddebug();
 	cv::Mat im_patch;
+	/*
 	if (sample_sz.width - pos2.x > 0 && sample_sz.height - pos2.y > 0)
 	{
 		im_patch = RectTools::subwindow(new_im, cv::Rect(pos2, sample_sz), IPL_BORDER_REPLICATE);
@@ -137,6 +147,8 @@ cv::Mat feature_extractor::sample_patch(const cv::Mat &im,
 	{
 		im_patch = RectTools::subwindow(new_im, cv::Rect(cv::Point(0, 0), new_im.size()), IPL_BORDER_REPLICATE);
 	}
+	*/
+	im_patch = RectTools::subwindow(new_im, cv::Rect(pos2, sample_sz), IPL_BORDER_REPLICATE);
 	/*
 	imgInfo(im_patch);
 	showfeature(im_patch, 0);
@@ -236,6 +248,7 @@ vector<cv::Mat> feature_extractor::get_hog(vector<cv::Mat> ims)
 
 ECO_FEATS feature_extractor::get_cnn_layers(vector<cv::Mat> im, const cv::Mat &deep_mean_mat)
 {
+	ddebug();
 	for (unsigned int i = 0; i < im.size(); ++i)
 	{
 		im[i].convertTo(im[i], CV_32FC3);
@@ -247,7 +260,7 @@ ECO_FEATS feature_extractor::get_cnn_layers(vector<cv::Mat> im, const cv::Mat &d
 	}
 	cv::Mat input_imgs;
 	cv::merge(im, input_imgs);
-
+	ddebug();
 	// forward computation and exrtract cnn1 and output data
 	Blob<float> *input_layer = net->input_blobs()[0];
 	input_layer->Reshape(im.size(), im[0].channels(), im[0].rows, im[0].cols); //224, 224);
@@ -256,6 +269,7 @@ ECO_FEATS feature_extractor::get_cnn_layers(vector<cv::Mat> im, const cv::Mat &d
 	WrapInputLayer(&input_channels);
 	cv::split(input_imgs, input_channels);
 	net->Forward();
+	ddebug();
 	ECO_FEATS feature_map;
 	for (size_t idx = 0; idx < cnn_features.fparams.output_layer.size(); ++idx)
 	{
@@ -274,7 +288,9 @@ ECO_FEATS feature_extractor::get_cnn_layers(vector<cv::Mat> im, const cv::Mat &d
 			pstart = layerData->cpu_data();
 			shape = layerData->shape();
 		}
+		ddebug();
 		//debug("shape: %d, %d, %d, %d", shape[0], shape[1], shape[2], shape[3]);
+		//debug("%d %d", cnn_features.fparams.start_ind[0 + 2 * idx] - 1, cnn_features.fparams.end_ind[0 + 2 * idx]);
 		vector<cv::Mat> merge_feature;
 		for (size_t i = 0; i < (size_t)(shape[0] * shape[1]); i++) //  CNN into single channel
 		{
@@ -283,16 +299,14 @@ ECO_FEATS feature_extractor::get_cnn_layers(vector<cv::Mat> im, const cv::Mat &d
 			//const float* inData = feat_map.ptr<float>(0);
 			//inData = pstart;
 			pstart += shape[2] * shape[3];
-
-			//  extract features according to fparamss
+			//  extract features according to fparams
 			cnn_params fparams = cnn_features.fparams;
 			cv::Mat extract_map = feat_map(cv::Range(fparams.start_ind[0 + 2 * idx] - 1, fparams.end_ind[0 + 2 * idx]),
 										   cv::Range(fparams.start_ind[0 + 2 * idx] - 1, fparams.end_ind[0 + 2 * idx]));
-
 			extract_map = (cnn_features.fparams.downsample_factor[idx] == 1) ? extract_map : sample_pool(extract_map, 2, 2);
 			merge_feature.push_back(extract_map);
 		} //end for
-
+		ddebug();
 		feature_map.push_back(merge_feature);
 	}
 	return feature_map;

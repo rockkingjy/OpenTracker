@@ -68,7 +68,7 @@ int main(int argc, char** argv)
 	::google::InitGoogleLogging(argv[0]);
     
     string databaseTypes[4] = {"VOT-2017", "TB-2015", "TLP", "UAV123"};
-    string databaseType = databaseTypes[1];
+    string databaseType = databaseTypes[2];
     // Read from the images ====================================================
     int f, isLost;
     float x, y, w, h;
@@ -77,70 +77,9 @@ int main(int argc, char** argv)
     std::string path;
     ifstream *groundtruth;
     ostringstream osfile;
-    if (databaseType == "TLP")
+    if (databaseType == "VOT-2017")
     {
-        path = "/media/elab/sdd/data/TLP/Sam"; //Alladin";//IceSkating";//Sam";//Bike
-        // Read the groundtruth bbox
-        groundtruth = new ifstream(path + "/groundtruth_rect.txt");
-        getline(*groundtruth, s, ',');
-        f = atof(s.c_str());
-        getline(*groundtruth, s, ',');
-        x = atof(s.c_str());
-        getline(*groundtruth, s, ',');
-        y = atof(s.c_str());
-        getline(*groundtruth, s, ',');
-        w = atof(s.c_str());
-        getline(*groundtruth, s, ',');
-        h = atof(s.c_str());
-        getline(*groundtruth, s);
-        isLost = atof(s.c_str());
-        cout << f << " " << x << " " << y << " " << w << " " << h << " " << isLost << endl;
-        // Read images in a folder
-        osfile << path << "/img/" << setw(5) << setfill('0') << f << ".jpg";
-        cout << osfile.str() << endl;
-    }
-    else if (databaseType == "TB-2015")
-    {
-        path = "/media/elab/sdd/data/TB-2015/Coke"; ///Bird1";//BlurFace";
-        // Read the groundtruth bbox
-        groundtruth = new ifstream(path + "/groundtruth_rect.txt");
-        f = 1;
-        getline(*groundtruth, s, ',');
-        x = atof(s.c_str());
-        getline(*groundtruth, s, ',');
-        y = atof(s.c_str());
-        getline(*groundtruth, s, ',');
-        w = atof(s.c_str());
-        getline(*groundtruth, s);
-        h = atof(s.c_str());
-        cout << f << " " << x << " " << y << " " << w << " " << h << " " << endl;
-        // Read images in a folder
-        osfile << path << "/img/" << setw(4) << setfill('0') << f << ".jpg";
-        cout << osfile.str() << endl;
-    }
-    else if (databaseType == "UAV123")
-    {
-        string folderUAV = "bike1"; //
-        path = "/media/elab/sdd/data/UAV123/data_seq/UAV123/" + folderUAV;
-        // Read the groundtruth bbox
-        groundtruth = new ifstream("/media/elab/sdd/data/UAV123/anno/UAV123/" + folderUAV + ".txt");
-        f = 1;
-        getline(*groundtruth, s, ',');
-        x = atof(s.c_str());
-        getline(*groundtruth, s, ',');
-        y = atof(s.c_str());
-        getline(*groundtruth, s, ',');
-        w = atof(s.c_str());
-        getline(*groundtruth, s);
-        h = atof(s.c_str());
-        cout << x << " " << y << " " << w << " " << h << endl;
-        // Read images in a folder
-        osfile << path << "/" << setw(6) << setfill('0') << f << ".jpg";
-        cout << osfile.str() << endl;
-    }
-    else if (databaseType == "VOT-2017")
-    {
-        string folderVOT = "girl"; //"iceskater1";//"drone1"; //"iceskater2";//"helicopter";//"matrix";//"leaves";//"sheep";//"racing";//"girl";//"road"; //"uav2";//
+        string folderVOT = "girl";//"drone1";//"iceskater1";//"girl"; //"road";//"bag";////"iceskater2";//"helicopter";//"matrix";//"leaves";//"sheep";//"racing";//"girl";//"road"; //"uav2";//
         path = "/media/elab/sdd/data/VOT/vot2017/" + folderVOT;
         // Read the groundtruth bbox
         groundtruth = new ifstream("/media/elab/sdd/data/VOT/vot2017/" + folderVOT + "/groundtruth.txt");
@@ -168,6 +107,67 @@ int main(int argc, char** argv)
         cout << x << " " << y << " " << w << " " << h << endl;
         // Read images in a folder
         osfile << path << "/" << setw(8) << setfill('0') << f << ".jpg";
+        cout << osfile.str() << endl;
+    }
+    else if (databaseType == "TB-2015")
+    {
+        path = "/media/elab/sdd/data/TB-2015/Coke"; ///Bird1";//BlurFace";
+        // Read the groundtruth bbox
+        groundtruth = new ifstream(path + "/groundtruth_rect.txt");
+        f = 1;
+        getline(*groundtruth, s, ',');
+        x = atof(s.c_str());
+        getline(*groundtruth, s, ',');
+        y = atof(s.c_str());
+        getline(*groundtruth, s, ',');
+        w = atof(s.c_str());
+        getline(*groundtruth, s);
+        h = atof(s.c_str());
+        cout << f << " " << x << " " << y << " " << w << " " << h << " " << endl;
+        // Read images in a folder
+        osfile << path << "/img/" << setw(4) << setfill('0') << f << ".jpg";
+        cout << osfile.str() << endl;
+    }
+    else if (databaseType == "TLP")
+    {
+        path = "/media/elab/sdd/data/TLP/Drone1";//Sam"; //Alladin";//IceSkating";//Sam";//Bike
+        // Read the groundtruth bbox
+        groundtruth = new ifstream(path + "/groundtruth_rect.txt");
+        getline(*groundtruth, s, ',');
+        f = atof(s.c_str());
+        getline(*groundtruth, s, ',');
+        x = atof(s.c_str());
+        getline(*groundtruth, s, ',');
+        y = atof(s.c_str());
+        getline(*groundtruth, s, ',');
+        w = atof(s.c_str());
+        getline(*groundtruth, s, ',');
+        h = atof(s.c_str());
+        getline(*groundtruth, s);
+        isLost = atof(s.c_str());
+        cout << f << " " << x << " " << y << " " << w << " " << h << " " << isLost << endl;
+        // Read images in a folder
+        osfile << path << "/img/" << setw(5) << setfill('0') << f << ".jpg";
+        cout << osfile.str() << endl;
+    }
+    else if (databaseType == "UAV123")
+    {
+        string folderUAV = "bike1"; //"person3";//
+        path = "/media/elab/sdd/data/UAV123/data_seq/UAV123/" + folderUAV;
+        // Read the groundtruth bbox
+        groundtruth = new ifstream("/media/elab/sdd/data/UAV123/anno/UAV123/" + folderUAV + ".txt");
+        f = 1;
+        getline(*groundtruth, s, ',');
+        x = atof(s.c_str());
+        getline(*groundtruth, s, ',');
+        y = atof(s.c_str());
+        getline(*groundtruth, s, ',');
+        w = atof(s.c_str());
+        getline(*groundtruth, s);
+        h = atof(s.c_str());
+        cout << x << " " << y << " " << w << " " << h << endl;
+        // Read images in a folder
+        osfile << path << "/" << setw(6) << setfill('0') << f << ".jpg";
         cout << osfile.str() << endl;
     }
 

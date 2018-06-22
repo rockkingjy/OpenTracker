@@ -10,7 +10,7 @@ namespace FFTTools
 	{
 		return cv::Vec<_Tp, 2>(v[0], -v[1]);
 	}
-	
+	// fft float type version;
 	cv::Mat fftf(const cv::Mat& img_org, bool backwards)
 	{
 		cv::Mat img;
@@ -25,7 +25,7 @@ namespace FFTTools
 
 		return img;
 	}
-
+	// fft double type version;
 	cv::Mat fftd(const cv::Mat& img_org, bool backwards)
 	{
 		cv::Mat img;
@@ -139,7 +139,7 @@ namespace FFTTools
 		q2.copyTo(q1);
 		tmp.copyTo(q2);
 	}
-
+	// shift half of 
 	cv::Mat fftshift(const cv::Mat& org_img, bool rowshift, bool colshift, bool reverse)
 	{
 		cv::Mat temp(org_img.size(), org_img.type());
@@ -165,6 +165,7 @@ namespace FFTTools
 		}
 		return temp;
 	}
+	// double type version of fftshift();
 	cv::Mat fftshiftd(const cv::Mat& org_img, bool rowshift, bool colshift, bool reverse)
 	{
 		cv::Mat temp(org_img.size(), org_img.type());

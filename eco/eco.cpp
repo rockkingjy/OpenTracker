@@ -182,6 +182,13 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 
 	//   reproject sample and updata sample space
 	projection_matrix = eco_trainer.get_proj(); //*** exect to matlab tracker
+	for (size_t i = 0; i < projection_matrix.size(); ++i)
+	{
+		double maxValue = 0, minValue = 0;
+		cv::minMaxLoc(projection_matrix[i], &minValue, &maxValue, NULL, NULL);
+		debug("projection_matrix %lu: value: %lf %lf", i, minValue, maxValue);
+	}	
+
 
 	xlf_porj = project_sample(xlf, projection_matrix);
 	debug("xlf_porj size: %lu, %lu, %d x %d", xlf_porj.size(), xlf_porj[0].size(), xlf_porj[0][0].rows, xlf_porj[0][0].cols);
@@ -200,8 +207,14 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 		debug("hf_full: %lu, %lu, %d x %d", i, hf_full[i].size(), hf_full[i][0].rows, hf_full[i][0].cols);
 	}
 	ddebug();
-	//showmat(hf_full[0][0], 2);
-	//assert(0);
+	/*
+	for (size_t i = 0; i < hf_full[0].size(); ++i)
+	{
+		double maxValue = 0, minValue = 0;
+		cv::minMaxLoc(hf_full[0][i], &minValue, &maxValue, NULL, NULL);
+		debug("hf_full %lu: value: %lf %lf", i, minValue, maxValue);
+	}
+	*/
 }
 
 bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
@@ -214,46 +227,71 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 		samples_scales.push_back(currentScaleFactor * scaleFactors[i]);
 	}
 	ddebug();
+
 	// 1: Extract features at multiple resolutions
 	ECO_FEATS xt = feat_extrator.extractor(frame, sample_pos, samples_scales, params, deep_mean_mat, net);
-	//debug("xt size: %lu, %lu, %d x %d", xt.size(), xt[0].size(), xt[0][0].rows, xt[0][0].cols);
+	debug("xt size: %lu, %lu, %d x %d", xt.size(), xt[0].size(), xt[0][0].rows, xt[0][0].cols);
 	ddebug();
+	/*
+	for (size_t i = 0; i < xt[0].size(); ++i)
+	{
+		double maxValue = 0, minValue = 0;
+		cv::minMaxLoc(xt[0][i], &minValue, &maxValue, NULL, NULL);
+		debug("xt %lu: value: %lf %lf", i, minValue, maxValue);
+	}
+	*/
 	// 2:  project sample *****
 	ECO_FEATS xt_proj = FeatProjMultScale(xt, projection_matrix);
-	//debug("xt_proj size: %lu, %lu, %d x %d", xt_proj.size(), xt_proj[0].size(), xt_proj[0][0].rows, xt_proj[0][0].cols);
+	debug("xt_proj size: %lu, %lu, %d x %d", xt_proj.size(), xt_proj[0].size(), xt_proj[0][0].rows, xt_proj[0][0].cols);
 	ddebug();
+/*
+	for (size_t i = 0; i < xt_proj[0].size(); ++i)
+	{
+		double maxValue = 0, minValue = 0;
+		cv::minMaxLoc(xt_proj[0][i], &minValue, &maxValue, NULL, NULL);
+		debug("xt_proj %lu: value: %lf %lf", i, minValue, maxValue);
+	}
+*/
 	// 3: Do windowing of features ***
 	xt_proj = do_windows_x(xt_proj, cos_window);
 	ddebug();
 	// 4: Compute the fourier series ***
-	xt_proj = do_dft(xt_proj);
+	ECO_FEATS xtf_proj = do_dft(xt_proj);
 	ddebug();
 	// 5: Interpolate features to the continuous domain
-	xt_proj = interpolate_dft(xt_proj, interp1_fs, interp2_fs);
-	//	debug("xt_proj size: %lu, %lu, %d, %d", xt_proj.size(), xt_proj[0].size(), xt_proj[0][0].cols, xt_proj[0][0].rows);
+	xtf_proj = interpolate_dft(xtf_proj, interp1_fs, interp2_fs);
 	ddebug();
+	debug("xtf_proj size: %lu, %lu, %d x %d", xtf_proj.size(), xtf_proj[0].size(), xtf_proj[0][0].rows, xtf_proj[0][0].cols);
+
 	// 6: compute the scores for different scales of target
 	// Compute convolution for each feature block in the Fourier domain and the sum over all blocks.
 	// Also sum over all feature blocks. Gives the fourier coefficients of the convolution response.
 	vector<cv::Mat> scores_fs_sum;
 	for (size_t i = 0; i < scaleFactors.size(); i++)
 		scores_fs_sum.push_back(cv::Mat::zeros(filter_sz[output_index], CV_32FC2));
+	debug("scores_fs_sum: %lu, %d x %d", scores_fs_sum.size(), scores_fs_sum[0].rows, scores_fs_sum[0].cols);
 
-	for (size_t i = 0; i < xt_proj.size(); i++)
+	for (size_t i = 0; i < xtf_proj.size(); i++) // for each feature
 	{
-		int pad = (filter_sz[output_index].height - xt_proj[i][0].rows) / 2;
-		cv::Rect temp_roi = cv::Rect(pad, pad, xt_proj[i][0].cols, xt_proj[i][0].rows);
+		int pad = (filter_sz[output_index].height - xtf_proj[i][0].rows) / 2;
+		cv::Rect temp_roi = cv::Rect(pad, pad, xtf_proj[i][0].cols, xtf_proj[i][0].rows);
 
-		for (size_t j = 0; j < xt_proj[i].size(); j++)
+		for (size_t j = 0; j < xtf_proj[i].size(); j++) // for each dimension of the feature
 		{
-			/*	cv::Mat temp_score = complexMultiplication(xt_proj[i][j], hf_full[i][j % hf_full[i].size()]);
-			temp_score += scores_fs_sum[j / hf_full[i].size()](temp_roi);
-			temp_score.copyTo(scores_fs_sum[j / hf_full[i].size()](temp_roi)); */
+			// debug("%lu, %lu", j, j / hf_full[i].size());
 			scores_fs_sum[j / hf_full[i].size()](temp_roi) +=
-				complexMultiplication(xt_proj[i][j], hf_full[i][j % hf_full[i].size()]);
+				complexMultiplication(xtf_proj[i][j], hf_full[i][j % hf_full[i].size()]);
 		}
 	}
 	ddebug();
+/*
+	for (size_t i = 0; i < scores_fs_sum.size(); ++i)
+	{
+		double maxValue = 0, minValue = 0;
+		cv::minMaxLoc(scores_fs_sum[i], &minValue, &maxValue, NULL, NULL);
+		debug("scores_fs_sum %lu: value: %lf %lf", i, minValue, maxValue);
+	}
+*/
 	// 7: Optimize the continuous score function with Newton's method.
 	optimize_scores scores(scores_fs_sum, params.newton_iterations);
 	scores.compute_scores();
@@ -264,7 +302,8 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	float resize_scores_height = (img_support_sz.height / output_sz) * currentScaleFactor * scaleFactors[scale_change_factor];
 	float dx = scores.get_disp_col() * resize_scores_width;
 	float dy = scores.get_disp_row() * resize_scores_height;
-	//	debug("get_disp_col: %f, get_disp_row: %f, dx: %f, dy: %f", scores.get_disp_col(), scores.get_disp_row(), dx, dy);
+	debug("scale_change_factor:%d, get_disp_col: %f, get_disp_row: %f, dx: %f, dy: %f",
+		  scale_change_factor, scores.get_disp_col(), scores.get_disp_row(), dx, dy);
 	// 9: Update position
 	pos = cv::Point2f(sample_pos) + cv::Point2f(dx, dy);
 
@@ -290,8 +329,19 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 		cv::rectangle(resframe, roi, cv::Scalar(0, 255, 0));
 
 		// Apply the colormap
+		std::vector<cv::Mat> scores_sum = scores_fs_sum;
+	/*
+		// Do inverse fft to the scores in the Fourier domain back to the spacial domain
+		for (size_t i = 0; i < scores_fs_sum.size(); ++i)
+		{
+			int area = scores_fs_sum[i].size().area();
+			// debug("area: %d", area);
+			cv::Mat tmp = fftf(fftshift(scores_fs_sum[i], 1, 1, 1), 1); // inverse dft
+			scores_sum.push_back(real(tmp * area));		 // spacial domain only contains real part
+		}
+	*/
 		cv::Mat cm_tmp, cm_img;
-		cm_tmp = FFTTools::magnitude(scores_fs_sum[scale_change_factor]) * 100000;
+		cm_tmp = FFTTools::magnitude(scores_sum[scale_change_factor]) * 100000;
 		cm_tmp.convertTo(cm_tmp, CV_8U);
 
 		cv::resize(cm_tmp, cm_img, cv::Size(cm_tmp.cols * resize_scores_width, cm_tmp.rows * resize_scores_height),
@@ -344,9 +394,19 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 		cv::Mat cm_img_vis = cm_img(cv::Rect(x_vis, y_vis, w_vis, h_vis));
 		ddebug();
 		cv::addWeighted(cm_img_vis, alpha_vis, roi_vis, 1.0 - alpha_vis, 0.0, roi_vis);
+		// Add a circle to the expected next position
+		cv::circle(resframe, pos, 5, cv::Scalar(0, 0, 225));
 
 		cv::imshow("Tracking", resframe);
-		cv::waitKey(1);
+		int c = cvWaitKey(1);
+		if (c != -1)
+			c = c % 256;
+		if (c == 27)
+		{
+			cvDestroyWindow("Tracking");
+			assert(0);
+		}
+		//cv::waitKey(0);
 	}
 	//*****************************************************************************
 	//*****                     Model update step
@@ -354,14 +414,14 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	ddebug();
 	// 1: Use the sample that was used for detection
 	ECO_FEATS xlf_proj;
-	for (size_t i = 0; i < xt_proj.size(); ++i)
+	for (size_t i = 0; i < xtf_proj.size(); ++i)
 	{
 		std::vector<cv::Mat> tmp;
 		int start_ind = scale_change_factor * projection_matrix[i].cols;
 		int end_ind = (scale_change_factor + 1) * projection_matrix[i].cols;
 		for (size_t j = start_ind; j < (size_t)end_ind; ++j)
 		{
-			tmp.push_back(xt_proj[i][j].colRange(0, xt_proj[i][j].rows / 2 + 1));
+			tmp.push_back(xtf_proj[i][j].colRange(0, xtf_proj[i][j].rows / 2 + 1));
 		}
 		xlf_proj.push_back(tmp);
 	}
@@ -400,7 +460,7 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	projection_matrix = eco_trainer.get_proj(); //*** exect to matlab tracker
 	hf_full = full_fourier_coeff(eco_trainer.get_hf());
 	//*****************************************************************************
-	//*****                    return
+	//*****                    			Return
 	//******************************************************************************
 	roi.width = base_target_sz.width * currentScaleFactor;
 	roi.height = base_target_sz.height * currentScaleFactor;
@@ -439,10 +499,13 @@ void ECO::init_features()
 		params.cnn_features.img_sample_sz = img_sample_sz;
 
 		// Calculate the output size of the 2 output layer;
+		// matlab version pad can be unbalanced, but caffe cannot for the moment;
 		int cnn_output_sz0 = (int)((img_sample_sz.width - 7 + 0 + 0) / 2) + 1; //122
-		int cnn_output_sz1 = (int)((cnn_output_sz0 - 3 + 0 + 1) / 2) + 1;	  //61
+		//int cnn_output_sz1 = (int)((cnn_output_sz0 - 3 + 0 + 1) / 2) + 1;	  //61 matlab version 
+		int cnn_output_sz1 = (int)((cnn_output_sz0 - 3 + 0 + 0) / 2) + 1;	  //61
 		cnn_output_sz1 = (int)((cnn_output_sz1 - 3 + 1 + 1) / 2) + 1;		   //15
-		cnn_output_sz1 = (int)((cnn_output_sz1 - 3 + 0 + 1) / 2) + 1;		   //15
+		//cnn_output_sz1 = (int)((cnn_output_sz1 - 3 + 0 + 1) / 2) + 1;		   //15 matlab version
+		cnn_output_sz1 = (int)((cnn_output_sz1 - 3 + 0 + 0) / 2) + 1;		   //15
 		int total_feature_sz0 = cnn_output_sz0;
 		int total_feature_sz1 = cnn_output_sz1;
 		debug("total_feature_sz: %d %d", total_feature_sz0, total_feature_sz1);
