@@ -68,7 +68,7 @@ int main(int argc, char** argv)
 	::google::InitGoogleLogging(argv[0]);
     
     string databaseTypes[4] = {"VOT-2017", "TB-2015", "TLP", "UAV123"};
-    string databaseType = databaseTypes[2];
+    string databaseType = databaseTypes[1];
     // Read from the images ====================================================
     int f, isLost;
     float x, y, w, h;
@@ -130,7 +130,7 @@ int main(int argc, char** argv)
     }
     else if (databaseType == "TLP")
     {
-        path = "/media/elab/sdd/data/TLP/Drone1";//Sam"; //Alladin";//IceSkating";//Sam";//Bike
+        path = "/media/elab/sdd/data/TLP/Basketball";//Bike";//Drone2";//Sam"; //Alladin";//IceSkating";//Sam";//Bike
         // Read the groundtruth bbox
         groundtruth = new ifstream(path + "/groundtruth_rect.txt");
         getline(*groundtruth, s, ',');

@@ -46,40 +46,44 @@ ECO_FEATS do_dft(const ECO_FEATS &xlw)
 	}
 	return xlf;
 }
-
+// DO projection row vector x_mat[i] * projection_matrix[i]
 ECO_FEATS project_sample(const ECO_FEATS &x, const std::vector<cv::Mat> &projection_matrix)
 {
 	ECO_FEATS result;
-
-	for (size_t i = 0; i < x.size(); i++)
+	for (size_t i = 0; i < x.size(); i++) // for each feature
 	{
-		//**** smaple projection ******
+		// vectorize the mat
 		cv::Mat x_mat;
-		for (size_t j = 0; j < x[i].size(); j++)
+		for (size_t j = 0; j < x[i].size(); j++) // for each channel of original feature
 		{
+			// transform x[i][j]:
+			// x1 x4
+			// x2 x5
+			// x3 x6
+			// to [x1 x2 x3 x4 x5 x6]
 			cv::Mat t = x[i][j].t();
-			
-			x_mat.push_back(cv::Mat(1, x[i][j].size().area(), CV_32FC2, t.data));
+			x_mat.push_back(cv::Mat(1, x[i][j].size().area(), CV_32FC2, t.data)); // vectorize each channel map to row vector
 		}
-		x_mat = x_mat.t();
+		//debug("x_mat %lu: %d x %d", i, x_mat.rows, x_mat.cols);
+		x_mat = x_mat.t(); 
+		// do projection by matrix production
+		cv::Mat res_temp = x_mat * projection_matrix[i]; // each col is a reduced feature
 
-		cv::Mat res_temp = x_mat * projection_matrix[i];
-
-		//**** reconver to standard formation ****
+		// transform back to standard formation 
 		std::vector<cv::Mat> temp;
-		for (size_t j = 0; j < (size_t)res_temp.cols; j++)
+		for (size_t j = 0; j < (size_t)res_temp.cols; j++) // for each channel of reduced feature
 		{
-			cv::Mat temp2 = res_temp.col(j);
+			cv::Mat temp2 = res_temp.col(j); // just a header of the col, no data copied
 			cv::Mat tt;
-			temp2.copyTo(tt);											  // the memory should be continous!!!!!!!!!!
-			cv::Mat temp3(x[i][0].cols, x[i][0].rows, CV_32FC2, tt.data); //(x[i][0].cols, x[i][0].rows, CV_32FC2, temp2.data) int size[2] = { x[i][0].cols, x[i][0].rows };cv::Mat temp3 = temp2.reshape(2, 2, size)
+			temp2.copyTo(tt); // the memory should be continous, prepare for transform back
+			cv::Mat temp3(x[i][0].cols, x[i][0].rows, CV_32FC2, tt.data); 
 			temp.push_back(temp3.t());
 		}
 		result.push_back(temp);
 	}
 	return result;
 }
-
+// compute the distance of two features;
 float feat_dis_compute(ECO_FEATS&feat1, ECO_FEATS &feat2)
 {
 	if (feat1.size() != feat2.size())
@@ -96,7 +100,7 @@ float feat_dis_compute(ECO_FEATS&feat1, ECO_FEATS &feat2)
 	}
 	return dist;
 }
-
+// compute the energy of the feature
 float FeatEnergy(ECO_FEATS &feat)
 {
 	float res = 0;
@@ -106,7 +110,7 @@ float FeatEnergy(ECO_FEATS &feat)
 	res = feat_dis_compute(feat, feat);
 	return res;
 }
-
+// compute the feats^H * feats
 ECO_FEATS feats_pow2(const ECO_FEATS &feats)
 {
 	ECO_FEATS result;
@@ -116,9 +120,9 @@ ECO_FEATS feats_pow2(const ECO_FEATS &feats)
 		return feats;
 	}
 
-	for (size_t i = 0; i < feats.size(); i++)
+	for (size_t i = 0; i < feats.size(); i++) // for each feature
 	{
-		std::vector<cv::Mat> feat_vec; //*** locate memory ****
+		std::vector<cv::Mat> feat_vec; 
 		for (size_t j = 0; j < (size_t)feats[i].size(); j++)
 		{
 			cv::Mat temp(feats[i][0].size(), CV_32FC2);
@@ -177,7 +181,7 @@ std::vector<cv::Mat> computeFeatSores(const ECO_FEATS &x, const ECO_FEATS &f)
 }
 
 ///**** features operation **************
-
+// for each element, * scale
 ECO_FEATS FeatScale(ECO_FEATS data, float scale)
 {
 	ECO_FEATS res;

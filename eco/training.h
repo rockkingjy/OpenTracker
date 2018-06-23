@@ -64,7 +64,7 @@ public:
 
 	void                train_joint();
 
-	ECO_FEATS           project_sample(const ECO_FEATS& x, const vector<cv::Mat>& projection_matrix);
+//	ECO_FEATS           project_sample(const ECO_FEATS& x, const vector<cv::Mat>& projection_matrix);
 
 	ECO_FEATS           mtimesx(ECO_FEATS& x, vector<cv::Mat> y, bool _conj = 0); // feature * yf 
 

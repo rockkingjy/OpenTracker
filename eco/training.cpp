@@ -133,14 +133,13 @@ void eco_train::train_joint()
 	}
 
 }
-
+/*
 ECO_FEATS eco_train::project_sample(const ECO_FEATS& x, const vector<cv::Mat>& projection_matrix)
 {
 	ECO_FEATS result;
 
 	for (size_t i = 0; i < x.size(); i++)
 	{
-		//**** smaple projection ******
 		cv::Mat x_mat;
 		for (size_t j = 0; j < x[i].size(); j++)
 		{
@@ -151,7 +150,6 @@ ECO_FEATS eco_train::project_sample(const ECO_FEATS& x, const vector<cv::Mat>& p
 
 		cv::Mat res_temp = x_mat * projection_matrix[i];
 
-		//**** reconver to standard formation ****
 		std::vector<cv::Mat> temp;
 		for (size_t j = 0; j < (size_t)res_temp.cols; j++)
 		{
@@ -165,7 +163,7 @@ ECO_FEATS eco_train::project_sample(const ECO_FEATS& x, const vector<cv::Mat>& p
 	return result;
 
 }
-
+*/
 ECO_FEATS eco_train::mtimesx(ECO_FEATS& x, vector<cv::Mat> y, bool _conj)
 {
 	if (x.size() != y.size())
