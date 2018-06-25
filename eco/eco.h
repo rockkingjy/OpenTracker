@@ -33,7 +33,8 @@
 //using namespace std;
 using namespace caffe;
 //using namespace cv;
-using namespace FFTTools;
+using namespace FFTTools_ECO;
+using namespace RectTools_ECO;
 using namespace eco_sample_update;
 
 namespace eco

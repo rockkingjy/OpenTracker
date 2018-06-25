@@ -7,7 +7,7 @@
 #include "fftTool.h"
 #include "debug.h"
 
-using namespace FFTTools;
+using namespace FFTTools_ECO;
 
 class optimize_scores
 {

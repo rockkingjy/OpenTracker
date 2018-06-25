@@ -66,9 +66,9 @@ void drawBox(cv::Mat& image, cv::Rect box, cv::Scalar color, int thick){
 int main(int argc, char** argv)
 {
 	::google::InitGoogleLogging(argv[0]);
-    
+    // Database settings
     string databaseTypes[4] = {"VOT-2017", "TB-2015", "TLP", "UAV123"};
-    string databaseType = databaseTypes[1];
+    string databaseType = databaseTypes[2];
     // Read from the images ====================================================
     int f, isLost;
     float x, y, w, h;
@@ -79,7 +79,7 @@ int main(int argc, char** argv)
     ostringstream osfile;
     if (databaseType == "VOT-2017")
     {
-        string folderVOT = "girl";//"drone1";//"iceskater1";//"girl"; //"road";//"bag";////"iceskater2";//"helicopter";//"matrix";//"leaves";//"sheep";//"racing";//"girl";//"road"; //"uav2";//
+        string folderVOT = "iceskater2";//"road";//"girl";//"drone1";//"iceskater1";//"girl"; //"road";//"bag";////"helicopter";
         path = "/media/elab/sdd/data/VOT/vot2017/" + folderVOT;
         // Read the groundtruth bbox
         groundtruth = new ifstream("/media/elab/sdd/data/VOT/vot2017/" + folderVOT + "/groundtruth.txt");
@@ -130,7 +130,7 @@ int main(int argc, char** argv)
     }
     else if (databaseType == "TLP")
     {
-        path = "/media/elab/sdd/data/TLP/Basketball";//Bike";//Drone2";//Sam"; //Alladin";//IceSkating";//Sam";//Bike
+        path = "/media/elab/sdd/data/TLP/Sam"; //Drone3";//Bike";//Drone2";//Alladin";//IceSkating";//Sam";//Bike
         // Read the groundtruth bbox
         groundtruth = new ifstream(path + "/groundtruth_rect.txt");
         getline(*groundtruth, s, ',');
@@ -152,7 +152,7 @@ int main(int argc, char** argv)
     }
     else if (databaseType == "UAV123")
     {
-        string folderUAV = "bike1"; //"person3";//
+        string folderUAV = "building1";//"wakeboard2"; //"person3";//
         path = "/media/elab/sdd/data/UAV123/data_seq/UAV123/" + folderUAV;
         // Read the groundtruth bbox
         groundtruth = new ifstream("/media/elab/sdd/data/UAV123/anno/UAV123/" + folderUAV + ".txt");
@@ -174,6 +174,8 @@ int main(int argc, char** argv)
     Rect2f bboxGroundtruth(x, y, w, h);
 
     cv::Mat frame = cv::imread(osfile.str().c_str(), CV_LOAD_IMAGE_UNCHANGED);
+    cv::Mat frameDraw;
+    frame.copyTo(frameDraw);
     if (!frame.data)
     {
         cout << "Could not open or find the image" << std::endl;
@@ -182,22 +184,22 @@ int main(int argc, char** argv)
     // Draw gt;
     if (databaseType == "TLP")
     {
-        rectangle(frame, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
+        rectangle(frameDraw, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
     }
     else if (databaseType == "TB-2015")
     {
-        rectangle(frame, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
+        rectangle(frameDraw, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
     }
     else if (databaseType == "UAV123")
     {
-        rectangle(frame, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
+        rectangle(frameDraw, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
     }
     else if (databaseType == "VOT-2017")
     {
-        line(frame, cv::Point(x1, y1), cv::Point(x2, y2), Scalar(0, 0, 0), 2, 1);
-        line(frame, cv::Point(x2, y2), cv::Point(x3, y3), Scalar(0, 0, 0), 2, 1);
-        line(frame, cv::Point(x3, y3), cv::Point(x4, y4), Scalar(0, 0, 0), 2, 1);
-        line(frame, cv::Point(x4, y4), cv::Point(x1, y1), Scalar(0, 0, 0), 2, 1);
+        line(frameDraw, cv::Point(x1, y1), cv::Point(x2, y2), Scalar(0, 0, 0), 2, 1);
+        line(frameDraw, cv::Point(x2, y2), cv::Point(x3, y3), Scalar(0, 0, 0), 2, 1);
+        line(frameDraw, cv::Point(x3, y3), cv::Point(x4, y4), Scalar(0, 0, 0), 2, 1);
+        line(frameDraw, cv::Point(x4, y4), cv::Point(x1, y1), Scalar(0, 0, 0), 2, 1);
     }
 
     //imshow("Tracking", frame);
@@ -208,47 +210,48 @@ int main(int argc, char** argv)
 
     while (frame.data)
     {
+        frame.copyTo(frameDraw);
         double timereco = (double)getTickCount();
         bool okeco = ecotracker.update(frame, ecobbox);
         float fpseco = getTickFrequency() / ((double)getTickCount() - timereco);
         if (okeco)
         {
-            rectangle(frame, ecobbox, Scalar(0, 225, 0), 2, 1); //blue
+            rectangle(frameDraw, ecobbox, Scalar(255, 0, 255), 2, 1); //blue
         }
         else
         {
-            putText(frame, "ECO tracking failure detected", cv::Point(100, 80), FONT_HERSHEY_SIMPLEX,
-                    0.75, Scalar(0, 225, 0), 2);
+            putText(frameDraw, "ECO tracking failure detected", cv::Point(100, 80), FONT_HERSHEY_SIMPLEX,
+                    0.75, Scalar(255, 0, 255), 2);
         }
 
         // Draw ground truth box
         if (databaseType == "TLP")
         {
-            rectangle(frame, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
+            rectangle(frameDraw, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
         }
         else if (databaseType == "TB-2015")
         {
-            rectangle(frame, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
+            rectangle(frameDraw, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
         }
         else if (databaseType == "UAV123")
         {
-            rectangle(frame, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
+            rectangle(frameDraw, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
         }
         else if (databaseType == "VOT-2017")
         {
-            line(frame, cv::Point(x1, y1), cv::Point(x2, y2), Scalar(0, 0, 0), 2, 1);
-            line(frame, cv::Point(x2, y2), cv::Point(x3, y3), Scalar(0, 0, 0), 2, 1);
-            line(frame, cv::Point(x3, y3), cv::Point(x4, y4), Scalar(0, 0, 0), 2, 1);
-            line(frame, cv::Point(x4, y4), cv::Point(x1, y1), Scalar(0, 0, 0), 2, 1);
+            line(frameDraw, cv::Point(x1, y1), cv::Point(x2, y2), Scalar(0, 0, 0), 2, 1);
+            line(frameDraw, cv::Point(x2, y2), cv::Point(x3, y3), Scalar(0, 0, 0), 2, 1);
+            line(frameDraw, cv::Point(x3, y3), cv::Point(x4, y4), Scalar(0, 0, 0), 2, 1);
+            line(frameDraw, cv::Point(x4, y4), cv::Point(x1, y1), Scalar(0, 0, 0), 2, 1);
         }
 
-        // Display FPS on frame
-        putText(frame, "FPS: " + SSTR(float(fpseco)), Point(100, 50), FONT_HERSHEY_SIMPLEX,
+        // Display FPS on frameDraw
+        putText(frameDraw, "FPS: " + SSTR(float(fpseco)), Point(100, 50), FONT_HERSHEY_SIMPLEX,
                 0.75, Scalar(0, 225, 0), 2);
         
         if (DEBUG == 0)
         {
-            imshow("Tracking", frame);
+            imshow("Tracking", frameDraw);
         }
 
         int c = cvWaitKey(1);
@@ -260,7 +263,7 @@ int main(int argc, char** argv)
             return 0;
         }
         waitKey(1);
-        // Read next image
+        // Read next image======================================================
         f++;
         osfile.str("");
         cout << "Frame:" << f << " FPS:" << fpseco << endl;

@@ -58,7 +58,8 @@
 //#include "opencv2/imgproc.hpp"
 #include "opencv2/imgproc/imgproc_c.h"
 
-
+namespace HOG_ECO
+{
 //modified from "_lsvmc_types.h"
 
 // DataType: STRUCT featureMap
@@ -173,6 +174,6 @@ int allocFeatureMapObject(CvLSVMFeatureMapCaskade **obj, const int sizeX, const 
                           const int p);
 
 int freeFeatureMapObject (CvLSVMFeatureMapCaskade **obj);
-
+}
 
 #endif

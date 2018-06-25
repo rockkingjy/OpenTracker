@@ -10,7 +10,7 @@
 #include "feature_operator.h"
 #include "debug.h"
 
-using namespace FFTTools;
+using namespace FFTTools_ECO;
 
 namespace eco_sample_update{
 

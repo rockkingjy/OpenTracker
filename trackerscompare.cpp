@@ -2,6 +2,7 @@
 #include "kcf/kcftracker.hpp"
 #include "goturn/network/regressor.h"
 #include "goturn/tracker/tracker.h"
+#include "eco/eco.h"
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/tracking.hpp>
@@ -23,41 +24,10 @@ using namespace std;
 int main(int argc, char **argv)
 //int trackercompare()
 {
+	::google::InitGoogleLogging(argv[0]);
+    // Database settings
     string databaseTypes[4] = {"VOT-2017", "TB-2015", "TLP", "UAV123"};
-    string databaseType = databaseTypes[2];
-    // Create KCFTracker:
-    bool HOG = true, FIXEDWINDOW = true, MULTISCALE = true, LAB = true, DSST = false; //LAB color space features
-    KCFTracker kcftracker(HOG, FIXEDWINDOW, MULTISCALE, LAB, DSST);
-
-    // Create DSSTTracker:
-    DSST = true;
-    KCFTracker dssttracker(HOG, FIXEDWINDOW, MULTISCALE, LAB, DSST);
-
-    // Create Opencv tracker:
-    string trackerTypes[6] = {"BOOSTING", "MIL", "KCF", "TLD", "MEDIANFLOW", "GOTURN"};
-    string trackerType = trackerTypes[2];
-    Ptr<cv::Tracker> opencvtracker;
-
-    if (trackerType == "BOOSTING")
-        opencvtracker = cv::TrackerBoosting::create();
-    if (trackerType == "MIL")
-        opencvtracker = cv::TrackerMIL::create();
-    if (trackerType == "KCF")
-        opencvtracker = cv::TrackerKCF::create();
-    if (trackerType == "TLD")
-        opencvtracker = cv::TrackerTLD::create();
-    if (trackerType == "MEDIANFLOW")
-        opencvtracker = cv::TrackerMedianFlow::create();
-    if (trackerType == "GOTURN")
-        opencvtracker = cv::TrackerGOTURN::create();
-    
-    // Create GOTURN tracker:
-    const string model_file = "goturn/nets/deploy.prototxt";
-    const string pretrain_file = "goturn/nets/goturun_tracker.caffemodel";
-    int gpu_id = 0;
-
-    Regressor regressor(model_file,pretrain_file,gpu_id, false);
-    goturn::Tracker goturntracker(false);
+    string databaseType = databaseTypes[0];
 
     // Read from the images ====================================================
     int f, isLost;
@@ -67,70 +37,9 @@ int main(int argc, char **argv)
     std::string path;
     ifstream *groundtruth;
     ostringstream osfile;
-    if (databaseType == "TLP")
+    if (databaseType == "VOT-2017")
     {
-        path = "/media/elab/sdd/data/TLP/Bike"; //Alladin";//IceSkating";//Sam";
-        // Read the groundtruth bbox
-        groundtruth = new ifstream(path + "/groundtruth_rect.txt");
-        getline(*groundtruth, s, ',');
-        f = atof(s.c_str());
-        getline(*groundtruth, s, ',');
-        x = atof(s.c_str());
-        getline(*groundtruth, s, ',');
-        y = atof(s.c_str());
-        getline(*groundtruth, s, ',');
-        w = atof(s.c_str());
-        getline(*groundtruth, s, ',');
-        h = atof(s.c_str());
-        getline(*groundtruth, s);
-        isLost = atof(s.c_str());
-        cout << f << " " << x << " " << y << " " << w << " " << h << " " << isLost << endl;
-        // Read images in a folder
-        osfile << path << "/img/" << setw(5) << setfill('0') << f << ".jpg";
-        cout << osfile.str() << endl;
-    }
-    else if (databaseType == "TB-2015")
-    {
-        path = "/media/elab/sdd/data/TB-2015/Coke";///Bird1";//BlurFace"; 
-        // Read the groundtruth bbox
-        groundtruth = new ifstream(path + "/groundtruth_rect.txt");
-        f = 1;
-        getline(*groundtruth, s, ',');
-        x = atof(s.c_str());
-        getline(*groundtruth, s, ',');
-        y = atof(s.c_str());
-        getline(*groundtruth, s, ',');
-        w = atof(s.c_str());
-        getline(*groundtruth, s);
-        h = atof(s.c_str());
-        cout << f << " " << x << " " << y << " " << w << " " << h << " "<< endl;
-        // Read images in a folder
-        osfile << path << "/img/" << setw(4) << setfill('0') << f << ".jpg";
-        cout << osfile.str() << endl;
-    }
-    else if (databaseType == "UAV123")
-    {
-        string folderUAV = "bike2"; //"bike1"; //
-        path = "/media/elab/sdd/data/UAV123/data_seq/UAV123/" + folderUAV;
-        // Read the groundtruth bbox
-        groundtruth = new ifstream("/media/elab/sdd/data/UAV123/anno/UAV123/" + folderUAV + ".txt");
-        f = 1;
-        getline(*groundtruth, s, ',');
-        x = atof(s.c_str());
-        getline(*groundtruth, s, ',');
-        y = atof(s.c_str());
-        getline(*groundtruth, s, ',');
-        w = atof(s.c_str());
-        getline(*groundtruth, s);
-        h = atof(s.c_str());
-        cout << x << " " << y << " " << w << " " << h << endl;
-        // Read images in a folder
-        osfile << path << "/" << setw(6) << setfill('0') << f << ".jpg";
-        cout << osfile.str() << endl;
-    }
-    else if (databaseType == "VOT-2017")
-    {
-        string folderVOT = "girl"; //"iceskater1";//"drone1"; //"iceskater2";//"helicopter";//"matrix";//"leaves";//"sheep";//"racing";//"girl";//"road"; //"uav2";//
+        string folderVOT = "iceskater1";//"road";//"girl"; //"iceskater1";//"drone1"; //"helicopter";//"matrix";//"leaves";//"sheep";//"racing";//"girl";//"road"; //"uav2";//
         path = "/media/elab/sdd/data/VOT/vot2017/" + folderVOT;
         // Read the groundtruth bbox
         groundtruth = new ifstream("/media/elab/sdd/data/VOT/vot2017/" + folderVOT + "/groundtruth.txt");
@@ -160,10 +69,73 @@ int main(int argc, char **argv)
         osfile << path << "/" << setw(8) << setfill('0') << f << ".jpg";
         cout << osfile.str() << endl;
     }
+    else if (databaseType == "TB-2015")
+    {
+        path = "/media/elab/sdd/data/TB-2015/Coke";///Bird1";//BlurFace"; 
+        // Read the groundtruth bbox
+        groundtruth = new ifstream(path + "/groundtruth_rect.txt");
+        f = 1;
+        getline(*groundtruth, s, ',');
+        x = atof(s.c_str());
+        getline(*groundtruth, s, ',');
+        y = atof(s.c_str());
+        getline(*groundtruth, s, ',');
+        w = atof(s.c_str());
+        getline(*groundtruth, s);
+        h = atof(s.c_str());
+        cout << f << " " << x << " " << y << " " << w << " " << h << " "<< endl;
+        // Read images in a folder
+        osfile << path << "/img/" << setw(4) << setfill('0') << f << ".jpg";
+        cout << osfile.str() << endl;
+    }
+    else if (databaseType == "TLP")
+    {
+        path = "/media/elab/sdd/data/TLP/Drone3";//IceSkating";//Sam";
+        // Read the groundtruth bbox
+        groundtruth = new ifstream(path + "/groundtruth_rect.txt");
+        getline(*groundtruth, s, ',');
+        f = atof(s.c_str());
+        getline(*groundtruth, s, ',');
+        x = atof(s.c_str());
+        getline(*groundtruth, s, ',');
+        y = atof(s.c_str());
+        getline(*groundtruth, s, ',');
+        w = atof(s.c_str());
+        getline(*groundtruth, s, ',');
+        h = atof(s.c_str());
+        getline(*groundtruth, s);
+        isLost = atof(s.c_str());
+        cout << f << " " << x << " " << y << " " << w << " " << h << " " << isLost << endl;
+        // Read images in a folder
+        osfile << path << "/img/" << setw(5) << setfill('0') << f << ".jpg";
+        cout << osfile.str() << endl;
+    }
+    else if (databaseType == "UAV123")
+    {
+        string folderUAV = "wakeboard1";//"bike1"; //"bike1"; //
+        path = "/media/elab/sdd/data/UAV123/data_seq/UAV123/" + folderUAV;
+        // Read the groundtruth bbox
+        groundtruth = new ifstream("/media/elab/sdd/data/UAV123/anno/UAV123/" + folderUAV + ".txt");
+        f = 1;
+        getline(*groundtruth, s, ',');
+        x = atof(s.c_str());
+        getline(*groundtruth, s, ',');
+        y = atof(s.c_str());
+        getline(*groundtruth, s, ',');
+        w = atof(s.c_str());
+        getline(*groundtruth, s);
+        h = atof(s.c_str());
+        cout << x << " " << y << " " << w << " " << h << endl;
+        // Read images in a folder
+        osfile << path << "/" << setw(6) << setfill('0') << f << ".jpg";
+        cout << osfile.str() << endl;
+    }
 
     Rect2d bboxGroundtruth(x, y, w, h);
 
     cv::Mat frame = cv::imread(osfile.str().c_str(), CV_LOAD_IMAGE_UNCHANGED);
+    cv::Mat frameDraw;
+    frame.copyTo(frameDraw);
     if (!frame.data)
     {
         cout << "Could not open or find the image" << std::endl;
@@ -172,122 +144,178 @@ int main(int argc, char **argv)
     // Draw gt;
     if (databaseType == "TLP")
     {
-        rectangle(frame, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
+        rectangle(frameDraw, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
     }
     else if (databaseType == "TB-2015")
     {
-        rectangle(frame, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
+        rectangle(frameDraw, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
     }
     else if (databaseType == "UAV123")
     {
-        rectangle(frame, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
+        rectangle(frameDraw, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
     }
     else if (databaseType == "VOT-2017")
     {
-        line(frame, cv::Point(x1, y1), cv::Point(x2, y2), Scalar(0, 0, 0), 2, 1);
-        line(frame, cv::Point(x2, y2), cv::Point(x3, y3), Scalar(0, 0, 0), 2, 1);
-        line(frame, cv::Point(x3, y3), cv::Point(x4, y4), Scalar(0, 0, 0), 2, 1);
-        line(frame, cv::Point(x4, y4), cv::Point(x1, y1), Scalar(0, 0, 0), 2, 1);
+        line(frameDraw, cv::Point(x1, y1), cv::Point(x2, y2), Scalar(0, 0, 0), 2, 1);
+        line(frameDraw, cv::Point(x2, y2), cv::Point(x3, y3), Scalar(0, 0, 0), 2, 1);
+        line(frameDraw, cv::Point(x3, y3), cv::Point(x4, y4), Scalar(0, 0, 0), 2, 1);
+        line(frameDraw, cv::Point(x4, y4), cv::Point(x1, y1), Scalar(0, 0, 0), 2, 1);
     }
-    imshow("Tracking", frame);
+    //imshow("Tracking", frame);
     // Init the trackers=================================================
-    Rect2d kcfbbox(x, y, w, h);
-    kcftracker.init(frame, kcfbbox);
+    // Create Opencv tracker:
+    string trackerTypes[6] = {"BOOSTING", "MIL", "KCF", "TLD", "MEDIANFLOW", "GOTURN"};
+    string trackerType = trackerTypes[2];
+    Ptr<cv::Tracker> opencvtracker;
 
-    Rect2d dsstbbox(x, y, w, h);
-    dssttracker.init(frame, dsstbbox);
-
+    if (trackerType == "BOOSTING")
+        opencvtracker = cv::TrackerBoosting::create();
+    if (trackerType == "MIL")
+        opencvtracker = cv::TrackerMIL::create();
+    if (trackerType == "KCF")
+        opencvtracker = cv::TrackerKCF::create();
+    if (trackerType == "TLD")
+        opencvtracker = cv::TrackerTLD::create();
+    if (trackerType == "MEDIANFLOW")
+        opencvtracker = cv::TrackerMedianFlow::create();
+    if (trackerType == "GOTURN")
+        opencvtracker = cv::TrackerGOTURN::create();
+    
     Rect2d opencvbbox(x, y, w, h);
     opencvtracker->init(frame, opencvbbox);
-    
+    // Create KCFTracker:
+    bool HOG = true, FIXEDWINDOW = true, MULTISCALE = true, LAB = true, DSST = false; //LAB color space features
+    KCFTracker kcftracker(HOG, FIXEDWINDOW, MULTISCALE, LAB, DSST);
+    Rect2d kcfbbox(x, y, w, h);
+    kcftracker.init(frame, kcfbbox);
+    // Create DSSTTracker:
+    DSST = true;
+    KCFTracker dssttracker(HOG, FIXEDWINDOW, MULTISCALE, LAB, DSST);
+    Rect2d dsstbbox(x, y, w, h);
+    dssttracker.init(frame, dsstbbox);    
+    // Create GOTURN tracker:
+    const string model_file = "goturn/nets/deploy.prototxt";
+    const string pretrain_file = "goturn/nets/goturun_tracker.caffemodel";
+    int gpu_id = 0;
+    Regressor regressor(model_file,pretrain_file,gpu_id, false);
+    goturn::Tracker goturntracker(false);
     cv::Rect goturnbbox(x,y,w,h);
     BoundingBox bbox_gt;
     BoundingBox bbox_estimate_uncentered;
     bbox_gt.getRect(goturnbbox);
     goturntracker.Init(frame,bbox_gt,&regressor);
+    // Create ECO trakcer;
+    eco::ECO ecotracker;
+    Rect2f ecobbox(x, y, w, h);
+    ecotracker.init(frame, ecobbox);
 
     while (frame.data)
-    {
-        //KCF========================
-        double timerkcf = (double)getTickCount();
-        bool okkcf = kcftracker.update(frame, kcfbbox);
-        float fpskcf = getTickFrequency() / ((double)getTickCount() - timerkcf);
-        if (okkcf)
-        {
-            rectangle(frame, kcfbbox, Scalar(225, 0, 0), 2, 1); //blue
-        }
-        else
-        {
-            putText(frame, "Kcf tracking failure detected", cv::Point(100, 80), FONT_HERSHEY_SIMPLEX,
-                    0.75, Scalar(255, 0, 0), 2);
-        }
-
-        //DSST=============================
-        double timerdsst = (double)getTickCount();
-        bool okdsst = dssttracker.update(frame, dsstbbox);
-        float fpsdsst = getTickFrequency() / ((double)getTickCount() - timerdsst);
-        if (okdsst)
-        {
-            rectangle(frame, dsstbbox, Scalar(0, 0, 255), 2, 1); //blue
-        }
-        else
-        {
-            putText(frame, "DSST tracking failure detected", cv::Point(100, 80), FONT_HERSHEY_SIMPLEX,
-                    0.75, Scalar(0, 0, 255), 2);
-        }
-        //Opencv========================================
+    {   
+        frame.copyTo(frameDraw);
+        
+        //Opencv=====================
         double timercv = (double)getTickCount();
         bool okopencv = opencvtracker->update(frame, opencvbbox);
         float fpscv = getTickFrequency() / ((double)getTickCount() - timercv);
         if (okopencv)
         {
-            rectangle(frame, opencvbbox, Scalar(0, 225, 0), 2, 1); //green
+            rectangle(frameDraw, opencvbbox, Scalar(255, 0, 0), 2, 1); 
         }
         else
         {
-            putText(frame, "Opencv tracking failure detected", cv::Point(100, 110), FONT_HERSHEY_SIMPLEX,
-                    0.75, Scalar(0, 225, 0), 2);
+            putText(frameDraw, "Opencv tracking failure detected", cv::Point(10, 50), FONT_HERSHEY_SIMPLEX,
+                    0.75, Scalar(255, 0, 0), 2);
         }
-        //GOTURN========================
+        
+        //KCF=========================
+        double timerkcf = (double)getTickCount();
+        bool okkcf = kcftracker.update(frame, kcfbbox);
+        float fpskcf = getTickFrequency() / ((double)getTickCount() - timerkcf);
+        if (okkcf)
+        {
+            rectangle(frameDraw, kcfbbox, Scalar(0, 255, 0), 2, 1); 
+        }
+        else
+        {
+            putText(frameDraw, "Kcf tracking failure detected", cv::Point(10, 80), FONT_HERSHEY_SIMPLEX,
+                    0.75, Scalar(0, 255, 0), 2);
+        }
+        
+        //DSST========================
+        double timerdsst = (double)getTickCount();
+        bool okdsst = dssttracker.update(frame, dsstbbox);
+        float fpsdsst = getTickFrequency() / ((double)getTickCount() - timerdsst);
+        if (okdsst)
+        {
+            rectangle(frameDraw, dsstbbox, Scalar(0, 0, 255), 2, 1); 
+        }
+        else
+        {
+            putText(frameDraw, "DSST tracking failure detected", cv::Point(10, 100), FONT_HERSHEY_SIMPLEX,
+                    0.75, Scalar(0, 0, 255), 2);
+        }
+        
+        //GOTURN=====================
         double timergoturn = (double)getTickCount();
         goturntracker.Track(frame, &regressor, &bbox_estimate_uncentered);
         bbox_estimate_uncentered.putRect(goturnbbox);
         float fpsgoturn = getTickFrequency() / ((double)getTickCount() - timergoturn);
-        // draw goturn bbox
-        rectangle(frame, goturnbbox, Scalar(100, 100, 100), 2, 1); 
-
-
+        rectangle(frameDraw, goturnbbox, Scalar(255, 255, 0), 2, 1); 
+        
+        //ECO========================
+        double timeeco = (double)getTickCount();
+        bool okeco = ecotracker.update(frame, ecobbox);
+        float fpseco = getTickFrequency() / ((double)getTickCount() - timeeco);
+        if (okeco)
+        {
+            rectangle(frameDraw, ecobbox, Scalar(255, 0, 255), 2, 1); 
+        }
+        else
+        {
+            putText(frameDraw, "ECO tracking failure detected", cv::Point(10, 30), FONT_HERSHEY_SIMPLEX,
+                    0.75, Scalar(255, 0, 255), 2);
+        } 
         // Draw ground truth box===========================================
         if (databaseType == "TLP")
         {
-            rectangle(frame, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
+            rectangle(frameDraw, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
         }
         else if (databaseType == "TB-2015")
         {
-            rectangle(frame, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
+            rectangle(frameDraw, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
         }
         else if (databaseType == "UAV123")
         {
-            rectangle(frame, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
+            rectangle(frameDraw, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
         }
         else if (databaseType == "VOT-2017")
         {
-            line(frame, cv::Point(x1, y1), cv::Point(x2, y2), Scalar(0, 0, 0), 2, 1);
-            line(frame, cv::Point(x2, y2), cv::Point(x3, y3), Scalar(0, 0, 0), 2, 1);
-            line(frame, cv::Point(x3, y3), cv::Point(x4, y4), Scalar(0, 0, 0), 2, 1);
-            line(frame, cv::Point(x4, y4), cv::Point(x1, y1), Scalar(0, 0, 0), 2, 1);
+            line(frameDraw, cv::Point(x1, y1), cv::Point(x2, y2), Scalar(0, 0, 0), 2, 1);
+            line(frameDraw, cv::Point(x2, y2), cv::Point(x3, y3), Scalar(0, 0, 0), 2, 1);
+            line(frameDraw, cv::Point(x3, y3), cv::Point(x4, y4), Scalar(0, 0, 0), 2, 1);
+            line(frameDraw, cv::Point(x4, y4), cv::Point(x1, y1), Scalar(0, 0, 0), 2, 1);
         }
 
-        // Display FPS on frame
-        putText(frame, "FPS: " + SSTR(long(fpsgoturn)), Point(100, 50), FONT_HERSHEY_SIMPLEX,
-                0.75, Scalar(0, 0, 0), 2);
-        // Display tracker type on frame
-        putText(frame, "Black:GT; Blue: KCF; Red: DSST; Green: opencv " + trackerType + ";",
-                Point(100, 20), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0, 0, 0), 2);
+        // Display FPS on frameDraw
+        putText(frameDraw, "FPS: " + SSTR(long(fpseco)), Point(10, 30), FONT_HERSHEY_SIMPLEX,
+                0.75, Scalar(0, 255, 0), 2);
+        
+        // Draw the label of trackers
+        putText(frameDraw, "Opencv ", cv::Point(frameDraw.cols - 180, 50), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(255, 0, 0), 2);
+        line(frameDraw, cv::Point(frameDraw.cols - 100, 50), cv::Point(frameDraw.cols - 10, 50), Scalar(255, 0, 0), 2, 1);
+        putText(frameDraw, "KCF ", cv::Point(frameDraw.cols - 180, 75), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0, 255, 0), 2);
+        line(frameDraw, cv::Point(frameDraw.cols - 100, 75), cv::Point(frameDraw.cols - 10, 75), Scalar(0, 255, 0), 2, 1);
+        putText(frameDraw, "DSST ", cv::Point(frameDraw.cols - 180, 100), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0, 0, 255), 2);
+        line(frameDraw, cv::Point(frameDraw.cols - 100, 100), cv::Point(frameDraw.cols - 10, 100), Scalar(0, 0, 255), 2, 1);
+        putText(frameDraw, "GOTURN ", cv::Point(frameDraw.cols - 180, 125), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(255, 255, 0), 2);
+        line(frameDraw, cv::Point(frameDraw.cols - 100, 125), cv::Point(frameDraw.cols - 10, 125), Scalar(255, 255, 0), 2, 1);
+        putText(frameDraw, "ECO ", cv::Point(frameDraw.cols - 180, 150), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(255, 0, 255), 2);
+        line(frameDraw, cv::Point(frameDraw.cols - 100, 150), cv::Point(frameDraw.cols - 10, 150), Scalar(255, 0, 255), 2, 1);
+
         //=============================================================================
-        // Display frame.
+        // Display frameDraw.
         //cvNamedWindow("Tracking", CV_WINDOW_NORMAL);
-        imshow("Tracking", frame);
+        imshow("Tracking", frameDraw);
 
         int c = cvWaitKey(1);
         if (c != -1)
@@ -298,7 +326,7 @@ int main(int argc, char **argv)
             return 0;
         }
         waitKey(1);
-        // Read next image
+        // Read next image======================================================
         f++;
         osfile.str("");
 

@@ -41,7 +41,7 @@ the use of this software, even if advised of the possibility of such damage.
 #define _OPENCV_FFTTOOLS_HPP_
 #endif
 
-namespace FFTTools
+namespace FFTTools_KCF
 {
 cv::Mat fftd(cv::Mat img, bool backwards = false, bool byRow = false);//byRow=true: 1d trasform, else 2d;
 cv::Mat real(cv::Mat img);

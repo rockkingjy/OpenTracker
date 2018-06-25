@@ -46,7 +46,7 @@ the use of this software, even if advised of the possibility of such damage.
 #include <opencv2/opencv.hpp>
 
 
-namespace RectTools
+namespace RectTools_ECO
 {
 
 	template <typename t>
@@ -120,13 +120,13 @@ namespace RectTools
 	inline cv::Mat subwindow(const cv::Mat &in, const cv::Rect & window, int borderType = cv::BORDER_CONSTANT)
 	{
 		cv::Rect cutWindow = window;
-		RectTools::limit(cutWindow, in.cols, in.rows);
+		RectTools_ECO::limit(cutWindow, in.cols, in.rows);
 		if (cutWindow.height <= 0 || cutWindow.width <= 0)
 		{
 			printf("Error in cut window size!\n");
 			assert(0); //return cv::Mat(window.height,window.width,in.type(),0) ;
 		}
-		cv::Rect border = RectTools::getBorder(window, cutWindow);
+		cv::Rect border = RectTools_ECO::getBorder(window, cutWindow);
 		cv::Mat res = in(cutWindow);
 
 		if (border != cv::Rect(0, 0, 0, 0))

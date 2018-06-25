@@ -45,13 +45,6 @@ ECO_FEATS feature_extractor::extractor(cv::Mat image,
 		img_samples.push_back(img_samples_temp);
 	}
 	/*
-	for (size_t i = 0; i < img_samples[0].size(); ++i)
-	{
-		double maxValue = 0, minValue = 0;
-		cv::minMaxLoc(img_samples[0][i], &minValue, &maxValue, NULL, NULL);
-		debug("img_samples %lu: value: %lf %lf", i, minValue, maxValue);
-	}*/
-	/*	
 	for (unsigned int i = 0; i < img_samples.size(); ++i)
 	{
 		debug("img_sample for feature: %d, scales:%lu", i, img_samples[i].size());
@@ -82,7 +75,14 @@ ECO_FEATS feature_extractor::extractor(cv::Mat image,
 	if (params.useCnFeature)
 	{
 	}
-
+	/*
+	for (size_t i = 0; i < sum_features[0].size(); ++i)
+	{
+		double maxValue = 0, minValue = 0;
+		cv::minMaxLoc(sum_features[0][i], &minValue, &maxValue, NULL, NULL);
+		debug("sum_features %lu: value: %lf %lf", i, minValue, maxValue);
+	}
+	*/
 	return sum_features;
 }
 
@@ -135,34 +135,37 @@ cv::Mat feature_extractor::sample_patch(const cv::Mat &im,
 				   pos.y - floor((sample_sz.height + 1) / 2));
 	//debug("new_im:%d x %d, pos2:%d %d, sample_sz:%f x %f", new_im.rows, new_im.cols, pos2.y, pos2.x,
 	//	  sample_sz.height, sample_sz.width);
-	//showfeature(new_im, 0);
+	//showmatNch(new_im, 0);
 	ddebug();
 	cv::Mat im_patch;
-	/*
-	if (sample_sz.width - pos2.x > 0 && sample_sz.height - pos2.y > 0)
-	{
-		im_patch = RectTools::subwindow(new_im, cv::Rect(pos2, sample_sz), IPL_BORDER_REPLICATE);
-	}
-	else
-	{
-		im_patch = RectTools::subwindow(new_im, cv::Rect(cv::Point(0, 0), new_im.size()), IPL_BORDER_REPLICATE);
-	}
-	*/
-	im_patch = RectTools::subwindow(new_im, cv::Rect(pos2, sample_sz), IPL_BORDER_REPLICATE);
+	im_patch = subwindow(new_im, cv::Rect(pos2, sample_sz), IPL_BORDER_REPLICATE);
 	/*
 	imgInfo(im_patch);
-	showfeature(im_patch, 0);
+	showmatNch(im_patch, 0);
 	assert(0);
+
+	cv::Point p;
+	double maxValue = -1, minValue = 256;
+	cv::Mat tmp_re = im_patch.reshape(1);
+	cv::minMaxLoc(tmp_re, &minValue, &maxValue, NULL, &p);
+	debug("im_patch value: %lf %lf %d, %d", minValue, maxValue, p.y, p.x);
+	debug("%d",tmp_re.at<unsigned char>(p.y,p.x));
 */
 	cv::Mat resized_patch;
 	cv::resize(im_patch, resized_patch, input_sz);
-	/*
-	debug();
+/*
 	imgInfo(resized_patch);
+	showmatNch(resized_patch, 0);
 
 	cv::imshow("Tracking", resized_patch);
 	cv::waitKey(0);
 	assert(0);
+
+	tmp_re = resized_patch.reshape(1);
+	cv::minMaxLoc(tmp_re, &minValue, &maxValue, NULL, &p);
+	debug("resized_patch value: %lf %lf %d, %d", minValue, maxValue, p.y, p.x);
+	debug("%d",tmp_re.at<unsigned char>(p.y,p.x));
+	//debug("inputsize: %lf x %lf", input_sz.width, input_sz.height);
 */
 	return resized_patch;
 }

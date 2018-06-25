@@ -15,7 +15,7 @@
 #include "feature_type.h"
 #include "feature_operator.h"
 
-using namespace FFTTools;
+using namespace FFTTools_ECO;
 
 class eco_train
 {

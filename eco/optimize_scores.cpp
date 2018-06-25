@@ -32,7 +32,7 @@ std::vector<cv::Mat> optimize_scores::sample_fs(const std::vector<cv::Mat>& xf, 
 		init_max_score.push_back(sampled_scores[i].at<float>(pos.y, pos.x));
 		//debug("init_max_score %lu: value: %lf %lf y:%d x:%d", i, minValue, maxValue, pos.y, pos.x);
 	}
-
+	
 	// Shift and rescale the coordinate system to [-pi, pi]
 	int h = xf[0].rows, w = xf[0].cols;
 	std::vector<float> max_pos_y, max_pos_x, init_pos_y, init_pos_x;
@@ -85,8 +85,8 @@ std::vector<cv::Mat> optimize_scores::sample_fs(const std::vector<cv::Mat>& xf, 
 			y_resp.push_back(exp_iky[i] * scores_fs[i]);
 			resp_x.push_back(scores_fs[i] * exp_ikx[i]);
 
-			grad_y.push_back(-1 * FFTTools::imag(ky_exp_ky[i] * resp_x[i]));
-			grad_x.push_back(-1 * FFTTools::imag(y_resp[i] * kx_exp_kx[i]));
+			grad_y.push_back(-1 * imag(ky_exp_ky[i] * resp_x[i]));
+			grad_x.push_back(-1 * imag(y_resp[i] * kx_exp_kx[i]));
 
 			// Compute Hessian
 			ival.push_back(exp_iky[i] * resp_x[i]);

@@ -88,6 +88,9 @@ the use of this software, even if advised of the possibility of such damage.
 #include "labdata.hpp"
 #endif
 
+using namespace FFTTools_KCF;
+using namespace HOG_KCF;
+
 // Constructor
 KCFTracker::KCFTracker(bool hog, bool fixed_window, bool multiscale, bool lab, bool dsst)
 {
@@ -375,8 +378,6 @@ bool KCFTracker::update_dsst(const cv::Mat image, cv::Rect2d &roi)
 // Detect object in the current frame.
 cv::Point2f KCFTracker::detect(cv::Mat z, cv::Mat x, float &peak_value) // KCF Algorithm 1 , _alpha updated in train();
 {
-    using namespace FFTTools;
-
     cv::Mat k = gaussianCorrelation(x, z);
     cv::Mat res = (real(fftd(complexMultiplication(_alphaf, fftd(k)), true))); // KCF (22)
 
@@ -408,7 +409,7 @@ cv::Point2f KCFTracker::detect(cv::Mat z, cv::Mat x, float &peak_value) // KCF A
 // train tracker with a single image, to update _alphaf;
 void KCFTracker::train(cv::Mat x, float train_interp_factor)
 {
-    using namespace FFTTools;
+     
 
     cv::Mat k = gaussianCorrelation(x, x);
     cv::Mat alphaf = complexDivision(_prob, (fftd(k) + lambda)); // KCF (17)
@@ -432,7 +433,7 @@ void KCFTracker::train(cv::Mat x, float train_interp_factor)
 // which must both be MxN. They must also be periodic (ie., pre-processed with a cosine window).
 cv::Mat KCFTracker::gaussianCorrelation(cv::Mat x1, cv::Mat x2) // KCF (30)
 {
-    using namespace FFTTools;
+     
     cv::Mat c = cv::Mat(cv::Size(_size_patch[1], _size_patch[0]), CV_32F, cv::Scalar(0));
     // HOG features
     if (_hogfeatures)
@@ -472,6 +473,8 @@ cv::Mat KCFTracker::gaussianCorrelation(cv::Mat x1, cv::Mat x2) // KCF (30)
 // Create Gaussian Peak. Function called only in the first frame.
 cv::Mat KCFTracker::createGaussianPeak(int sizey, int sizex)
 {
+     
+
     cv::Mat_<float> res(sizey, sizex);
 
     int syh = (sizey) / 2;
@@ -504,7 +507,7 @@ cv::Mat KCFTracker::createGaussianPeak(int sizey, int sizex)
             int jh = j - sxh;
             res(i, j) = std::exp(mult * (float)(ih * ih + jh * jh));
         }
-    return FFTTools::fftd(res);
+    return fftd(res);
 }
 
 // Obtain sub-window from image, with replication-padding and extract features
@@ -765,6 +768,7 @@ void KCFTracker::init_dsst(const cv::Mat image, const cv::Rect2d &roi)
 // Train method for scaling
 void KCFTracker::train_dsst(cv::Mat image, bool ini)
 {
+     
     cv::Mat samples = get_sample_dsst(image);
 
     // Adjust ysf to the same size as xsf in the first frame
@@ -781,7 +785,7 @@ void KCFTracker::train_dsst(cv::Mat image, bool ini)
     // Get Sigma{FF} in the paper (delta B)
     cv::Mat new_den_dsst;
     cv::mulSpectrums(samples, samples, new_den_dsst, 0, true);
-    cv::reduce(FFTTools::real(new_den_dsst), new_den_dsst, 0, CV_REDUCE_SUM);
+    cv::reduce(real(new_den_dsst), new_den_dsst, 0, CV_REDUCE_SUM);
 
     if (ini)
     {
@@ -799,15 +803,16 @@ void KCFTracker::train_dsst(cv::Mat image, bool ini)
 // Detect the new scaling rate
 cv::Point2i KCFTracker::detect_dsst(cv::Mat image)
 {
+     
     cv::Mat samples = KCFTracker::get_sample_dsst(image);
 
     // Compute AZ in the paper
     cv::Mat add_temp;
-    cv::reduce(FFTTools::complexMultiplication(_num_dsst, samples), add_temp, 0, CV_REDUCE_SUM);
+    cv::reduce(complexMultiplication(_num_dsst, samples), add_temp, 0, CV_REDUCE_SUM);
 
     // compute the final y, DSST (6);
     cv::Mat scale_response;
-    cv::idft(FFTTools::complexDivisionReal(add_temp, (_den_dsst + scale_lambda)), scale_response, cv::DFT_REAL_OUTPUT);
+    cv::idft(complexDivisionReal(add_temp, (_den_dsst + scale_lambda)), scale_response, cv::DFT_REAL_OUTPUT);
 
     // Get the max point as the final scaling rate
     cv::Point2i pi; //max location
@@ -820,6 +825,7 @@ cv::Point2i KCFTracker::detect_dsst(cv::Mat image)
 // Compute the F^l in DSST (4);
 cv::Mat KCFTracker::get_sample_dsst(const cv::Mat &image)
 {
+     
     CvLSVMFeatureMapCaskade *map[n_scales]; // temporarily store FHOG result
     cv::Mat samples;                        // output
     int totalSize;                          // # of features
@@ -843,7 +849,7 @@ cv::Mat KCFTracker::get_sample_dsst(const cv::Mat &image)
 
         if (im_patch.rows == 0 || im_patch.cols == 0)
         {
-            samples = FFTTools::fftd(samples, 0, 1);
+            samples = fftd(samples, 0, 1);
             return samples;
             // map[i]->map = (float *)malloc (sizeof(float));
         }
@@ -885,7 +891,7 @@ cv::Mat KCFTracker::get_sample_dsst(const cv::Mat &image)
         freeFeatureMapObject(&map[i]);
     }
     // Do fft to the FHOG features row by row
-    samples = FFTTools::fftd(samples, 0, 1);
+    samples = fftd(samples, 0, 1);
 
     return samples;
 }
@@ -893,6 +899,7 @@ cv::Mat KCFTracker::get_sample_dsst(const cv::Mat &image)
 // Compute the FFT Guassian Peak for scaling
 cv::Mat KCFTracker::createGaussianPeak_dsst()
 {
+     
     float scale_sigma2 = n_scales / std::sqrt(n_scales) * scale_sigma_factor;
     scale_sigma2 = scale_sigma2 * scale_sigma2;
     cv::Mat res(cv::Size(n_scales, 1), CV_32F, float(0));
@@ -903,7 +910,7 @@ cv::Mat KCFTracker::createGaussianPeak_dsst()
         res.at<float>(0, i) = std::exp(-0.5 * std::pow(i + 1 - ceilS, 2) / scale_sigma2);
     }
 
-    return FFTTools::fftd(res);
+    return fftd(res);
 }
 
 // Compute the hanning window for scaling

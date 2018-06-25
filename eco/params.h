@@ -6,6 +6,8 @@
 #include <vector>
 #include <string>
 
+#define DEBUG 1
+
 using std::vector;
 using std::string;
 

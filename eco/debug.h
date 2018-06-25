@@ -5,7 +5,6 @@
 #include <vector>
 #include <opencv2/opencv.hpp>
 
-#define DEBUG 1
 #define getName(var) #var
 
 #define debug(a, args...) printf("%s(%s:%d) " a "\n", __func__, __FILE__, __LINE__, ##args)
@@ -59,6 +58,15 @@ inline void imgInfo(cv::Mat mat)
 
 	debug("%s %d x %d", r.c_str(), mat.rows, mat.cols);
 	//return r;
+}
+
+void printMaxmin();
+inline void printMaxmin(cv::Mat mat)
+{
+	cv::Point p;
+	double maxValue = -1, minValue = 256;
+	cv::minMaxLoc(mat, &minValue, &maxValue, NULL, &p);
+	printf("mat: min: %lf max: %lf loc: %d %d \n", minValue, maxValue, p.x, p.y);
 }
 
 void showmat1chall(cv::Mat mat, int type);
@@ -353,47 +361,47 @@ inline void showmatNch(cv::Mat mat, int type)
 
 	debug("channels: %lu", splitmat.size());
 
-	printf("First row of channel 0: \n");
+	printf("11th row of channel 0: \n");
 	for (int j = 0; j < mat.cols; j += 1)
 	{
 		if (type == 0)
 		{
-			printf("%d ", splitmat[0].at<uchar>(0, j));
+			printf("%d ", splitmat[0].at<uchar>(10, j));
 		}
 		else if (type == 1)
 		{ // first row
-			printf("%d ", splitmat[0].at<int>(0, j));
+			printf("%d ", splitmat[0].at<int>(10, j));
 		}
 		else if (type == 2)
 		{ // first row
-			printf("%f ", splitmat[0].at<float>(0, j));
+			printf("%f ", splitmat[0].at<float>(10, j));
 		}
 		else if (type == 3)
 		{ // first row
-			printf("%lf ", splitmat[0].at<double>(0, j));
+			printf("%lf ", splitmat[0].at<double>(10, j));
 		}
 	}
 	printf("\n\n");
 
 	printf("\n");
-	printf("First col of  channel 0: \n");
+	printf("21th col of  channel 0: \n");
 	for (int i = 0; i < mat.rows; i += 1)
 	{
 		if (type == 0)
 		{ // first row
-			printf("%d ", splitmat[0].at<uchar>(i, 0));
+			printf("%d ", splitmat[0].at<uchar>(i, 20));
 		}
 		else if (type == 1)
 		{ // first row
-			printf("%d ", splitmat[0].at<int>(i, 0));
+			printf("%d ", splitmat[0].at<int>(i, 20));
 		}
 		else if (type == 2)
 		{ // first row
-			printf("%f ", splitmat[0].at<float>(i, 0));
+			printf("%f ", splitmat[0].at<float>(i, 20));
 		}
 		else if (type == 3)
 		{ // first col
-			printf("%lf ", splitmat[0].at<double>(i, 0));
+			printf("%lf ", splitmat[0].at<double>(i, 20));
 		}
 	}
 	printf("\n\n");

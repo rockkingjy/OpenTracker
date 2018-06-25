@@ -8,13 +8,17 @@ LDFLAGS= `pkg-config --libs opencv` -L/media/elab/sdd/mycodes/caffe/build/lib -l
 
 CXXFLAGS= -Wall `pkg-config --cflags opencv` -lstdc++ -lm -std=c++0x \
 	-I/media/elab/sdd/mycodes/caffe/build/include/ -I/media/elab/sdd/mycodes/caffe/include/ \
-	-I/usr/local/cuda/include/  -DUSE_OPENCV
+	-I/usr/local/cuda/include/ # -DUSE_OPENCV
 
-DEPS = *.h *.hpp $(wildcard kcf/*.h) $(wildcard goturn/*/*.h)
+DEPS = *.h *.hpp $(wildcard kcf/*.h) $(wildcard goturn/*/*.h) $(wildcard eco/*.h)
 
-OBJ = kcf/fhog.o kcf/kcftracker.o goturn/network/regressor_base.o goturn/network/regressor.o \
+OBJ = kcf/fhog.o kcf/kcftracker.o \
+	goturn/network/regressor_base.o goturn/network/regressor.o \
 	goturn/helper/bounding_box.o goturn/helper/helper.o goturn/helper/image_proc.o \
-	goturn/helper/high_res_timer.o goturn/tracker/tracker.o trackerscompare.o
+	goturn/helper/high_res_timer.o goturn/tracker/tracker.o trackerscompare.o \
+	eco/fftTool.o eco/fhog.o eco/interpolator.o eco/optimize_scores.o \
+	eco/reg_filter.o eco/feature_extractor.o eco/feature_operator.o  \
+	eco/training.o eco/eco_sample_update.o eco/eco.o
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< 

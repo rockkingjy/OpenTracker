@@ -11,7 +11,7 @@ ECO_FEATS featDotMul(const ECO_FEATS &a, const ECO_FEATS &b)
 		std::vector<cv::Mat> temp;
 		for (size_t j = 0; j < a[i].size(); j++)
 		{
-			temp.push_back(FFTTools::complexMultiplication(a[i][j], b[i][j]));
+			temp.push_back(complexMultiplication(a[i][j], b[i][j]));
 		}
 		res.push_back(temp);
 	}
@@ -28,11 +28,11 @@ ECO_FEATS do_dft(const ECO_FEATS &xlw)
 		{
 			int size = xlw[i][j].rows;
 			if (size % 2 == 1)
-				temp.push_back(FFTTools::fftshift(FFTTools::fftf(xlw[i][j])));
+				temp.push_back( fftshift( fftf(xlw[i][j])));
 			else
 			{
-				cv::Mat xf = FFTTools::fftshift(FFTTools::fftf(xlw[i][j]));
-				cv::Mat xf_pad = RectTools::subwindow(xf, cv::Rect(cv::Point(0, 0), cv::Size(size + 1, size + 1)));
+				cv::Mat xf =  fftshift( fftf(xlw[i][j]));
+				cv::Mat xf_pad = subwindow(xf, cv::Rect(cv::Point(0, 0), cv::Size(size + 1, size + 1)));
 				for (size_t k = 0; k < (size_t)xf_pad.rows; k++)
 				{
 					xf_pad.at<cv::Vec<float, 2>>(size, k) = xf_pad.at<cv::Vec<float, 2>>(size - 1, k).conj();
@@ -94,8 +94,8 @@ float feat_dis_compute(ECO_FEATS&feat1, ECO_FEATS &feat2)
 	{
 		for (size_t j = 0; j < feat1[i].size(); j++)
 		{
-			cv::Mat feat2_conj = FFTTools::mat_conj(feat2[i][j]);
-			dist += FFTTools::mat_sum(FFTTools::real(FFTTools::complexMultiplication(feat1[i][j], feat2_conj)));
+			cv::Mat feat2_conj =  mat_conj(feat2[i][j]);
+			dist +=  mat_sum( real( complexMultiplication(feat1[i][j], feat2_conj)));
 		}
 	}
 	return dist;
@@ -155,7 +155,7 @@ ECO_FEATS FeatDotDivide(ECO_FEATS a, ECO_FEATS b)
 		std::vector<cv::Mat> temp;
 		for (size_t j = 0; j < a[i].size(); j++)
 		{
-			temp.push_back(FFTTools::complexDivision(a[i][j], b[i][j]));
+			temp.push_back( complexDivision(a[i][j], b[i][j]));
 		}
 		res.push_back(temp);
 	}
@@ -271,7 +271,7 @@ ECO_FEATS FeatProjMultScale(const ECO_FEATS &x, const std::vector<cv::Mat> &proj
 
 			x_mat = x_mat.t();
 
-			cv::Mat res_temp = x_mat * FFTTools::real(projection_matrix[i]);
+			cv::Mat res_temp = x_mat *  real(projection_matrix[i]);
 
 			//**** reconver to standard formation ****
 			for (size_t j = 0; j < (size_t)res_temp.cols; j++)

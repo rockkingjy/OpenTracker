@@ -13,6 +13,9 @@
 #include "recttools.hpp"
 #include "debug.h"
 
+using namespace FFTTools_ECO;
+using namespace RectTools_ECO;
+
 template<typename T>
 extern std::vector<T> operator+(const std::vector<T>& a, const std::vector<T>& b)
 {

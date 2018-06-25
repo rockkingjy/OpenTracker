@@ -7,6 +7,7 @@
 #include "params.h"
 #include "fftTool.h"
 #include "debug.h"
+using namespace FFTTools_ECO;
 
 cv::Mat  get_reg_filter(cv::Size sz, cv::Size2f target_sz, const eco_params& params);
 

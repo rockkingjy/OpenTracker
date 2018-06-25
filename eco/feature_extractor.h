@@ -23,7 +23,9 @@
 #include "fhog.hpp"
 #include "debug.h"
 
-using namespace FFTTools;
+using namespace FFTTools_ECO;
+using namespace RectTools_ECO;
+using namespace HOG_ECO;
 //using namespace std;
 using namespace caffe;
 

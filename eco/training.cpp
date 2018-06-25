@@ -60,7 +60,7 @@ void eco_train::train_joint()
 			}
 		}*/
 		
-		init_samplesf_H.push_back(FFTTools::mat_conj(temp));	
+		init_samplesf_H.push_back( mat_conj(temp));	
 	}
 
 	//*** construct preconditioner ***
@@ -176,9 +176,9 @@ ECO_FEATS eco_train::mtimesx(ECO_FEATS& x, vector<cv::Mat> y, bool _conj)
 		for (size_t j = 0; j < x[i].size(); j++)
 		{
 			if (_conj)
-				temp.push_back(FFTTools::complexMultiplication(FFTTools::mat_conj(x[i][j]), y[i]));
+				temp.push_back( complexMultiplication( mat_conj(x[i][j]), y[i]));
 			else
-				temp.push_back(FFTTools::complexMultiplication(x[i][j], y[i]));
+				temp.push_back( complexMultiplication(x[i][j], y[i]));
 		}
 		res.push_back(temp);
 	}
@@ -199,7 +199,7 @@ vector<cv::Mat> eco_train::compute_rhs2(const vector<cv::Mat>& proj_mat,
 		cv::Mat l2 = cmat_multi(X_H[i].colRange(lf_ind[i], X_H[i].cols), 
 								fyf_vect.rowRange(lf_ind[i], fyf_vect.rows));
 		cv::Mat temp;
-		temp = real2complx(2 * FFTTools::real(l1 - l2)) + params.projection_reg * proj_mat[i];
+		temp = real2complx(2 *  real(l1 - l2)) + params.projection_reg * proj_mat[i];
 		res.push_back(temp);
 	}
 	return res;
@@ -324,7 +324,7 @@ eco_train::joint_out  eco_train::lhs_operation_joint(joint_fp& hf,
 	}
 
 	// find the maximum of size and its index 
-	vector<cv::Size>::iterator pos = max_element(filter_sz.begin(), filter_sz.end(), FFTTools::SizeCompare);
+	vector<cv::Size>::iterator pos = max_element(filter_sz.begin(), filter_sz.end(),  SizeCompare);
 	size_t k1 = pos - filter_sz.begin();
 	cv::Size output_sz = cv::Size(2 * pos->width -1, pos->height);
 
@@ -353,7 +353,7 @@ eco_train::joint_out  eco_train::lhs_operation_joint(joint_fp& hf,
 			int pad = (output_sz.height - scores[i].rows) / 2;
 			cv::Mat roi = sh(cv::Rect(pad, pad, scores[i].cols, scores[i].rows));
 			cv::Mat ttt = mat_conj(roi);
-			cv::Mat res = FFTTools::complexMultiplication(mat_conj(roi), samplesf[i][j]);  // complex dot multiplication
+			cv::Mat res =  complexMultiplication(mat_conj(roi), samplesf[i][j]);  // complex dot multiplication
 			tmp.push_back(mat_conj(res));
 		}
 		hf_out1.push_back(tmp);    // ^^^ no problem compare to matlab
@@ -377,7 +377,7 @@ eco_train::joint_out  eco_train::lhs_operation_joint(joint_fp& hf,
 			cv::hconcat(fAndDel[i][j], mat_conj(temp), temp);
 
 			// do first convolution
-			cv::Mat res1 = FFTTools::conv_complex(temp, reg_filter[i]);
+			cv::Mat res1 =  conv_complex(temp, reg_filter[i]);
 			temp = res1;
 			//do final convolution and put toghether result
 			temp = conv_complex(temp.colRange(0, temp.cols - reg_pad), reg_filter[i], 1);
@@ -410,11 +410,11 @@ eco_train::joint_out  eco_train::lhs_operation_joint(joint_fp& hf,
 		{
 			int pad = (output_sz.height - hf_out1[i][0].rows) / 2;
 			cv::Rect roi = cv::Rect(pad, pad, hf_out1[i][0].cols, hf_out1[i][0].rows);
-			cv::Mat temp = FFTTools::complexMultiplication(BP(roi), mat_conj(samplesf[i][j].clone()));   // A^H * BP
+			cv::Mat temp =  complexMultiplication(BP(roi), mat_conj(samplesf[i][j].clone()));   // A^H * BP
 			hf_out1[i][j] += temp; // A^H .* A .* hat(f) + W *W * hat(f) + A^H * B * P
 
-			vfBP.push_back(FFTTools::complexMultiplication(mat_conj(init_hf[i][j].clone()), BP(roi)));// B^H * BP
-			vshBP.push_back(FFTTools::complexMultiplication(mat_conj(init_hf[i][j].clone()), sh(roi)));// B^H * BP
+			vfBP.push_back( complexMultiplication(mat_conj(init_hf[i][j].clone()), BP(roi)));// B^H * BP
+			vshBP.push_back( complexMultiplication(mat_conj(init_hf[i][j].clone()), sh(roi)));// B^H * BP
 		} 
 		fBP.push_back(vfBP);
 		shBP.push_back(vshBP);
@@ -430,11 +430,11 @@ eco_train::joint_out  eco_train::lhs_operation_joint(joint_fp& hf,
 		// B^H * BP
 		int c_len = XH[i].cols;
 		cv::Mat part1 = XH[i] * feat_vec(fBP)[i].t() - XH[i].colRange(fi, c_len) * feat_vec(fBP)[i].colRange(fi, c_len).t();
-		part1 = 2 * real2complx(FFTTools::real(part1)) + proj_reg * deltaP[i];
+		part1 = 2 * real2complx( real(part1)) + proj_reg * deltaP[i];
 
 		// Compute proj matrix part : B^H * A_m * f
 		cv::Mat part2 = XH[i] * feat_vec(shBP)[i].t() - XH[i].colRange(fi, c_len) * feat_vec(shBP)[i].colRange(fi, c_len).t();
-		part2 = 2 * real2complx(FFTTools::real(part2));
+		part2 = 2 * real2complx( real(part2));
 
 		hf_out2.push_back(part1 + part2);
 	}
@@ -607,7 +607,7 @@ ECO_FEATS eco_train::lhs_operation(ECO_FEATS& hf,
 	}
 
 	//1: find the maximum of size and its index 
-	vector<cv::Size>::iterator pos = max_element(filter_sz.begin(), filter_sz.end(), FFTTools::SizeCompare);
+	vector<cv::Size>::iterator pos = max_element(filter_sz.begin(), filter_sz.end(),  SizeCompare);
 	size_t k1 = pos - filter_sz.begin();
 	cv::Size output_sz = cv::Size(2 * pos->width - 1, pos->height);
 
@@ -640,7 +640,7 @@ ECO_FEATS eco_train::lhs_operation(ECO_FEATS& hf,
 			for (size_t s = 0; s < sh.size(); s++)
 			{
 				cv::Mat roi = sh[s](cv::Rect(pad, pad, hf[i][j].cols, hf[i][j].rows));
-				res += FFTTools::complexMultiplication(mat_conj(roi), samplesf[s][i][j]);
+				res +=  complexMultiplication(mat_conj(roi), samplesf[s][i][j]);
 			}
 			tmp.push_back(mat_conj(res));
 		}
@@ -660,7 +660,7 @@ ECO_FEATS eco_train::lhs_operation(ECO_FEATS& hf,
 			 
 			cv::hconcat(hf[i][j], mat_conj(temp), temp);
 			 
-			cv::Mat res1 = FFTTools::conv_complex(temp, reg_filter[i]);
+			cv::Mat res1 =  conv_complex(temp, reg_filter[i]);
 			temp = res1;
 
  			temp = conv_complex(temp.colRange(0, temp.cols - reg_pad), reg_filter[i], 1);
