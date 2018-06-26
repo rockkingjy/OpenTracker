@@ -39,7 +39,7 @@ int main(int argc, char **argv)
     ostringstream osfile;
     if (databaseType == "VOT-2017")
     {
-        string folderVOT = "iceskater1";//"road";//"girl"; //"iceskater1";//"drone1"; //"helicopter";//"matrix";//"leaves";//"sheep";//"racing";//"girl";//"road"; //"uav2";//
+        string folderVOT = "graduate";//"glove";//"drone1"; //"iceskater1";//"girl"; //"road";//"iceskater1";//"helicopter";//"matrix";//"leaves";//"sheep";//"racing";//"girl";//"road"; //"uav2";//
         path = "/media/elab/sdd/data/VOT/vot2017/" + folderVOT;
         // Read the groundtruth bbox
         groundtruth = new ifstream("/media/elab/sdd/data/VOT/vot2017/" + folderVOT + "/groundtruth.txt");
@@ -60,10 +60,10 @@ int main(int argc, char **argv)
         x4 = atof(s.c_str());
         getline(*groundtruth, s);
         y4 = atof(s.c_str());
-        x = (int)std::min(x1, x4);
-        y = (int)std::min(y1, y2);
-        w = (int)std::max(x2, x3) - x;
-        h = (int)std::max(y3, y4) - y;
+        x = std::min(x1, x4);
+        y = std::min(y1, y2);
+        w = std::max(x2, x3) - x;
+        h = std::max(y3, y4) - y;
         cout << x << " " << y << " " << w << " " << h << endl;
         // Read images in a folder
         osfile << path << "/" << setw(8) << setfill('0') << f << ".jpg";
@@ -90,7 +90,7 @@ int main(int argc, char **argv)
     }
     else if (databaseType == "TLP")
     {
-        path = "/media/elab/sdd/data/TLP/Drone3";//IceSkating";//Sam";
+        path = "/media/elab/sdd/data/TLP/Sam";//IceSkating";//Drone3";//
         // Read the groundtruth bbox
         groundtruth = new ifstream(path + "/groundtruth_rect.txt");
         getline(*groundtruth, s, ',');
@@ -112,7 +112,7 @@ int main(int argc, char **argv)
     }
     else if (databaseType == "UAV123")
     {
-        string folderUAV = "wakeboard1";//"bike1"; //"bike1"; //
+        string folderUAV = "wakeboard1";//"person23";//"bike1"; //"person16"; //"person21";//
         path = "/media/elab/sdd/data/UAV123/data_seq/UAV123/" + folderUAV;
         // Read the groundtruth bbox
         groundtruth = new ifstream("/media/elab/sdd/data/UAV123/anno/UAV123/" + folderUAV + ".txt");
@@ -131,7 +131,7 @@ int main(int argc, char **argv)
         cout << osfile.str() << endl;
     }
 
-    Rect2d bboxGroundtruth(x, y, w, h);
+    Rect2f bboxGroundtruth(x, y, w, h);
 
     cv::Mat frame = cv::imread(osfile.str().c_str(), CV_LOAD_IMAGE_UNCHANGED);
     cv::Mat frameDraw;
@@ -161,8 +161,8 @@ int main(int argc, char **argv)
         line(frameDraw, cv::Point(x3, y3), cv::Point(x4, y4), Scalar(0, 0, 0), 2, 1);
         line(frameDraw, cv::Point(x4, y4), cv::Point(x1, y1), Scalar(0, 0, 0), 2, 1);
     }
-    //imshow("Tracking", frame);
     // Init the trackers=================================================
+    
     // Create Opencv tracker:
     string trackerTypes[6] = {"BOOSTING", "MIL", "KCF", "TLD", "MEDIANFLOW", "GOTURN"};
     string trackerType = trackerTypes[2];
@@ -181,17 +181,17 @@ int main(int argc, char **argv)
     if (trackerType == "GOTURN")
         opencvtracker = cv::TrackerGOTURN::create();
     
-    Rect2d opencvbbox(x, y, w, h);
+    Rect2d opencvbbox((int)x, (int)y, (int)w, (int)h);
     opencvtracker->init(frame, opencvbbox);
     // Create KCFTracker:
     bool HOG = true, FIXEDWINDOW = true, MULTISCALE = true, LAB = true, DSST = false; //LAB color space features
     KCFTracker kcftracker(HOG, FIXEDWINDOW, MULTISCALE, LAB, DSST);
-    Rect2d kcfbbox(x, y, w, h);
+    Rect2d kcfbbox((int)x, (int)y, (int)w, (int)h);
     kcftracker.init(frame, kcfbbox);
     // Create DSSTTracker:
     DSST = true;
     KCFTracker dssttracker(HOG, FIXEDWINDOW, MULTISCALE, LAB, DSST);
-    Rect2d dsstbbox(x, y, w, h);
+    Rect2d dsstbbox((int)x, (int)y, (int)w, (int)h);
     dssttracker.init(frame, dsstbbox);    
     // Create GOTURN tracker:
     const string model_file = "goturn/nets/deploy.prototxt";
@@ -204,11 +204,14 @@ int main(int argc, char **argv)
     BoundingBox bbox_estimate_uncentered;
     bbox_gt.getRect(goturnbbox);
     goturntracker.Init(frame,bbox_gt,&regressor);
+    
     // Create ECO trakcer;
     eco::ECO ecotracker;
     Rect2f ecobbox(x, y, w, h);
     ecotracker.init(frame, ecobbox);
 
+    //imshow("Tracking", frame);
+    //waitKey(0);
     while (frame.data)
     {   
         frame.copyTo(frameDraw);
@@ -298,7 +301,7 @@ int main(int argc, char **argv)
 
         // Display FPS on frameDraw
         putText(frameDraw, "FPS: " + SSTR(long(fpseco)), Point(10, 30), FONT_HERSHEY_SIMPLEX,
-                0.75, Scalar(0, 255, 0), 2);
+                0.75, Scalar(255, 0, 255), 2);
         
         // Draw the label of trackers
         putText(frameDraw, "Opencv ", cv::Point(frameDraw.cols - 180, 50), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(255, 0, 0), 2);

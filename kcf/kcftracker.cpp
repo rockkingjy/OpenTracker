@@ -191,7 +191,6 @@ void KCFTracker::init(const cv::Mat image, const cv::Rect2d &roi)
     _alphaf = cv::Mat(_size_patch[0], _size_patch[1], CV_32FC2, float(0));
     //_num = cv::Mat(size_patch[0], size_patch[1], CV_32FC2, float(0));
     //_den = cv::Mat(size_patch[0], size_patch[1], CV_32FC2, float(0));
-
     train(_tmpl, 1.0); // train with initial frame
 
     if (_dsst)
@@ -409,7 +408,6 @@ cv::Point2f KCFTracker::detect(cv::Mat z, cv::Mat x, float &peak_value) // KCF A
 // train tracker with a single image, to update _alphaf;
 void KCFTracker::train(cv::Mat x, float train_interp_factor)
 {
-     
 
     cv::Mat k = gaussianCorrelation(x, x);
     cv::Mat alphaf = complexDivision(_prob, (fftd(k) + lambda)); // KCF (17)
@@ -433,7 +431,7 @@ void KCFTracker::train(cv::Mat x, float train_interp_factor)
 // which must both be MxN. They must also be periodic (ie., pre-processed with a cosine window).
 cv::Mat KCFTracker::gaussianCorrelation(cv::Mat x1, cv::Mat x2) // KCF (30)
 {
-     
+
     cv::Mat c = cv::Mat(cv::Size(_size_patch[1], _size_patch[0]), CV_32F, cv::Scalar(0));
     // HOG features
     if (_hogfeatures)
@@ -473,7 +471,6 @@ cv::Mat KCFTracker::gaussianCorrelation(cv::Mat x1, cv::Mat x2) // KCF (30)
 // Create Gaussian Peak. Function called only in the first frame.
 cv::Mat KCFTracker::createGaussianPeak(int sizey, int sizex)
 {
-     
 
     cv::Mat_<float> res(sizey, sizex);
 
@@ -589,12 +586,14 @@ cv::Mat KCFTracker::getFeatures(const cv::Mat &image, bool inithann, float scale
     //printf("extracted_roi:%d,%d,%d,%d\n", extracted_roi.x, extracted_roi.y, extracted_roi.width, extracted_roi.height);
     cv::Mat FeaturesMap;
     cv::Mat z = RectTools::subwindow(image, extracted_roi, cv::BORDER_REPLICATE);
-    
+
     if (z.cols != _tmpl_sz.width || z.rows != _tmpl_sz.height)
     {
         cv::resize(z, z, _tmpl_sz);
     }
-
+    //printf("%d, %d \n", z.cols, z.rows);
+    //double timereco = (double)cv::getTickCount();
+	//float fpseco = 0;
     // HOG features
     if (_hogfeatures)
     {
@@ -608,7 +607,7 @@ cv::Mat KCFTracker::getFeatures(const cv::Mat &image, bool inithann, float scale
         _size_patch[2] = map->numFeatures;
 
         FeaturesMap = cv::Mat(cv::Size(map->numFeatures, map->sizeX * map->sizeY), CV_32F, map->map); // Procedure do deal with cv::Mat multichannel bug
-        FeaturesMap = FeaturesMap.t(); // transpose 
+        FeaturesMap = FeaturesMap.t();                                                                // transpose
         freeFeatureMapObject(&map);
 
         // Lab features
@@ -673,7 +672,8 @@ cv::Mat KCFTracker::getFeatures(const cv::Mat &image, bool inithann, float scale
         _size_patch[1] = z.cols;
         _size_patch[2] = 1;
     }
-
+	//fpseco = ((double)cv::getTickCount() - timereco) / 1000000;
+	//printf("kcf hog extra time: %f \n", fpseco);
     if (inithann)
     {
         createHanningMats();
@@ -756,19 +756,18 @@ void KCFTracker::init_dsst(const cv::Mat image, const cv::Rect2d &roi)
 
     scale_model_width = (int)(base_width_dsst * scale_model_factor);
     scale_model_height = (int)(base_height_dsst * scale_model_factor);
-
+    //printf("%d, %d \n", scale_model_width, scale_model_height);
     // Compute min and max scaling rate
     min_scale_factor = 0.01; //std::pow(scale_step,
                              //     std::ceil(std::log((std::fmax(5 / (float)base_width, 5 / (float)base_height) * (1 + scale_padding))) / 0.0086));
     max_scale_factor = 10;   //std::pow(scale_step,
                              //      std::floor(std::log(std::fmin(image.rows / (float)base_height, image.cols / (float)base_width)) / 0.0086));
-    printf("dsstInit - min_scale_factor:%f; max_scale_factor:%f;\n", min_scale_factor, max_scale_factor);
+    //printf("dsstInit - min_scale_factor:%f; max_scale_factor:%f;\n", min_scale_factor, max_scale_factor);
 }
 
 // Train method for scaling
 void KCFTracker::train_dsst(cv::Mat image, bool ini)
 {
-     
     cv::Mat samples = get_sample_dsst(image);
 
     // Adjust ysf to the same size as xsf in the first frame
@@ -803,7 +802,7 @@ void KCFTracker::train_dsst(cv::Mat image, bool ini)
 // Detect the new scaling rate
 cv::Point2i KCFTracker::detect_dsst(cv::Mat image)
 {
-     
+
     cv::Mat samples = KCFTracker::get_sample_dsst(image);
 
     // Compute AZ in the paper
@@ -825,7 +824,9 @@ cv::Point2i KCFTracker::detect_dsst(cv::Mat image)
 // Compute the F^l in DSST (4);
 cv::Mat KCFTracker::get_sample_dsst(const cv::Mat &image)
 {
-     
+	//double timereco = (double)cv::getTickCount();
+	//float fpseco = 0;
+
     CvLSVMFeatureMapCaskade *map[n_scales]; // temporarily store FHOG result
     cv::Mat samples;                        // output
     int totalSize;                          // # of features
@@ -859,6 +860,9 @@ cv::Mat KCFTracker::get_sample_dsst(const cv::Mat &image)
             resize(im_patch, im_patch_resized, cv::Size(scale_model_width, scale_model_height), 0, 0, 1);
         else
             resize(im_patch, im_patch_resized, cv::Size(scale_model_width, scale_model_height), 0, 0, 3);
+        
+        //printf("%d, %d \n", im_patch_resized.cols, im_patch_resized.rows);
+        //printf("%d, %d \n", im_patch.cols, im_patch.rows);
         // Compute the FHOG features for the subwindow
         IplImage im_ipl = im_patch_resized;
         getFeatureMaps(&im_ipl, cell_size, &map[i]);
@@ -867,23 +871,28 @@ cv::Mat KCFTracker::get_sample_dsst(const cv::Mat &image)
 
         if (i == 0)
         {
-            //    printf("numFeatures:%d, sizeX:%d,sizeY:%d\n", map[i]->numFeatures, map[i]->sizeX, map[i]->sizeY);
+            //printf("numFeatures:%d, sizeX:%d,sizeY:%d\n", map[i]->numFeatures, map[i]->sizeX, map[i]->sizeY);
             totalSize = map[i]->numFeatures * map[i]->sizeX * map[i]->sizeY;
 
-            if (totalSize == 0) //map[i]->sizeX or Y could be 0 if the roi is too small!!!!!!!!!!!!!!!!!!!!!!!
+            if (totalSize <= 0) //map[i]->sizeX or Y could be 0 if the roi is too small!!!!!!!!!!!!!!!!!!!!!!!
             {
                 totalSize = 1;
             }
             samples = cv::Mat(cv::Size(n_scales, totalSize), CV_32F, float(0));
         }
-        // Multiply the FHOG results by hanning window and copy to the output
-        cv::Mat FeaturesMap = cv::Mat(cv::Size(1, totalSize), CV_32F, map[i]->map);
+        cv::Mat FeaturesMap;
+        if (map[i]->map != NULL)
+        {
+            // Multiply the FHOG results by hanning window and copy to the output
+            FeaturesMap = cv::Mat(cv::Size(1, totalSize), CV_32F, map[i]->map);
+            float mul = _hann_dsst.at<float>(0, i);
 
-        float mul = _hann_dsst.at<float>(0, i);
-
-        FeaturesMap = mul * FeaturesMap;
-        FeaturesMap.copyTo(samples.col(i));
+            FeaturesMap = mul * FeaturesMap;
+            FeaturesMap.copyTo(samples.col(i));
+        }
     }
+	//fpseco = ((double)cv::getTickCount() - timereco) / 1000000;
+	//printf("kcf hog extra time: %f \n", fpseco);
 
     // Free the temp variables
     for (int i = 0; i < n_scales; i++)
@@ -899,7 +908,7 @@ cv::Mat KCFTracker::get_sample_dsst(const cv::Mat &image)
 // Compute the FFT Guassian Peak for scaling
 cv::Mat KCFTracker::createGaussianPeak_dsst()
 {
-     
+
     float scale_sigma2 = n_scales / std::sqrt(n_scales) * scale_sigma_factor;
     scale_sigma2 = scale_sigma2 * scale_sigma2;
     cv::Mat res(cv::Size(n_scales, 1), CV_32F, float(0));

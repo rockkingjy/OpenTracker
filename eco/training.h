@@ -43,14 +43,7 @@ public:
 		rl_out    operator-(rl_out data2);    // the union structure scale transformation
 
 	} joint_out, joint_fp;
-/*
-	eco_train(ECO_FEATS phf, ECO_FEATS phf_inc, vector<cv::Mat> pproj_matrix, ECO_FEATS pxlf, vector<cv::Mat> pyf,
-		vector<cv::Mat> preg_filter, ECO_FEATS psample_energy, vector<float> preg_energy, vector<cv::Mat> pproj_energy,
-		eco_params& params)
-	{
-		train_init( phf, phf_inc, pproj_matrix, pxlf, pyf, preg_filter, psample_energy, preg_energy, pproj_energy,params);
-	}
-*/
+
 	void               train_init(ECO_FEATS phf, 
 								  ECO_FEATS phf_inc, 
 								  vector<cv::Mat> pproj_matrix, 
@@ -63,8 +56,6 @@ public:
 								  eco_params& params);
 
 	void                train_joint();
-
-//	ECO_FEATS           project_sample(const ECO_FEATS& x, const vector<cv::Mat>& projection_matrix);
 
 	ECO_FEATS           mtimesx(ECO_FEATS& x, vector<cv::Mat> y, bool _conj = 0); // feature * yf 
 

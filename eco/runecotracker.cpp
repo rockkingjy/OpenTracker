@@ -68,7 +68,7 @@ int main(int argc, char** argv)
 	::google::InitGoogleLogging(argv[0]);
     // Database settings
     string databaseTypes[4] = {"VOT-2017", "TB-2015", "TLP", "UAV123"};
-    string databaseType = databaseTypes[2];
+    string databaseType = databaseTypes[0];
     // Read from the images ====================================================
     int f, isLost;
     float x, y, w, h;
@@ -79,7 +79,7 @@ int main(int argc, char** argv)
     ostringstream osfile;
     if (databaseType == "VOT-2017")
     {
-        string folderVOT = "iceskater2";//"road";//"girl";//"drone1";//"iceskater1";//"girl"; //"road";//"bag";////"helicopter";
+        string folderVOT = "girl";//"iceskater1";//"road";//"drone1";//"iceskater1";//"girl"; //"road";//"bag";////"helicopter";
         path = "/media/elab/sdd/data/VOT/vot2017/" + folderVOT;
         // Read the groundtruth bbox
         groundtruth = new ifstream("/media/elab/sdd/data/VOT/vot2017/" + folderVOT + "/groundtruth.txt");
@@ -130,7 +130,7 @@ int main(int argc, char** argv)
     }
     else if (databaseType == "TLP")
     {
-        path = "/media/elab/sdd/data/TLP/Sam"; //Drone3";//Bike";//Drone2";//Alladin";//IceSkating";//Sam";//Bike
+        path = "/media/elab/sdd/data/TLP/Drone3";//Bike";//Drone2";//Alladin";//IceSkating";//Sam";//
         // Read the groundtruth bbox
         groundtruth = new ifstream(path + "/groundtruth_rect.txt");
         getline(*groundtruth, s, ',');
@@ -152,7 +152,7 @@ int main(int argc, char** argv)
     }
     else if (databaseType == "UAV123")
     {
-        string folderUAV = "building1";//"wakeboard2"; //"person3";//
+        string folderUAV = "person23";//"building1";//"wakeboard2"; //"person3";//
         path = "/media/elab/sdd/data/UAV123/data_seq/UAV123/" + folderUAV;
         // Read the groundtruth bbox
         groundtruth = new ifstream("/media/elab/sdd/data/UAV123/anno/UAV123/" + folderUAV + ".txt");
@@ -203,14 +203,14 @@ int main(int argc, char** argv)
     }
 
     //imshow("Tracking", frame);
-
+    //waitKey(0);
     ECO ecotracker;
     Rect2f ecobbox(x, y, w, h);
     ecotracker.init(frame, ecobbox);
 
     while (frame.data)
     {
-        frame.copyTo(frameDraw);
+        frame.copyTo(frameDraw); // only copy can do the real copy, just equal not.
         double timereco = (double)getTickCount();
         bool okeco = ecotracker.update(frame, ecobbox);
         float fpseco = getTickFrequency() / ((double)getTickCount() - timereco);

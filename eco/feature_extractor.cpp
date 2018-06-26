@@ -7,6 +7,9 @@ ECO_FEATS feature_extractor::extractor(cv::Mat image,
 									   const cv::Mat &deep_mean_mat,
 									   const boost::shared_ptr<Net<float>> &net)
 {
+	//double timereco = (double)cv::getTickCount();
+	//float fpseco = 0;
+
 	int num_features = 0, num_scales = scales.size();
 	cv::Mat new_deep_mean_mat;
 	if (params.useDeepFeature)
@@ -27,6 +30,7 @@ ECO_FEATS feature_extractor::extractor(cv::Mat image,
 	{
 	}
 	ddebug();
+
 	// extract image path for different kinds of feautures
 	vector<vector<cv::Mat>> img_samples;
 	for (int i = 0; i < num_features; ++i) // for each feature
@@ -37,6 +41,8 @@ ECO_FEATS feature_extractor::extractor(cv::Mat image,
 		{
 			cv::Size2f img_sample_sz = (i == 0) && params.useDeepFeature ? cnn_features.img_sample_sz : hog_features.img_sample_sz;
 			cv::Size2f img_input_sz = (i == 0) && params.useDeepFeature ? cnn_features.img_input_sz : hog_features.img_input_sz;
+			//debug("img_sample_sz: %f x %f", img_sample_sz.height, img_sample_sz.width);
+			//debug("scale %u: %f", j,scales[j]);
 			img_sample_sz.width *= scales[j];
 			img_sample_sz.height *= scales[j];
 			//debug("img_sample_sz: %f x %f", img_sample_sz.height, img_sample_sz.width);
@@ -58,6 +64,7 @@ ECO_FEATS feature_extractor::extractor(cv::Mat image,
 	assert(0);
 */
 	ddebug();
+
 	// Extract feature maps for each feature in the list
 	ECO_FEATS sum_features;
 	if (params.useDeepFeature)
@@ -66,15 +73,21 @@ ECO_FEATS feature_extractor::extractor(cv::Mat image,
 		cnn_feature_normalization(sum_features);
 	}
 	ddebug();
+
 	if (params.useHogFeature)
 	{
 		hog_feat_maps = get_hog(img_samples[hog_feat_ind]);
 		vector<cv::Mat> hog_maps_vec = hog_feature_normalization(hog_feat_maps);
 		sum_features.push_back(hog_maps_vec);
 	}
+
 	if (params.useCnFeature)
 	{
 	}
+
+	//fpseco = ((double)cv::getTickCount() - timereco) / 1000000;
+	//debug("feature extra time: %f", fpseco);
+
 	/*
 	for (size_t i = 0; i < sum_features[0].size(); ++i)
 	{
@@ -153,7 +166,7 @@ cv::Mat feature_extractor::sample_patch(const cv::Mat &im,
 */
 	cv::Mat resized_patch;
 	cv::resize(im_patch, resized_patch, input_sz);
-/*
+	/*
 	imgInfo(resized_patch);
 	showmatNch(resized_patch, 0);
 
@@ -175,8 +188,11 @@ vector<cv::Mat> feature_extractor::get_hog(vector<cv::Mat> ims)
 	if (ims.empty())
 		return vector<cv::Mat>();
 
+//	double timereco = (double)cv::getTickCount();
+//	float fpseco = 0;
+	// debug("ims.size: %lu", ims.size());
 	vector<cv::Mat> hog_feats;
-	for (unsigned int i = 0; i < ims.size(); i++)
+	for (unsigned int i = 0; i < ims.size(); i++) // ims.size()=5
 	{
 		cv::Mat ims_f;
 		ims[i].convertTo(ims_f, CV_32FC3);
@@ -222,13 +238,16 @@ vector<cv::Mat> feature_extractor::get_hog(vector<cv::Mat> ims)
 		ddebug();
 		imgInfo(featurePaddingMat);
 		assert(0);
+
+		fpseco = ((double)cv::getTickCount() - timereco) / 1000000;
+		debug("hog extra time: %f", fpseco);
+		timereco = (double)cv::getTickCount();
+		debug("%d %d", featurePaddingMat.cols, featurePaddingMat.rows);
 */
 		IplImage zz = featurePaddingMat;
 		CvLSVMFeatureMapCaskade *map_temp;
 		getFeatureMaps(&zz, _cell_size, &map_temp); // dimension: 27
-
 		normalizeAndTruncate(map_temp, 0.2f); // dimension: 108
-
 		PCAFeatureMaps(map_temp); // dimension: 31
 
 		cv::Mat featuresMap = cv::Mat(cv::Size(map_temp->sizeX, map_temp->sizeY), // Procedure do deal with cv::Mat multichannel bug
@@ -246,6 +265,10 @@ vector<cv::Mat> feature_extractor::get_hog(vector<cv::Mat> ims)
 */
 		hog_feats.push_back(featuresMap);
 	}
+
+//	fpseco = ((double)cv::getTickCount() - timereco) / 1000000;
+//	debug("hog extra time: %f", fpseco);
+
 	return hog_feats;
 }
 
