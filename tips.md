@@ -1,12 +1,19 @@
 
 * Parameter analysis:
 
+
 In eco/params.h/search_area_scale = 4.5, if change to 2.5, ECO will lose the target in UAV123/person23.
 
 While, in kcf/kcftracker.cpp/padding = 2.5, if change to 4.5, KCF will follow the target in the same
 data above.
 
+
+
 In eco/params.h/nSamples = 50, if change to 10, ECO will lose the target in VOT/girl.
+
+But, in eco/params.h/nSamples = 50, if change to 10, ECO will keep the target in UAV123/bike1.
+
+The reason is for VOT/girl, it needs more history memory to return back to target. But for UAV123/bike1, long histroy means cannot adapte the recent changes. There is a dilemma in here.
 
 
 * Running time analysis:

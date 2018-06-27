@@ -27,7 +27,7 @@ int main(int argc, char **argv)
 	::google::InitGoogleLogging(argv[0]);
     // Database settings
     string databaseTypes[4] = {"VOT-2017", "TB-2015", "TLP", "UAV123"};
-    string databaseType = databaseTypes[0];
+    string databaseType = databaseTypes[3];
 
     // Read from the images ====================================================
     int f, isLost;
@@ -112,7 +112,7 @@ int main(int argc, char **argv)
     }
     else if (databaseType == "UAV123")
     {
-        string folderUAV = "wakeboard1";//"person23";//"bike1"; //"person16"; //"person21";//
+        string folderUAV ="bike1"; //"person16"; //"person21";//"wakeboard1";// "person22";//
         path = "/media/elab/sdd/data/UAV123/data_seq/UAV123/" + folderUAV;
         // Read the groundtruth bbox
         groundtruth = new ifstream("/media/elab/sdd/data/UAV123/anno/UAV123/" + folderUAV + ".txt");

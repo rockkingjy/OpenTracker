@@ -1,5 +1,6 @@
 **Why most of the trackers are written by matlab? Slow speed, lots of extra-packages, need loads of money to buy the licences, version compliance problems (gcc4.9 gcc5.0 oh my god)... Anyway, I hate that! C++ is fast and clear! I even doubt that the FPS measured by using matlab is really meaningful, especially for actual and embedded system use! So I will re-implement those trackers by cpp day by day, keep the clarity and less extra-packages in mind, hope you like it!**
 
+**2018/06/28 -- New features** Now it support automatic initialization with Web camera using OpenPose.
 
 ## Supported tracker (more in progressing):
 Included                                   | Tracker    
@@ -22,6 +23,10 @@ Included                                   | Dataset    | Reference
 :ballot_box_with_check:                    | TLP          | [Web](https://amoudgl.github.io/tlp/)
 :ballot_box_with_check:                    | UAV123       | [Web](https://ivul.kaust.edu.sa/Pages/Dataset-UAV123.aspx)
 
+## Supported Autodetection with Web Camera
+Included                                   | Dataset    | Reference
+-------------------------------------------|--------------|-----------
+:ballot_box_with_check:                    | OpenPose     | [Web](https://github.com/CMU-Perceptual-Computing-Lab/openpose)
 
 # Compile and Run
 --------------------------------

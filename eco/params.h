@@ -86,7 +86,7 @@ struct eco_params
 	// Learning parameters
 	float	output_sigma_factor = 0.0833333f;	// Label function sigma
 	float	learning_rate 		= 0.009;	 	// Learning rate
-	size_t	nSamples            = 50;           // Maximum number of stored training samples
+	size_t	nSamples            = 10;           // Maximum number of stored training samples
 	string	sample_replace_strategy = "lowest_prior";	// Which sample to replace when the memory is full
 	bool	lt_size			    = 0;            // The size of the long - term memory(where all samples have equal weight)
 	int 	train_gap			= 5;		    // The number of intermediate frames with no training(0 corresponds to training every frame)
