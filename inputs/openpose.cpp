@@ -1,38 +1,4 @@
-// ------------------------- OpenPose Library Tutorial - Real Time Pose Estimation -------------------------
-// If the user wants to learn to use the OpenPose library, we highly recommend to start with the `examples/tutorial_*/`
-// folders.
-// This example summarizes all the funcitonality of the OpenPose library:
-// 1. Read folder of images / video / webcam  (`producer` module)
-// 2. Extract and render body keypoint / heatmap / PAF of that image (`pose` module)
-// 3. Extract and render face keypoint / heatmap / PAF of that image (`face` module)
-// 4. Save the results on disk (`filestream` module)
-// 5. Display the rendered pose (`gui` module)
-// Everything in a multi-thread scenario (`thread` module)
-// Points 2 to 5 are included in the `wrapper` module
-// In addition to the previous OpenPose modules, we also need to use:
-// 1. `core` module:
-// For the Array<float> class that the `pose` module needs
-// For the Datum struct that the `thread` module sends between the queues
-// 2. `utilities` module: for the error & logging functions, i.e. op::error & op::log respectively
-// This file should only be used for the user to take specific examples.
-
-// C++ std library dependencies
-#include <chrono> // `std::chrono::` functions and classes, e.g. std::chrono::milliseconds
-#include <thread> // std::this_thread
-// Other 3rdparty dependencies
-// GFlags: DEFINE_bool, _int32, _int64, _uint64, _double, _string
-#include <gflags/gflags.h>
-// Allow Google Flags in Ubuntu 14
-#ifndef GFLAGS_GFLAGS_H_
-namespace gflags = google;
-#endif
-// OpenPose dependencies
-#include <openpose/headers.hpp>
-#include <iostream>
-// See all the available parameter options withe the `--help` flag. E.g. `build/examples/openpose/openpose.bin --help`
-// Note: This command will show you flags for other unnecessary 3rdparty files. Check only the flags for the OpenPose
-// executable. E.g. for `openpose.bin`, look for `Flags from examples/openpose/openpose.cpp:`.
-// Debugging/Other
+#include "openpose.h"
 DEFINE_int32(logging_level, 3, "The logging level. Integer in the range [0, 255]. 0 will output any log() message, while"
                                " 255 will not output any. Current OpenPose library messages are in the range 0-4: 1 for"
                                " low priority messages and 4 for important ones.");
@@ -238,218 +204,183 @@ DEFINE_string(write_bvh, "", "Experimental, not available yet. E.g.: `~/Desktop/
 DEFINE_string(udp_host, "127.0.0.1", "IP for UDP communication.");
 DEFINE_string(udp_port, "8051", "Port number for UDP communication.");
 
-// If the user needs his own variables, he can inherit the op::Datum struct and add them
-// UserDatum can be directly used by the OpenPose wrapper because it inherits from op::Datum, just define
-// Wrapper<UserDatum> instead of Wrapper<op::Datum>
-struct UserDatum : public op::Datum
+
+WUserOutput::WUserOutput(cv::Rect2f* bboxGroundtruth)
 {
-    bool boolThatUserNeedsForSomeReason;
+    gt = bboxGroundtruth;
+}
 
-    UserDatum(const bool boolThatUserNeedsForSomeReason_ = false) : boolThatUserNeedsForSomeReason{boolThatUserNeedsForSomeReason_}
-    {
-    }
-};
 
-// The W-classes can be implemented either as a template or as simple classes given
-// that the user usually knows which kind of data he will move between the queues,
-// in this case we assume a std::shared_ptr of a std::vector of UserDatum
-
-// This worker will just read and return all the jpg files in a directory
-class WUserOutput : public op::WorkerConsumer<std::shared_ptr<std::vector<UserDatum>>>
+void WUserOutput::workConsumer(const std::shared_ptr<std::vector<UserDatum>> &datumsPtr)
 {
-  public:
-    int xmin = 0;
-    int ymin = 0;
-    int xmax = 0;
-    int ymax = 0;
-    cv::Rect2f bboxGroundtruth;
-    void initializationOnThread() {}
-
-    void return_xy()
+    try
     {
-        std::cout << "xmin xmax ymin ymax:\n";
-        std::cout << xmin << " " << xmax << " " << ymin << " " << ymax << "\n";
-        bboxGroundtruth.x = xmin;
-        bboxGroundtruth.y = ymin;
-        bboxGroundtruth.width = xmax - xmin;
-        bboxGroundtruth.height = ymax - ymin;
-    }
-
-    void workConsumer(const std::shared_ptr<std::vector<UserDatum>> &datumsPtr)
-    {
-        try
+        if (datumsPtr != nullptr && !datumsPtr->empty())
         {
-            // User's displaying/saving/other processing here
-            // datum.cvOutputData: rendered frame with pose or heatmaps
-            // datum.poseKeypoints: Array<float> with the estimated pose
-            if (datumsPtr != nullptr && !datumsPtr->empty())
+            const auto &poseKeypoints = datumsPtr->at(0).poseKeypoints;
+            int LWristx = 10000000;
+            int LWristy = 10000000;
+
+            int RWristx = 10000000;
+            int RWristy = 10000000;
+
+            int Nosex = 0;
+            int Nosey = 0;
+
+            //int numberPeopleDetected = poseKeypoints.getSize(0);
+            //int numberBodyParts = poseKeypoints.getSize(1);
+
+            int x = 0;
+            int y = 0;
+
+            //double score = 0;
+            //int baseIndex = 0;
+
+            for (auto person = 0; person < poseKeypoints.getSize(0); person++)
             {
-                // Show in command line the resulting pose keypoints for body, face and hands
-                //              op::log("\nKeypoints:");
-                // Accesing each element of the keypoints
-                const auto &poseKeypoints = datumsPtr->at(0).poseKeypoints;
-                int LWristx = 10000000;
-                int LWristy = 10000000;
+                LWristx = 10000000;
+                LWristy = 10000000;
 
-                int RWristx = 10000000;
-                int RWristy = 10000000;
+                RWristx = 10000000;
+                RWristy = 10000000;
 
-                int Nosex = 0;
-                int Nosey = 0;
+                Nosex = 0;
+                Nosey = 0;
 
-                int numberPeopleDetected = poseKeypoints.getSize(0);
-                int numberBodyParts = poseKeypoints.getSize(1);
-
-                int x = 0;
-                int y = 0;
-
-                double score = 0;
-                int baseIndex = 0;
-
-                //                op::log("Person pose keypoints:");
-                //		int detect=0;
-                // 	&& detect==0
-                for (auto person = 0; person < poseKeypoints.getSize(0); person++)
+                xmin = 10000000;
+                xmax = 0;
+                ymin = 10000000;
+                ymax = 0;
+                //&& detect==0
+                //			op::log("/n:");
+                for (auto bodyPart = 0; bodyPart < poseKeypoints.getSize(1); bodyPart++)
                 {
-                    //                   	op::log("Person " + std::to_string(person));
+                    x = poseKeypoints[{person, bodyPart, 0}];
+                    y = poseKeypoints[{person, bodyPart, 1}];
 
-                    LWristx = 10000000;
-                    LWristy = 10000000;
-
-                    RWristx = 10000000;
-                    RWristy = 10000000;
-
-                    Nosex = 0;
-                    Nosey = 0;
-
-                    xmin = 10000000;
-                    xmax = 0;
-                    ymin = 10000000;
-                    ymax = 0;
-                    //&& detect==0
-                    //			op::log("/n:");
-                    for (auto bodyPart = 0; bodyPart < poseKeypoints.getSize(1); bodyPart++)
+                    if (xmin > x && x > 0)
                     {
-                        x = poseKeypoints[{person, bodyPart, 0}];
-                        y = poseKeypoints[{person, bodyPart, 1}];
+                        xmin = x;
+                    }
 
-                        if (xmin > x && x > 0)
-                        {
-                            xmin = x;
-                        }
+                    if (xmax < x)
+                    {
+                        xmax = x;
+                    }
 
-                        if (xmax < x)
-                        {
-                            xmax = x;
-                        }
+                    if (ymin > y && y > 0)
+                    {
+                        ymin = y;
+                    }
 
-                        if (ymin > y && y > 0)
-                        {
-                            ymin = y;
-                        }
+                    if (ymax < y)
+                    {
+                        ymax = y;
+                    }
 
-                        if (ymax < y)
-                        {
-                            ymax = y;
-                        }
+                    //score = poseKeypoints[{person, bodyPart, 2}];
+                    //		op::log("bodyPart"+ std::to_string(bodyPart) + " x " + std::to_string(x) + " y " + std::to_string(y) )
 
-                        score = poseKeypoints[{person, bodyPart, 2}];
-                        //		op::log("bodyPart"+ std::to_string(bodyPart) + " x " + std::to_string(x) + " y " + std::to_string(y) )
+                    if ((bodyPart == 3 || bodyPart == 4) && x > 0 && y > 0)
+                    {
+                        LWristx = x;
+                        LWristy = y;
+                        //					op::log(" position of Nose and Wrist");
+                        //					op::log( "Nose   " + std::to_string(Nosex ) + " " + std::to_string( Nosey  ));
+                        //					op::log( "Rwrist " + std::to_string(RWristx)+ " " + std::to_string( RWristy));
+                        //					op::log( "Lwrist " + std::to_string(LWristx)+ " " + std::to_string( LWristy));
+                    }
+                    else if ((bodyPart == 6 || bodyPart == 7) && x > 0 && y > 0)
+                    {
+                        RWristx = x;
+                        RWristy = y;
+                        //					op::log(" position of Nose and Wrist");
+                        //					op::log( "Nose   " + std::to_string(Nosex ) + " " + std::to_string( Nosey  ));
+                        //					op::log( "Rwrist " + std::to_string(RWristx)+ " " + std::to_string( RWristy));
+                        //					op::log( "Lwrist " + std::to_string(LWristx)+ " " + std::to_string( LWristy));
+                    }
+                    else if ((bodyPart == 15 || bodyPart == 16 || bodyPart == 17 || bodyPart == 18) && x > 0 && y > 0)
+                    {
+                        Nosex = x;
+                        Nosey = y;
+                        //					op::log(" position of Nose and Wrist");
+                        //					op::log( "Nose   " + std::to_string(Nosex ) + " " + std::to_string( Nosey  ));
+                        //					op::log( "Rwrist " + std::to_string(RWristx)+ " " + std::to_string( RWristy));
+                        //					op::log( "Lwrist " + std::to_string(LWristx)+ " " + std::to_string( LWristy));
+                    }
 
-                        if ((bodyPart == 3 || bodyPart == 4) && x > 0 && y > 0)
-                        {
-                            LWristx = x;
-                            LWristy = y;
-                            //					op::log(" position of Nose and Wrist");
-                            //					op::log( "Nose   " + std::to_string(Nosex ) + " " + std::to_string( Nosey  ));
-                            //					op::log( "Rwrist " + std::to_string(RWristx)+ " " + std::to_string( RWristy));
-                            //					op::log( "Lwrist " + std::to_string(LWristx)+ " " + std::to_string( LWristy));
-                        }
-                        else if ((bodyPart == 6 || bodyPart == 7) && x > 0 && y > 0)
-                        {
-                            RWristx = x;
-                            RWristy = y;
-                            //					op::log(" position of Nose and Wrist");
-                            //					op::log( "Nose   " + std::to_string(Nosex ) + " " + std::to_string( Nosey  ));
-                            //					op::log( "Rwrist " + std::to_string(RWristx)+ " " + std::to_string( RWristy));
-                            //					op::log( "Lwrist " + std::to_string(LWristx)+ " " + std::to_string( LWristy));
-                        }
-                        else if (( bodyPart == 15 || bodyPart == 16 || bodyPart == 17 || bodyPart == 18) && x > 0 && y > 0)
-                        {
-                            Nosex = x;
-                            Nosey = y;
-                            //					op::log(" position of Nose and Wrist");
-                            //					op::log( "Nose   " + std::to_string(Nosex ) + " " + std::to_string( Nosey  ));
-                            //					op::log( "Rwrist " + std::to_string(RWristx)+ " " + std::to_string( RWristy));
-                            //					op::log( "Lwrist " + std::to_string(LWristx)+ " " + std::to_string( LWristy));
-                        }
-
-                        if (Nosey > LWristy && Nosey > RWristy && Nosex > 0 && Nosey > 0 && LWristx > 0 && RWristx > 0&& LWristy > 0 && RWristy > 0 
-                                        && LWristy < 10000 && RWristy < 10000 && LWristx < 10000 && RWristx < 10000 && Nosex < 10000 && Nosey < 10000)
-                        {
-                            op::log("Person " + std::to_string(person));
-                            op::log("last position of Nose and Wrist");
-                            op::log("Nose   " + std::to_string(Nosex) + " " + std::to_string(Nosey));
-                            op::log("Rwrist " + std::to_string(RWristx) + " " + std::to_string(RWristy));
-                            op::log("Lwrist " + std::to_string(LWristx) + " " + std::to_string(LWristy));
-                            return_xy();
-
-                            cv::Point nose = cv::Point(Nosex, Nosey);
-		                    cv::circle(datumsPtr->at(0).cvOutputData, nose, 5, cv::Scalar(0, 255, 0));
-                            cv::Point rwrist = cv::Point(RWristx, RWristy);
-		                    cv::circle(datumsPtr->at(0).cvOutputData, rwrist, 5, cv::Scalar(255, 255, 0));
-                            cv::Point lwrist = cv::Point(LWristx, LWristy);
-		                    cv::circle(datumsPtr->at(0).cvOutputData, lwrist, 5, cv::Scalar(255, 255, 0));
-                            rectangle(datumsPtr->at(0).cvOutputData, bboxGroundtruth, cv::Scalar(0, 0, 0), 2, 1);
-                            bboxGroundtruth.x = 0;
-                            bboxGroundtruth.y = 0;
-                            bboxGroundtruth.width = 0;
-                            bboxGroundtruth.height = 0;
-
-                            //					detect==1;
-                            //this->stop();
-                            //					exit(0);
-                        }
+                    if (Nosey > LWristy && Nosey > RWristy && Nosex > 0 && Nosey > 0 && LWristx > 0 && RWristx > 0 && LWristy > 0 && RWristy > 0 && LWristy < 10000 && RWristy < 10000 && LWristx < 10000 && RWristx < 10000 && Nosex < 10000 && Nosey < 10000)
+                    {
+                        op::log("Person " + std::to_string(person));
+                        op::log("last position of Nose and Wrist");
+                        op::log("Nose   " + std::to_string(Nosex) + " " + std::to_string(Nosey));
+                        op::log("Rwrist " + std::to_string(RWristx) + " " + std::to_string(RWristy));
+                        op::log("Lwrist " + std::to_string(LWristx) + " " + std::to_string(LWristy));
+                        std::cout << "xmin xmax ymin ymax:\n";
+                        std::cout << xmin << " " << xmax << " " << ymin << " " << ymax << "\n";
+                        gt->x = xmin;
+                        gt->y = ymin;
+                        gt->width = xmax - xmin;
+                        gt->height = ymax - ymin;
+                        //f = new cv::Mat(datumsPtr->at(0).cvOutputData.size(),datumsPtr->at(0).cvOutputData.type());
+                        //cv::imwrite("ini.jpg", *f);
+                        //cv::destroyAllWindows();
+                        this->stop();
+                        /*
+                        cv::Point nose = cv::Point(Nosex, Nosey);
+                        cv::circle(datumsPtr->at(0).cvOutputData, nose, 5, cv::Scalar(0, 255, 0));
+                        cv::Point rwrist = cv::Point(RWristx, RWristy);
+                        cv::circle(datumsPtr->at(0).cvOutputData, rwrist, 5, cv::Scalar(255, 255, 0));
+                        cv::Point lwrist = cv::Point(LWristx, LWristy);
+                        cv::circle(datumsPtr->at(0).cvOutputData, lwrist, 5, cv::Scalar(255, 255, 0));
+                        rectangle(datumsPtr->at(0).cvOutputData, gt, cv::Scalar(0, 0, 0), 2, 1);
+                        gt.x = 0;
+                        gt.y = 0;
+                        gt.width = 0;
+                        gt.height = 0;
+                        */
                     }
                 }
-                op::log(" ");
-                // Alternative: just getting std::string equivalent
-                //op::log("Face keypoints: " + datumsPtr->at(0).faceKeypoints.toString());
-                //op::log("Left hand keypoints: " + datumsPtr->at(0).handKeypoints[0].toString());
-                //op::log("Right hand keypoints: " + datumsPtr->at(0).handKeypoints[1].toString());
-                // Heatmaps
-                const auto &poseHeatMaps = datumsPtr->at(0).poseHeatMaps;
-                if (!poseHeatMaps.empty())
-                {
-                    op::log("Pose heatmaps size: [" + std::to_string(poseHeatMaps.getSize(0)) + ", " + std::to_string(poseHeatMaps.getSize(1)) + ", " + std::to_string(poseHeatMaps.getSize(2)) + "]");
-                    const auto &faceHeatMaps = datumsPtr->at(0).faceHeatMaps;
-                    op::log("Face heatmaps size: [" + std::to_string(faceHeatMaps.getSize(0)) + ", " + std::to_string(faceHeatMaps.getSize(1)) + ", " + std::to_string(faceHeatMaps.getSize(2)) + ", " + std::to_string(faceHeatMaps.getSize(3)) + "]");
-                    const auto &handHeatMaps = datumsPtr->at(0).handHeatMaps;
-                    op::log("Left hand heatmaps size: [" + std::to_string(handHeatMaps[0].getSize(0)) + ", " + std::to_string(handHeatMaps[0].getSize(1)) + ", " + std::to_string(handHeatMaps[0].getSize(2)) + ", " + std::to_string(handHeatMaps[0].getSize(3)) + "]");
-                    op::log("Right hand heatmaps size: [" + std::to_string(handHeatMaps[1].getSize(0)) + ", " + std::to_string(handHeatMaps[1].getSize(1)) + ", " + std::to_string(handHeatMaps[1].getSize(2)) + ", " + std::to_string(handHeatMaps[1].getSize(3)) + "]");
-                }
-                // Display rendered output image
-                cv::imshow("User worker GUI", datumsPtr->at(0).cvOutputData);
-                // Display image and sleeps at least 1 ms (it usually sleeps ~5-10 msec to display the image)
-                const char key = (char)cv::waitKey(1);
-                if (key == 27)
-                    this->stop();
             }
-        }
-        catch (const std::exception &e)
-        {
-            this->stop();
-            op::error(e.what(), __LINE__, __FUNCTION__, __FILE__);
+            op::log(" ");
+            // Alternative: just getting std::string equivalent
+            //op::log("Face keypoints: " + datumsPtr->at(0).faceKeypoints.toString());
+            //op::log("Left hand keypoints: " + datumsPtr->at(0).handKeypoints[0].toString());
+            //op::log("Right hand keypoints: " + datumsPtr->at(0).handKeypoints[1].toString());
+            // Heatmaps
+            f = datumsPtr->at(0).cvOutputData;
+            const auto &poseHeatMaps = datumsPtr->at(0).poseHeatMaps;
+            if (!poseHeatMaps.empty())
+            {
+                op::log("Pose heatmaps size: [" + std::to_string(poseHeatMaps.getSize(0)) + ", " + std::to_string(poseHeatMaps.getSize(1)) + ", " + std::to_string(poseHeatMaps.getSize(2)) + "]");
+                const auto &faceHeatMaps = datumsPtr->at(0).faceHeatMaps;
+                op::log("Face heatmaps size: [" + std::to_string(faceHeatMaps.getSize(0)) + ", " + std::to_string(faceHeatMaps.getSize(1)) + ", " + std::to_string(faceHeatMaps.getSize(2)) + ", " + std::to_string(faceHeatMaps.getSize(3)) + "]");
+                const auto &handHeatMaps = datumsPtr->at(0).handHeatMaps;
+                op::log("Left hand heatmaps size: [" + std::to_string(handHeatMaps[0].getSize(0)) + ", " + std::to_string(handHeatMaps[0].getSize(1)) + ", " + std::to_string(handHeatMaps[0].getSize(2)) + ", " + std::to_string(handHeatMaps[0].getSize(3)) + "]");
+                op::log("Right hand heatmaps size: [" + std::to_string(handHeatMaps[1].getSize(0)) + ", " + std::to_string(handHeatMaps[1].getSize(1)) + ", " + std::to_string(handHeatMaps[1].getSize(2)) + ", " + std::to_string(handHeatMaps[1].getSize(3)) + "]");
+            }
+
+            // Display rendered output image
+            cv::imshow("User worker GUI", datumsPtr->at(0).cvOutputData);
+            // Display image and sleeps at least 1 ms (it usually sleeps ~5-10 msec to display the image)
+            const char key = (char)cv::waitKey(1);
+            if (key == 27)
+                this->stop();
         }
     }
-};
+    catch (const std::exception &e)
+    {
+        this->stop();
+        op::error(e.what(), __LINE__, __FUNCTION__, __FILE__);
+    }
+}
 
-int openPoseDemo()
+int openPoseDemo(cv::Rect2f* bboxGroundtruth)
 {
     try
     {
         op::log("Starting OpenPose demo...", op::Priority::High);
-        const auto timerBegin = std::chrono::high_resolution_clock::now();
+        //const auto timerBegin = std::chrono::high_resolution_clock::now();
 
         // logging_level
         op::check(0 <= FLAGS_logging_level && FLAGS_logging_level <= 255, "Wrong logging_level value.",
@@ -505,7 +436,7 @@ int openPoseDemo()
 
         // Initializing the user custom classes
         // GUI (Display)
-        auto wUserOutput = std::make_shared<WUserOutput>();
+        auto wUserOutput = std::make_shared<WUserOutput>(bboxGroundtruth);
 
         // Add custom processing
         const auto workerOutputOnNewThread = true;
@@ -565,36 +496,6 @@ int openPoseDemo()
 
         opWrapper.exec();
 
-        //	opWrapper.return_xy();
-        // // Option b) Keeping this thread free in case you want to do something else meanwhile, e.g. profiling the GPU
-        // memory
-        // // VERY IMPORTANT NOTE: if OpenCV is compiled with Qt support, this option will not work. Qt needs the main
-        // // thread to plot visual results, so the final GUI (which uses OpenCV) would return an exception similar to:
-        // // `QMetaMethod::invoke: Unable to invoke methods with return values in queued connections`
-        // // Start threads
-        // opWrapper.start();
-        // // Profile used GPU memory
-        //     // 1: wait ~10sec so the memory has been totally loaded on GPU
-        //     // 2: profile the GPU memory
-        // const auto sleepTimeMs = 10;
-        // for (auto i = 0 ; i < 10000/sleepTimeMs && opWrapper.isRunning() ; i++)
-        //     std::this_thread::sleep_for(std::chrono::milliseconds{sleepTimeMs});
-        // op::Profiler::profileGpuMemory(__LINE__, __FUNCTION__, __FILE__);
-        // // Keep program alive while running threads
-        // while (opWrapper.isRunning())
-        //     std::this_thread::sleep_for(std::chrono::milliseconds{sleepTimeMs});
-        // // Stop and join threads
-        // op::log("Stopping thread(s)", op::Priority::High);
-        // opWrapper.stop();
-
-        // Measuring total time
-        //const auto now = std::chrono::high_resolution_clock::now();
-        // const auto totalTimeSec = (double)std::chrono::duration_cast<std::chrono::nanoseconds>(now - timerBegin).count() * 1e-9;
-        //        const auto message = "OpenPose demo successfully finished. Total time: "
-        //                           + std::to_string(totalTimeSec) + " seconds.";
-        //        op::log(message, op::Priority::High);
-
-        // Return successful message
         return 0;
     }
     catch (const std::exception &e)
@@ -604,6 +505,23 @@ int openPoseDemo()
     }
 }
 
+
+OpenPose::OpenPose(){};
+OpenPose::~OpenPose(){};
+void OpenPose::IniRead(cv::Rect2f &bboxGroundtruth)
+{
+    cv::Rect2f *gt ;//= NULL;
+    //gflags::ParseCommandLineFlags(&argc, &argv, true);
+    openPoseDemo(gt);
+    printf("%f %f %f %f\n", gt->x, gt->y, gt->width, gt->height);
+    bboxGroundtruth.x = gt->x;
+    bboxGroundtruth.y = gt->y;
+    bboxGroundtruth.width = gt->width;
+    bboxGroundtruth.height = gt->height;
+}
+
+
+/*
 int main(int argc, char *argv[])
 {
     // Parsing command line flags
@@ -612,3 +530,4 @@ int main(int argc, char *argv[])
     // Running openPoseDemo
     return openPoseDemo();
 }
+*/

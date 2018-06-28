@@ -36,11 +36,16 @@ The only extra-package is: **Opencv3.x** (already installed if you follow the en
 
 Of course, for trackers that use Deep features, you need to install [[**caffe**](https://github.com/rockkingjy/caffe)] (maybe I will use Darknet with C in the future, I like Darknet :lips: ), and change the **makefile** according to your path. Compile of caffe refer to : [[Install caffe by makefile](https://github.com/rockkingjy/DeepLearningSettings/blob/master/caffe.md)].
 
+If you want to autodetection the people with web camera, you need to install [[OpenPose](https://github.com/CMU-Perceptual-Computing-Lab/openpose)]. 
+
 ## Run to compare all the trackers
 ```
 make all
 ./trackerscompare.bin
 ```
+
+## To use web camera with openpose
+By raising your two arms higher than your nose, it will atomatically detect the person and start the tracking programme.
 
 ## Run Opencv trackers
 Change the path of your test images in **kcf/opencvtrackers.cpp**.
