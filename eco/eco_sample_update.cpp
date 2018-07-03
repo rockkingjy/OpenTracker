@@ -39,6 +39,8 @@ void sample_update::init(const std::vector<cv::Size> &filter, const std::vector<
 	}
 	// resize prior weights to the same as nSamples
 	prior_weights.resize(nSamples);
+
+	//showmat1chall(real(distance_matrix), 2);
 	/*
 	debug("prior_weights size: %lu ", prior_weights.size());
 	for (size_t j = 0; j < (size_t)prior_weights.size(); j++)
@@ -56,9 +58,9 @@ void sample_update::update_sample_space_model(ECO_FEATS &new_train_sample)
 	/*
 	debug("%s: ", getName(gram_vector));
 	imgInfo(gram_vector);
-	showmat2chall(gram_vector, 2);
+	showmat1chall(real(gram_vector), 2);
 	*/
-	float new_train_sample_norm = 2 * FeatEnergy(new_train_sample);
+	float new_train_sample_norm = 2 * FeatureComputeEnergy(new_train_sample);
 	cv::Mat dist_vec(nSamples, 1, CV_32FC2);
 	//
 	for (size_t i = 0; i < nSamples; i++)
@@ -70,6 +72,7 @@ void sample_update::update_sample_space_model(ECO_FEATS &new_train_sample)
 		else
 			dist_vec.at<cv::Vec<float, 2>>(i, 0) = cv::Vec<float, 2>(INF, 0);
 	}
+	 
 	//printf("\n\n");
 	//debug("prior_weights size: %lu ", prior_weights.size());
 	/*
@@ -89,22 +92,23 @@ void sample_update::update_sample_space_model(ECO_FEATS &new_train_sample)
 		float min_sample_weight = INF;
 		int min_sample_id = 0;
 		findMin(min_sample_weight, min_sample_id);
-		//debug("min_sample: %d %f", min_sample_id, min_sample_weight);
+	//	debug("min_sample: %d %f", min_sample_id, min_sample_weight);
 
 		if (min_sample_weight < _minmum_sample_weight) //*** If any prior weight is less than the minimum allowed weight,
 													   // replace that sample with the new sample
 		{
+			 
 			//*** Normalise the prior weights so that the new sample gets weight as
 			update_distance_matrix(gram_vector, new_train_sample_norm, min_sample_id, -1, 0, 1);
 			prior_weights[min_sample_id] = 0;
-/*
+			 
+			/*
 			for (size_t j = 0; j < (size_t)prior_weights.size(); j++)
 			{
 				printf("%f ", prior_weights[j]);
 			}
 			printf("\n\n");
-			*/
-		
+	*/
 			float sum = std::accumulate(prior_weights.begin(), prior_weights.end(), 0.0f);
 			//debug("sum:%f", sum);
 
@@ -121,6 +125,7 @@ void sample_update::update_sample_space_model(ECO_FEATS &new_train_sample)
 		}
 		else
 		{
+			 
 			//*** If no sample has low enough prior weight, then we either merge
 			//*** the new sample with an existing sample, or merge two of the
 			//*** existing samples and insert the new sample in the vacated position
@@ -133,27 +138,25 @@ void sample_update::update_sample_space_model(ECO_FEATS &new_train_sample)
 			double existing_samples_min_dist;
 			cv::Point closest_exist_sample_pair; //*** closest location ***
 			cv::minMaxLoc(real(duplicate), &existing_samples_min_dist, 0, &closest_exist_sample_pair);
-			/*
-			imgInfo(duplicate);
-			imgInfo(real(duplicate));
-			showmat1chall(real(duplicate), 2);
-			*/
-			/*
-			debug("closest_exist_sample_pair x:%d y:%d", closest_exist_sample_pair.x,
+
+/*			imgInfo(duplicate);
+			debug("closest_exist_sample_pair x:%d y:%d",
+				  closest_exist_sample_pair.x,
 				  closest_exist_sample_pair.y);
 			debug("new_sample_min_dist: %lf, existing_samples_min_dist:%lf, in matrix: %f",
 				  new_sample_min_dist, existing_samples_min_dist,
 				  duplicate.at<cv::Vec2f>(closest_exist_sample_pair)[0]);
-			debug("closest_exist_sample_pair:%d %d, %f %f", closest_exist_sample_pair.x, closest_exist_sample_pair.y,
+			debug("closest_exist_sample_pair:%d %d, %f %f",
+				  closest_exist_sample_pair.x, closest_exist_sample_pair.y,
 				  prior_weights[closest_exist_sample_pair.x],
 				  prior_weights[closest_exist_sample_pair.y]);
-		*/
+*/
 			if (closest_exist_sample_pair.x == closest_exist_sample_pair.y)
 				assert("distance matrix diagonal filled wrongly ");
 
 			if (new_sample_min_dist < existing_samples_min_dist)
 			{
-
+				 
 				//*** If the min distance of the new sample to the existing samples is less than the min distance
 				//*** amongst any of the existing samples, we merge the new sample with the nearest existing
 				for (size_t i = 0; i < prior_weights[i]; i++)
@@ -164,11 +167,11 @@ void sample_update::update_sample_space_model(ECO_FEATS &new_train_sample)
 
 				//*** Extract the existing sample to merge ***
 				ECO_FEATS existing_sample_to_merge = samples_f[merged_sample_id];
-
+				 
 				//*** Merge the new_train_sample with existing sample ***
 				merged_sample = merge_samples(existing_sample_to_merge, new_train_sample,
 											  prior_weights[merged_sample_id], learning_rate, std::string("merge"));
-
+				 
 				//*** Update distance matrix and the gram matrix
 				update_distance_matrix(gram_vector, new_train_sample_norm, merged_sample_id, -1,
 									   prior_weights[merged_sample_id], learning_rate);
@@ -191,12 +194,12 @@ void sample_update::update_sample_space_model(ECO_FEATS &new_train_sample)
 				//*** Ensure that the sample with higher prior weight is assigned id1.
 				if (prior_weights[closest_exist_sample_pair.x] > prior_weights[closest_exist_sample_pair.y])
 					std::swap(closest_exist_sample_pair.x, closest_exist_sample_pair.y);
-
+				 
 				//*** Merge the existing closest samples ****
 				merged_sample = merge_samples(samples_f[closest_exist_sample_pair.x], samples_f[closest_exist_sample_pair.y],
 											  prior_weights[closest_exist_sample_pair.x], prior_weights[closest_exist_sample_pair.y],
 											  std::string("Merge"));
-
+				 
 				//**  Update distance matrix and the gram matrix
 				update_distance_matrix(gram_vector, new_train_sample_norm, closest_exist_sample_pair.x, closest_exist_sample_pair.y,
 									   prior_weights[closest_exist_sample_pair.x], prior_weights[closest_exist_sample_pair.y]);
@@ -216,7 +219,10 @@ void sample_update::update_sample_space_model(ECO_FEATS &new_train_sample)
 	{
 		size_t sample_position = num_training_samples; //*** location ****
 		update_distance_matrix(gram_vector, new_train_sample_norm, sample_position, -1, 0, 1);
-
+/*
+		debug("distance_matrix");
+		showmat1chall(real(distance_matrix), 2);
+*/
 		if (sample_position == 0)
 			prior_weights[sample_position] = 1;
 		else
@@ -236,13 +242,14 @@ void sample_update::update_sample_space_model(ECO_FEATS &new_train_sample)
 
 void sample_update::update_distance_matrix(cv::Mat &gram_vector, float new_sample_norm, int id1, int id2, float w1, float w2)
 {
+	 
 	float alpha1 = w1 / (w1 + w2);
 	float alpha2 = 1 - alpha1;
-
+//	debug("alpha1: %f, alpha2: %f", alpha1, alpha2);
 	if (id2 < 0)
 	{
 		COMPLEX norm_id1 = gram_matrix.at<COMPLEX>(id1, id1);
-
+		 
 		//** update the matrix ***
 		if (alpha1 == 0)
 		{
@@ -264,7 +271,7 @@ void sample_update::update_distance_matrix(cv::Mat &gram_vector, float new_sampl
 			gram_matrix.at<COMPLEX>(id1, id1) =
 				COMPLEX(std::pow(alpha1, 2) * norm_id1[0] + std::pow(alpha2, 2) * new_sample_norm + 2 * alpha1 * alpha2 * gram_vector.at<COMPLEX>(id1)[0], 0);
 		}
-
+		 
 		//*** Update distance matrix *****
 		cv::Mat dist_vec(nSamples, 1, CV_32FC2);
 		for (size_t i = 0; i < nSamples; i++)

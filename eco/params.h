@@ -6,7 +6,7 @@
 #include <vector>
 #include <string>
 
-#define DEBUG 0
+#define DEBUG 1
 
 using std::vector;
 using std::string;
@@ -23,9 +23,9 @@ struct hog_params
 
 //*** cnn   feature   configuration *****
 struct cnn_params{
-    string 	proto 	= "model/imagenet-vgg-m-2048.prototxt";
-    string 	model	= "model/VGG_CNN_M_2048.caffemodel";
-    string 	mean_file = "model/VGG_mean.binaryproto";
+    string 	proto 	= "/media/elab/sdd/mycodes/tracker/OpenTrackers/eco/model/imagenet-vgg-m-2048.prototxt";
+    string 	model	= "/media/elab/sdd/mycodes/tracker/OpenTrackers/eco/model/VGG_CNN_M_2048.caffemodel";
+    string 	mean_file = "/media/elab/sdd/mycodes/tracker/OpenTrackers/eco/model/VGG_mean.binaryproto";
     //string 	mean_yml  = "model/mean.yml";
 
 	string 			nn_name = "imagenet-vgg-m-2048.mat"; 
@@ -68,7 +68,7 @@ struct eco_params
 	hog_feature 		hog_features; 
 
 	// Features
-	bool 	useDeepFeature 		 = false;
+	bool 	useDeepFeature 		 = true;
 	bool	useHogFeature		 = true;		// Not used yet, add later.......
 	bool	useCnFeature		 = false;		// Not used yet, add later.......
 
@@ -129,7 +129,7 @@ struct eco_params
 	bool    interpolation_windowing = false;	// Do additional windowing on the Fourier coefficients of the kernel
 
 	// Scale parameters for the translation model
-	size_t  number_of_scales = 1;			    // Number of scales to run the detector
+	size_t  number_of_scales = 3;			    // Number of scales to run the detector
 	float   scale_step	= 1.02f;                // The scale factor
 	float 	min_scale_factor;
 	float	max_scale_factor;

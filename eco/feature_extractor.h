@@ -57,8 +57,6 @@ class feature_extractor
 
 	void cnn_feature_normalization(ECO_FEATS &feature);
 
-	void WrapInputLayer(std::vector<cv::Mat> *input_channels);
-
 	cv::Mat sample_pool(const cv::Mat &im, int smaple_factor, int stride);
 
 	inline ECO_FEATS get_cnn_feats() const { return cnn_feat_maps; }

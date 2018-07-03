@@ -9,7 +9,7 @@ LDFLAGS= `pkg-config --libs opencv` -L/media/elab/sdd/mycodes/caffe/build/lib -l
 	-lboost_system -lboost_filesystem -lboost_regex -lglog  -lprotobuf \
 	-lstdc++ -lm 
 
-CXXFLAGS= -Wall `pkg-config --cflags opencv` -lstdc++ -lm -std=c++0x \
+CXXFLAGS= -g -Wall `pkg-config --cflags opencv` -lstdc++ -lm -std=c++0x \
 	-I/media/elab/sdd/mycodes/caffe/build/include/ -I/media/elab/sdd/mycodes/caffe/include/ \
 	-I/usr/local/cuda/include/ 
 

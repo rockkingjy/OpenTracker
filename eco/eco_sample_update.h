@@ -33,7 +33,7 @@ namespace eco_sample_update{
 
 			std::vector<float> dist_vec;
 			for (size_t i = 0; i < num_training_samples; i++) // calculate the distance;
-				dist_vec.push_back(2 * feat_dis_compute(samples_f[i], new_train_sample));
+				dist_vec.push_back(2 * FeatureComputeDistance(samples_f[i], new_train_sample));
 
 			for (size_t i = 0; i < dist_vec.size(); i++)
 				result.at<cv::Vec<float, 2>>(i, 0) = cv::Vec<float, 2>(dist_vec[i], 0);
@@ -51,11 +51,12 @@ namespace eco_sample_update{
 		inline ECO_FEATS merge_samples(ECO_FEATS& sample1, ECO_FEATS& sample2, float w1, float w2, 
 									std::string sample_merge_type = "merge")
 		{
+			 
 			float alpha1 = w1 / (w1 + w2);
 			float alpha2 = 1 - alpha1;
-
+			 
 			ECO_FEATS merged_sample = sample1;
-
+			 
 			if (sample_merge_type == std::string("replace"))
 			{
 			}
@@ -65,6 +66,7 @@ namespace eco_sample_update{
 				for (size_t j = 0; j < sample1[i].size(); j++)
 					merged_sample[i][j] = alpha1 * sample1[i][j] + alpha2 * sample2[i][j];
 			}
+			 
 			return merged_sample;
 		};
 

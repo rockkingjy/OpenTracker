@@ -76,7 +76,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	yf_gaussian();
 
 	// *** Construct cosine window
-	cos_wind();
+	cos_window();
 
 	// *** Compute Fourier series of interpolation function, refer C-COT
 	for (size_t i = 0; i < filter_sz.size(); ++i)
@@ -108,6 +108,10 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	}
 
 	//*** scale factor, 5 scales, refer SAMF
+	if (params.number_of_scales % 2 == 0)
+	{
+		params.number_of_scales++;
+	}
 	int scalemin = floor((1.0 - (float)params.number_of_scales) / 2.0);
 	int scalemax = floor(((float)params.number_of_scales - 1.0) / 2.0);
 	for (int i = scalemin; i <= scalemax; i++)
@@ -137,13 +141,13 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	xl = feat_extrator.extractor(im, pos, vector<float>(1, currentScaleFactor), params, deep_mean_mat, net);
 	debug("xl size: %lu, %lu, %d x %d", xl.size(), xl[0].size(), xl[0][0].rows, xl[0][0].cols);
 
-	//*** Do windowing of features ***
-	xl = do_windows_x(xl, cos_window);
+	//*** Do windowing of features 
+	xl = do_windows(xl, _cos_window);
 
-	//*** Compute the fourier series ***
+	//*** Compute the fourier series 
 	xlf = do_dft(xl);
 
-	//*** Interpolate features to the continuous domain **
+	//*** Interpolate features to the continuous domain
 	xlf = interpolate_dft(xlf, interp1_fs, interp2_fs);
 
 	//*** New sample to be added
@@ -158,8 +162,8 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	{
 		debug("projection_matrix %lu 's size: %d x %d", i, projection_matrix[i].rows, projection_matrix[i].cols);
 	}
-	//*** project sample *****
-	xlf_porj = project_sample(xlf, projection_matrix);
+	//*** project sample 
+	xlf_porj = FeatureProjection(xlf, projection_matrix);
 	for (size_t i = 0; i < xlf.size(); i++)
 	{
 		debug("xlf_porj feature %lu 's size: %lu, %d x %d", i, xlf_porj[i].size(), xlf_porj[i][0].rows, xlf_porj[i][0].cols);
@@ -170,8 +174,8 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 
 	SampleUpdate.update_sample_space_model(xlf_porj);
 
-	//**** used for precondition ******
-	sample_energy = feats_pow2(xlf_porj);
+	//**** used for precondition 
+	sample_energy = FeautreComputePower2(xlf_porj);
 
 	vector<cv::Mat> proj_energy = project_mat_energy(projection_matrix, yf);
 
@@ -181,7 +185,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 		hf.push_back(vector<cv::Mat>(xlf_porj[i].size(), cv::Mat::zeros(xlf_porj[i][0].size(), CV_32FC2)));
 		hf_inc.push_back(vector<cv::Mat>(xlf_porj[i].size(), cv::Mat::zeros(xlf_porj[i][0].size(), CV_32FC2)));
 	}
-	ddebug();
+	 
 	eco_trainer.train_init(hf, hf_inc, projection_matrix, xlf, yf, reg_filter,
 						   sample_energy, reg_energy, proj_energy, params);
 
@@ -196,13 +200,13 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 		debug("projection_matrix %lu: value: %lf %lf", i, minValue, maxValue);
 	}
 
-	xlf_porj = project_sample(xlf, projection_matrix);
+	xlf_porj = FeatureProjection(xlf, projection_matrix);
 	debug("xlf_porj size: %lu, %lu, %d x %d", xlf_porj.size(), xlf_porj[0].size(), xlf_porj[0][0].rows, xlf_porj[0][0].cols);
 
 	SampleUpdate.replace_sample(xlf_porj, 0);
 
 	//  Find the norm of the reprojected sample
-	float new_sample_norm = FeatEnergy(xlf_porj);
+	float new_sample_norm = FeatureComputeEnergy(xlf_porj);
 	SampleUpdate.set_gram_matrix(0, 0, 2 * new_sample_norm);
 
 	frames_since_last_train = 0;
@@ -228,17 +232,17 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	{
 		samples_scales.push_back(currentScaleFactor * scaleFactors[i]);
 	}
-
+	
 	// 1: Extract features at multiple resolutions
 	ECO_FEATS xt = feat_extrator.extractor(frame, sample_pos, samples_scales, params, deep_mean_mat, net);
 	//debug("xt size: %lu, %lu, %d x %d", xt.size(), xt[0].size(), xt[0][0].rows, xt[0][0].cols);
 
 	// 2:  project sample *****
-	ECO_FEATS xt_proj = FeatProjMultScale(xt, projection_matrix);
+	ECO_FEATS xt_proj = FeatureProjectionMultScale(xt, projection_matrix);
 	//debug("xt_proj size: %lu, %lu, %d x %d", xt_proj.size(), xt_proj[0].size(), xt_proj[0][0].rows, xt_proj[0][0].cols);
 
 	// 3: Do windowing of features ***
-	xt_proj = do_windows_x(xt_proj, cos_window);
+	xt_proj = do_windows(xt_proj, _cos_window);
 
 	// 4: Compute the fourier series ***
 	ECO_FEATS xtf_proj = do_dft(xt_proj);
@@ -246,7 +250,7 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	// 5: Interpolate features to the continuous domain
 	xtf_proj = interpolate_dft(xtf_proj, interp1_fs, interp2_fs);
 	//debug("xtf_proj size: %lu, %lu, %d x %d", xtf_proj.size(), xtf_proj[0].size(), xtf_proj[0][0].rows, xtf_proj[0][0].cols);
-
+	
 	// 6: compute the scores for different scales of target
 	vector<cv::Mat> scores_fs_sum;
 	for (size_t i = 0; i < scaleFactors.size(); i++)
@@ -295,13 +299,13 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	}
 
 	fpseco = ((double)cv::getTickCount() - timereco) / 1000000;
-	debug("localization time: %f", fpseco);
+	//debug("localization time: %f", fpseco);
 	//*****************************************************************************
 	//*****                       Visualization
 	//*****************************************************************************
 	if (DEBUG == 1)
 	{
-		ddebug();
+		 
 		cv::Mat resframe = frame.clone();
 		cv::rectangle(resframe, roi, cv::Scalar(0, 255, 0));
 
@@ -326,7 +330,7 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 				   0, 0, cv::INTER_LINEAR);
 		cv::applyColorMap(cm_img, cm_img, cv::COLORMAP_JET);
 
-		ddebug();
+		 
 		// Merge these two images
 		float alpha_vis = 0.5;
 		int x_vis = std::max(0, sample_pos.x - cm_img.cols / 2);
@@ -351,7 +355,7 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 		}
 		//debug("%d %d %d %d",x_vis, y_vis, w_vis, h_vis);
 		cv::Mat roi_vis = resframe(cv::Rect(x_vis, y_vis, w_vis, h_vis));
-		ddebug();
+		 
 		if (x_vis == 0)
 		{
 			x_vis = cm_img.cols / 2 - sample_pos.x;
@@ -370,7 +374,7 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 		}
 		//debug("%d %d %d %d",x_vis, y_vis, w_vis, h_vis);
 		cv::Mat cm_img_vis = cm_img(cv::Rect(x_vis, y_vis, w_vis, h_vis));
-		ddebug();
+		 
 		cv::addWeighted(cm_img_vis, alpha_vis, roi_vis, 1.0 - alpha_vis, 0.0, roi_vis);
 		// Add a circle to the expected next position
 		cv::circle(resframe, pos, 5, cv::Scalar(0, 255, 0));
@@ -410,11 +414,12 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	//  A shift in spatial domain means multiply by exp(i pi L k), according to shift property of Fourier transformation.
 	cv::Point2f shift_samp = 2.0f * CV_PI * cv::Point2f(pos - cv::Point2f(sample_pos)) * (1.0f / (currentScaleFactor * img_support_sz.width));
 	xlf_proj = shift_sample(xlf_proj, shift_samp, kx, ky);
-
+	//debug("shift_sample: %f %f", shift_samp.x, shift_samp.y);
+	 
 	// 3: Update the samples to include the new sample, the distance matrix,
 	// kernel matrix and prior weight are also updated
 	SampleUpdate.update_sample_space_model(xlf_proj);
-
+	 
 	// 4: insert new sample
 	if (SampleUpdate.get_merge_id() > 0)
 	{
@@ -424,14 +429,14 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	{
 		SampleUpdate.replace_sample(xlf_proj, SampleUpdate.get_new_id());
 	}
-
+	 
 	// 5: update filter parameters, Ns in ECO paper
 	bool train_tracker = frames_since_last_train >= (size_t)params.train_gap;
 	if (train_tracker)
 	{
-		//debug("%lu %lu", sample_energy.size(), feats_pow2(xlf_proj).size());
-		sample_energy = FeatScale(sample_energy, 1 - params.learning_rate) +
-						FeatScale(feats_pow2(xlf_proj), params.learning_rate);
+		//debug("%lu %lu", sample_energy.size(), FeautreComputePower2(xlf_proj).size());
+		sample_energy = FeatureScale(sample_energy, 1 - params.learning_rate) +
+						FeatureScale(FeautreComputePower2(xlf_proj), params.learning_rate);
 		eco_trainer.train_filter(SampleUpdate.get_samples(), SampleUpdate.get_samples_weight(), sample_energy);
 		frames_since_last_train = 0;
 	}
@@ -627,7 +632,7 @@ void ECO::yf_gaussian() // real part of (9) in paper C-COT
 	}
 }
 
-void ECO::cos_wind()
+void ECO::cos_window()
 {
 	for (size_t i = 0; i < feature_sz.size(); i++)
 	{
@@ -638,26 +643,12 @@ void ECO::cos_wind()
 		for (int i = 0; i < hann2t.rows; i++)
 			hann2t.at<float>(i, 0) = 0.5 * (1 - std::cos(2 * 3.14159265358979323846 * i / (hann2t.rows - 1)));
 		cv::Mat hann2d = hann2t * hann1t;
-		cos_window.push_back(hann2d(cv::Range(1, hann2d.rows - 1), cv::Range(1, hann2d.cols - 1)));
+		_cos_window.push_back(hann2d(cv::Range(1, hann2d.rows - 1), cv::Range(1, hann2d.cols - 1)));
 		/*
-		showmat1ch(cos_window[i],2);
+		showmat1ch(_cos_window[i],2);
 		assert(0);
 		*/
 	}
-}
-// Do the element-wise multiplication for the two matrix.
-ECO_FEATS ECO::do_windows_x(const ECO_FEATS &xl, vector<cv::Mat> &cos_win)
-{
-	ECO_FEATS xlw;
-	for (size_t i = 0; i < xl.size(); i++) // for each feature
-	{
-		vector<cv::Mat> temp;
-		//debug("xl[%lu]: %lu", i, xl[i].size()); //96, 512, 31
-		for (size_t j = 0; j < xl[i].size(); j++) // for the dimensions fo the feature
-			temp.push_back(cos_win[i].mul(xl[i][j]));
-		xlw.push_back(temp);
-	}
-	return xlw;
 }
 
 ECO_FEATS ECO::interpolate_dft(const ECO_FEATS &xlf, vector<cv::Mat> &interp1_fs, vector<cv::Mat> &interp2_fs)
@@ -691,44 +682,6 @@ ECO_FEATS ECO::compact_fourier_coeff(const ECO_FEATS &xf)
 	return result;
 }
 
-vector<cv::Mat> ECO::init_projection_matrix(const ECO_FEATS &init_sample,
-											const vector<int> &compressed_dim,
-											const vector<int> &feature_dim)
-{
-	vector<cv::Mat> result;
-	for (size_t i = 0; i < init_sample.size(); i++) // for each feature
-	{
-		// vectorize mat init_sample
-		cv::Mat feat_vec(init_sample[i][0].size().area(), feature_dim[i], CV_32FC1);
-		//cv::Mat mean(init_sample[i][0].size().area(), feature_dim[i], CV_32FC1);
-		for (unsigned int j = 0; j < init_sample[i].size(); j++) // for each dimension of the feature
-		{
-			float mean = cv::mean(init_sample[i][j])[0]; // get the mean value of the mat;
-			for (size_t r = 0; r < (size_t)init_sample[i][j].rows; r++)
-				for (size_t c = 0; c < (size_t)init_sample[i][j].cols; c++)
-					feat_vec.at<float>(c * init_sample[i][j].rows + r, j) = init_sample[i][j].at<float>(r, c) - mean;
-		}
-		result.push_back(feat_vec);
-	}
-	//imgInfo(result[0]); // 3844 x 31
-
-	vector<cv::Mat> proj_mat;
-	// do SVD and dimension reduction for each feature
-	for (size_t i = 0; i < result.size(); i++)
-	{
-		cv::Mat S, V, D;
-		cv::SVD::compute(result[i].t() * result[i], S, V, D);
-		vector<cv::Mat> V_;
-		V_.push_back(V);									  // real part
-		V_.push_back(cv::Mat::zeros(V.size(), CV_32FC1));	 // image part
-		cv::merge(V_, V);									  // merge to 2 channel mat, represent a complex
-		proj_mat.push_back(V.colRange(0, compressed_dim[i])); // get the previous compressed number components
-	}
-
-	return proj_mat;
-}
-
-//***** the train part ****
 vector<cv::Mat> ECO::project_mat_energy(vector<cv::Mat> proj, vector<cv::Mat> yf)
 {
 	vector<cv::Mat> result;

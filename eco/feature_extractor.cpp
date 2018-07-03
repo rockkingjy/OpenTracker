@@ -29,9 +29,8 @@ ECO_FEATS feature_extractor::extractor(cv::Mat image,
 	if (params.useCnFeature)
 	{
 	}
-	ddebug();
 
-	// extract image path for different kinds of feautures
+	// extract image path for different feautures
 	vector<vector<cv::Mat>> img_samples;
 	for (int i = 0; i < num_features; ++i) // for each feature
 	{
@@ -41,29 +40,12 @@ ECO_FEATS feature_extractor::extractor(cv::Mat image,
 		{
 			cv::Size2f img_sample_sz = (i == 0) && params.useDeepFeature ? cnn_features.img_sample_sz : hog_features.img_sample_sz;
 			cv::Size2f img_input_sz = (i == 0) && params.useDeepFeature ? cnn_features.img_input_sz : hog_features.img_input_sz;
-			//debug("img_sample_sz: %f x %f", img_sample_sz.height, img_sample_sz.width);
-			//debug("scale %u: %f", j,scales[j]);
 			img_sample_sz.width *= scales[j];
 			img_sample_sz.height *= scales[j];
-			//debug("img_sample_sz: %f x %f", img_sample_sz.height, img_sample_sz.width);
 			img_samples_temp[j] = sample_patch(image, pos, img_sample_sz, img_input_sz, params);
 		}
 		img_samples.push_back(img_samples_temp);
 	}
-	/*
-	for (unsigned int i = 0; i < img_samples.size(); ++i)
-	{
-		debug("img_sample for feature: %d, scales:%lu", i, img_samples[i].size());
-		imgInfo(img_samples[i][0]); // 8UC3 250 x 250
-	}
-	*/
-	/*															
-	printImage(img_samples[0][0], 0);
-	cv::imshow("Tracking", img_samples[0][0]);
-	cv::waitKey(0);
-	assert(0);
-*/
-	ddebug();
 
 	// Extract feature maps for each feature in the list
 	ECO_FEATS sum_features;
@@ -72,8 +54,8 @@ ECO_FEATS feature_extractor::extractor(cv::Mat image,
 		sum_features = get_cnn_layers(img_samples[cnn_feat_ind], new_deep_mean_mat);
 		cnn_feature_normalization(sum_features);
 	}
-	ddebug();
 
+	//cv::waitKey(0);
 	if (params.useHogFeature)
 	{
 		hog_feat_maps = get_hog(img_samples[hog_feat_ind]);
@@ -87,15 +69,6 @@ ECO_FEATS feature_extractor::extractor(cv::Mat image,
 
 	//fpseco = ((double)cv::getTickCount() - timereco) / 1000000;
 	//debug("feature extra time: %f", fpseco);
-
-	/*
-	for (size_t i = 0; i < sum_features[0].size(); ++i)
-	{
-		double maxValue = 0, minValue = 0;
-		cv::minMaxLoc(sum_features[0][i], &minValue, &maxValue, NULL, NULL);
-		debug("sum_features %lu: value: %lf %lf", i, minValue, maxValue);
-	}
-	*/
 	return sum_features;
 }
 
@@ -149,37 +122,13 @@ cv::Mat feature_extractor::sample_patch(const cv::Mat &im,
 	//debug("new_im:%d x %d, pos2:%d %d, sample_sz:%f x %f", new_im.rows, new_im.cols, pos2.y, pos2.x,
 	//	  sample_sz.height, sample_sz.width);
 	//showmatNch(new_im, 0);
-	ddebug();
+
 	cv::Mat im_patch;
 	im_patch = subwindow(new_im, cv::Rect(pos2, sample_sz), IPL_BORDER_REPLICATE);
-	/*
-	imgInfo(im_patch);
-	showmatNch(im_patch, 0);
-	assert(0);
 
-	cv::Point p;
-	double maxValue = -1, minValue = 256;
-	cv::Mat tmp_re = im_patch.reshape(1);
-	cv::minMaxLoc(tmp_re, &minValue, &maxValue, NULL, &p);
-	debug("im_patch value: %lf %lf %d, %d", minValue, maxValue, p.y, p.x);
-	debug("%d",tmp_re.at<unsigned char>(p.y,p.x));
-*/
 	cv::Mat resized_patch;
 	cv::resize(im_patch, resized_patch, input_sz);
-	/*
-	imgInfo(resized_patch);
-	showmatNch(resized_patch, 0);
 
-	cv::imshow("Tracking", resized_patch);
-	cv::waitKey(0);
-	assert(0);
-
-	tmp_re = resized_patch.reshape(1);
-	cv::minMaxLoc(tmp_re, &minValue, &maxValue, NULL, &p);
-	debug("resized_patch value: %lf %lf %d, %d", minValue, maxValue, p.y, p.x);
-	debug("%d",tmp_re.at<unsigned char>(p.y,p.x));
-	//debug("inputsize: %lf x %lf", input_sz.width, input_sz.height);
-*/
 	return resized_patch;
 }
 
@@ -188,8 +137,8 @@ vector<cv::Mat> feature_extractor::get_hog(vector<cv::Mat> ims)
 	if (ims.empty())
 		return vector<cv::Mat>();
 
-//	double timereco = (double)cv::getTickCount();
-//	float fpseco = 0;
+	//	double timereco = (double)cv::getTickCount();
+	//	float fpseco = 0;
 	// debug("ims.size: %lu", ims.size());
 	vector<cv::Mat> hog_feats;
 	for (unsigned int i = 0; i < ims.size(); i++) // ims.size()=5
@@ -197,7 +146,7 @@ vector<cv::Mat> feature_extractor::get_hog(vector<cv::Mat> ims)
 		cv::Mat ims_f;
 		ims[i].convertTo(ims_f, CV_32FC3);
 		/*
-		ddebug();
+		 
 		imgInfo(ims_f);
 	
 		printImage(ims_f, 2);
@@ -235,7 +184,7 @@ vector<cv::Mat> feature_extractor::get_hog(vector<cv::Mat> ims)
 		}
 		ims_f.copyTo(featurePaddingMat);
 		/*
-		ddebug();
+		 
 		imgInfo(featurePaddingMat);
 		assert(0);
 
@@ -247,8 +196,8 @@ vector<cv::Mat> feature_extractor::get_hog(vector<cv::Mat> ims)
 		IplImage zz = featurePaddingMat;
 		CvLSVMFeatureMapCaskade *map_temp;
 		getFeatureMaps(&zz, _cell_size, &map_temp); // dimension: 27
-		normalizeAndTruncate(map_temp, 0.2f); // dimension: 108
-		PCAFeatureMaps(map_temp); // dimension: 31
+		normalizeAndTruncate(map_temp, 0.2f);		// dimension: 108
+		PCAFeatureMaps(map_temp);					// dimension: 31
 
 		cv::Mat featuresMap = cv::Mat(cv::Size(map_temp->sizeX, map_temp->sizeY), // Procedure do deal with cv::Mat multichannel bug
 									  CV_32FC(map_temp->numFeatures), map_temp->map);
@@ -258,7 +207,7 @@ vector<cv::Mat> feature_extractor::get_hog(vector<cv::Mat> ims)
 
 		freeFeatureMapObject(&map_temp);
 		/*
-		ddebug();
+		 
 		imgInfo(featuresMap);
 		printFeature(featuresMap, 2);
 		assert(0);
@@ -266,36 +215,67 @@ vector<cv::Mat> feature_extractor::get_hog(vector<cv::Mat> ims)
 		hog_feats.push_back(featuresMap);
 	}
 
-//	fpseco = ((double)cv::getTickCount() - timereco) / 1000000;
-//	debug("hog extra time: %f", fpseco);
+	//	fpseco = ((double)cv::getTickCount() - timereco) / 1000000;
+	//	debug("hog extra time: %f", fpseco);
 
 	return hog_feats;
 }
 
 ECO_FEATS feature_extractor::get_cnn_layers(vector<cv::Mat> im, const cv::Mat &deep_mean_mat)
 {
-	ddebug();
+	Blob<float> *input_layer = net->input_blobs()[0];
+	int width = input_layer->width();
+	int height = input_layer->height();
+	float *input_data = input_layer->mutable_cpu_data(); 
+	input_layer->Reshape(im.size(), im[0].channels(), im[0].rows, im[0].cols); // Reshape input_layer.
+	net->Reshape();															   // Forward dimension change to all layers.
+
+	// Preprocess the images
 	for (unsigned int i = 0; i < im.size(); ++i)
 	{
 		im[i].convertTo(im[i], CV_32FC3);
-		cv::cvtColor(im[i], im[i], CV_BGR2RGB);
-		im[i] = im[i].t();
-		//imgInfo(im[i]);
-		//imgInfo(deep_mean_mat);
 		im[i] = im[i] - deep_mean_mat;
 	}
-	cv::Mat input_imgs;
-	cv::merge(im, input_imgs);
-	ddebug();
-	// forward computation and exrtract cnn1 and output data
-	Blob<float> *input_layer = net->input_blobs()[0];
-	input_layer->Reshape(im.size(), im[0].channels(), im[0].rows, im[0].cols); //224, 224);
-	net->Reshape();
+	// Put the images to the input_data.
 	std::vector<cv::Mat> input_channels;
-	WrapInputLayer(&input_channels);
-	cv::split(input_imgs, input_channels);
+	for (int i = 0; i < input_layer->channels() * input_layer->shape()[0]; ++i)
+	{
+		cv::Mat channel(height, width, CV_32FC1, input_data);
+		input_channels.push_back(channel);
+		input_data += width * height;
+	}
+	// Split each image and merge all together, then split to input_channels.
+	std::vector<cv::Mat> im_split;
+	for (unsigned int i = 0; i < im.size(); i++)
+	{
+		std::vector<cv::Mat> tmp_split;
+		cv::split(im[i], tmp_split);
+		im_split.insert(im_split.end(), tmp_split.begin(), tmp_split.end());
+	}
+	cv::Mat im_merge;
+	cv::merge(im_split, im_merge);
+	cv::split(im_merge, input_channels);
+
+	/*
+	debug("im size: %lu", im.size());
+	imgInfo(im[0]);
+	for (unsigned int i = 0; i < im.size(); i++)
+	{
+		cv::imshow("Tracking", im[i]);
+		debug("i:%u", i);
+		cv::waitKey(0);
+	}
+
+	debug("input_channels size: %lu", input_channels.size());
+	for (unsigned int i = 0; i < input_channels.size(); i++)
+	{
+		cv::imshow("Tracking", input_channels[i]);
+		debug("i:%u", i);
+		cv::waitKey(0);
+	}
+*/
 	net->Forward();
-	ddebug();
+
 	ECO_FEATS feature_map;
 	for (size_t idx = 0; idx < cnn_features.fparams.output_layer.size(); ++idx)
 	{
@@ -314,16 +294,14 @@ ECO_FEATS feature_extractor::get_cnn_layers(vector<cv::Mat> im, const cv::Mat &d
 			pstart = layerData->cpu_data();
 			shape = layerData->shape();
 		}
-		ddebug();
-		//debug("shape: %d, %d, %d, %d", shape[0], shape[1], shape[2], shape[3]);
-		//debug("%d %d", cnn_features.fparams.start_ind[0 + 2 * idx] - 1, cnn_features.fparams.end_ind[0 + 2 * idx]);
+
+//		debug("shape: %d, %d, %d, %d", shape[0], shape[1], shape[2], shape[3]); //num, channel, height, width
+//		debug("%d %d", cnn_features.fparams.start_ind[0 + 2 * idx] - 1, cnn_features.fparams.end_ind[0 + 2 * idx]);
+
 		vector<cv::Mat> merge_feature;
 		for (size_t i = 0; i < (size_t)(shape[0] * shape[1]); i++) //  CNN into single channel
 		{
-			cv::Mat feat_map(shape[2], shape[3], CV_32FC(1), (void *)pstart);
-			feat_map = feat_map.t();
-			//const float* inData = feat_map.ptr<float>(0);
-			//inData = pstart;
+			cv::Mat feat_map(shape[2], shape[3], CV_32FC1, (void *)pstart);
 			pstart += shape[2] * shape[3];
 			//  extract features according to fparams
 			cnn_params fparams = cnn_features.fparams;
@@ -332,25 +310,11 @@ ECO_FEATS feature_extractor::get_cnn_layers(vector<cv::Mat> im, const cv::Mat &d
 			extract_map = (cnn_features.fparams.downsample_factor[idx] == 1) ? extract_map : sample_pool(extract_map, 2, 2);
 			merge_feature.push_back(extract_map);
 		} //end for
-		ddebug();
+
 		feature_map.push_back(merge_feature);
 	}
+
 	return feature_map;
-}
-
-void feature_extractor::WrapInputLayer(std::vector<cv::Mat> *input_channels)
-{
-	Blob<float> *input_layer = net->input_blobs()[0];
-	int width = input_layer->width();
-	int height = input_layer->height();
-	float *input_data = input_layer->mutable_cpu_data();
-
-	for (int i = 0; i < input_layer->channels() * input_layer->shape()[0]; ++i)
-	{
-		cv::Mat channel(height, width, CV_32FC1, input_data);
-		input_channels->push_back(channel);
-		input_data += width * height;
-	}
 }
 
 cv::Mat feature_extractor::sample_pool(const cv::Mat &im, int smaple_factor, int stride)
@@ -369,26 +333,27 @@ cv::Mat feature_extractor::sample_pool(const cv::Mat &im, int smaple_factor, int
 
 void feature_extractor::cnn_feature_normalization(ECO_FEATS &cnn_feat_maps)
 {
-	for (size_t i = 0; i < cnn_feat_maps.size(); i++)
+	//debug("cnn_feat_maps: %lu", cnn_feat_maps.size());
+	for (size_t i = 0; i < cnn_feat_maps.size(); i++) // for each layer = 2
 	{
-		//*** the normalization scale ****
-		vector<cv::Mat> temp = cnn_feat_maps[i]; // *** conv1 norm1 *****
+		vector<cv::Mat> temp = cnn_feat_maps[i];
 		vector<float> sum_scales;
-		for (size_t s = 0; s < temp.size(); s += cnn_features.fparams.nDim[i]) // *** for an scale ***
+		//debug("temp: %lu", temp.size());
+		for (size_t s = 0; s < temp.size(); s += cnn_features.fparams.nDim[i]) // for each scale , {96, 512} x scale
 		{
 			float sum = 0.0f;
-			for (size_t j = s; j < s + cnn_features.fparams.nDim[i]; j++)
+			for (size_t j = s; j < s + cnn_features.fparams.nDim[i]; j++) // for all the dimension
 				sum += cv::sum(temp[j].mul(temp[j]))[0];
 			sum_scales.push_back(sum);
 		}
-		//*** the normalization para ****
+
 		float para = 0.0f;
 		if (i == 0)
 			para = cnn_features.data_sz_block0.area() * cnn_features.fparams.nDim[i];
-		else
+		else if (i == 1)
 			para = cnn_features.data_sz_block1.area() * cnn_features.fparams.nDim[i];
-
-		for (unsigned int k = 0; k < temp.size(); k++) //*** normalization ****
+		//debug("para: %f", para);
+		for (unsigned int k = 0; k < temp.size(); k++)
 			cnn_feat_maps[i][k] /= sqrt(sum_scales[k / cnn_features.fparams.nDim[i]] / para);
 	}
 }

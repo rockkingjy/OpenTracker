@@ -42,32 +42,25 @@ namespace eco
 class ECO
 {
   public:
+	ECO() {};
 	virtual ~ECO() {}
 
-	ECO() {};
-
-	void init(cv::Mat &im, const cv::Rect2f &rect); //****** tracker intialization****
+	void init(cv::Mat &im, const cv::Rect2f &rect); 
 
 	bool update(const cv::Mat &frame, cv::Rect2f& roi);
 
-	void init_features(); // *** init the ECO features include deep feature or non-deep feature
+	void init_features(); 
 
 	void read_deep_mean(const string &mean_file);
 
-	void yf_gaussian(); //***** the desired outputs of features, real part of (9) in paper C-COT
+	void yf_gaussian(); // the desired outputs of features, real part of (9) in paper C-COT
 
-	void cos_wind(); 	//***** construct cosine window of features;
-
-	ECO_FEATS do_windows_x(const ECO_FEATS &xl, vector<cv::Mat> &cos_win);
+	void cos_window(); 	// construct cosine window of features;
 
 	ECO_FEATS interpolate_dft(const ECO_FEATS &xlf, vector<cv::Mat> &interp1_fs,
 							  vector<cv::Mat> &interp2_fs);
 
 	ECO_FEATS compact_fourier_coeff(const ECO_FEATS &xf);
-
-	vector<cv::Mat> init_projection_matrix(const ECO_FEATS &init_sample,
-										   const vector<int> &compressed_dim,
-										   const vector<int> &feature_dim);
 
 	vector<cv::Mat> project_mat_energy(vector<cv::Mat> proj, vector<cv::Mat> yf);
 
@@ -99,7 +92,7 @@ class ECO
 
 	// Compute the Fourier series indices 
 	// kx, ky is the k in (9) of C-COT paper, yf is the left part of (9);
-	vector<cv::Mat> 	ky, kx, yf, cos_window; 
+	vector<cv::Mat> 	ky, kx, yf, _cos_window; 
 	vector<cv::Mat> 	interp1_fs, interp2_fs; 	// interpl fourier series
 
 	vector<cv::Mat> 	reg_filter, projection_matrix; // spatial filter

@@ -24,7 +24,7 @@ using namespace std;
                     .str()
 
 int main(int argc, char **argv)
-{
+{ /*
     // Read using openpose============================================
     cv::Rect2f bboxGroundtruth;
     cv::Mat frame, frameDraw;
@@ -40,8 +40,8 @@ int main(int argc, char **argv)
     //frame.copyTo(frameDraw);
     //rectangle(frameDraw, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
     //imshow("Tracking", frameDraw);
-    
-    /*
+    */
+   
     // Read from the datasets==========================================
     ::google::InitGoogleLogging(argv[0]);
     cv::Rect2f bboxGroundtruth;
@@ -50,7 +50,6 @@ int main(int argc, char **argv)
     readdatasets.IniRead(bboxGroundtruth, frame);
     frame.copyTo(frameDraw);
     readdatasets.DrawGroundTruth(bboxGroundtruth, frameDraw);
-*/
     // Init the trackers=================================================
     // Create Opencv tracker:
     string trackerTypes[6] = {"BOOSTING", "MIL", "KCF", "TLD", "MEDIANFLOW", "GOTURN"};
@@ -167,7 +166,7 @@ int main(int argc, char **argv)
                     0.75, Scalar(255, 0, 255), 2);
         }
         // Draw ground truth box===========================================
-        //readdatasets.DrawGroundTruth(bboxGroundtruth, frameDraw);
+        readdatasets.DrawGroundTruth(bboxGroundtruth, frameDraw);
 
         // Display FPS on frameDraw
         putText(frameDraw, "FPS: " + SSTR(long(fpseco)), Point(10, 30), FONT_HERSHEY_SIMPLEX,
@@ -200,8 +199,8 @@ int main(int argc, char **argv)
         waitKey(1);
 
         // Read the next frame
-        //readdatasets.ReadNextFrame(bboxGroundtruth, frame);
-        cap >> frame;
+        readdatasets.ReadNextFrame(bboxGroundtruth, frame);
+        //cap >> frame;
     }
     cvDestroyWindow("Tracking");
     return 0;

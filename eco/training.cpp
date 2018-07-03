@@ -98,7 +98,7 @@ void eco_train::train_joint()
 	for (size_t i = 0; i < (size_t)params.init_GN_iter; i++)
 	{
 		//  Project sample with new matrix
-		ECO_FEATS init_samplef_proj = project_sample(init_samplesf, projection_matrix);
+		ECO_FEATS init_samplef_proj = FeatureProjection(init_samplesf, projection_matrix);
 		ECO_FEATS init_hf = hf;
 
 		// Construct the right hand side vector for the filter part
@@ -124,7 +124,7 @@ void eco_train::train_joint()
 								  jointFP);
 
 		// Make the filter symmetric(avoid roundoff errors)
-		symmetrize_filter(outPF.up_part);
+		FilterSymmetrize(outPF.up_part);
 
 		hf = outPF.up_part;
 		// Add to the projection matrix
@@ -303,7 +303,7 @@ eco_train::joint_out eco_train::lhs_operation_joint(joint_fp &hf,
 	//** implements: A' diag(sample_weights) A .*f = scores
 
 	// 1 :sum over all features and feature blocks (socres of all kinds of layers )
-	vector<cv::Mat> scores = computeFeatSores(samplesf, fAndDel);
+	vector<cv::Mat> scores = FeatureComputeScores(samplesf, fAndDel);
 	cv::Mat sh(cv::Mat::zeros(scores[k1].size(), scores[k1].type()));
 	for (size_t i = 0; i < scores.size(); i++)
 	{
@@ -359,7 +359,7 @@ eco_train::joint_out eco_train::lhs_operation_joint(joint_fp &hf,
 	//*** Stuff related to the projection matrix
 
 	// 1: BP = B * delat(P)  = X * inti(f)(before GC . previous  NG) * delta(P)
-	vector<cv::Mat> BP_cell = computeFeatSores(project_sample(init_samplef, deltaP), init_hf);
+	vector<cv::Mat> BP_cell = FeatureComputeScores(FeatureProjection(init_samplef, deltaP), init_hf);
 
 	cv::Mat BP(cv::Mat::zeros(BP_cell[k1].size(), BP_cell[k1].type()));
 	for (size_t i = 0; i < scores.size(); i++)
@@ -423,10 +423,10 @@ void eco_train::train_filter(const vector<ECO_FEATS> &samplesf, const vector<flo
 	double timereco = (double)cv::getTickCount();
 	float fpseco = 0;
 	//1:  Construct the right hand side vector
-	ECO_FEATS rhs_samplef = FeatScale(samplesf[0], sample_weights[0]);
+	ECO_FEATS rhs_samplef = FeatureScale(samplesf[0], sample_weights[0]);
 	for (size_t i = 1; i < samplesf.size(); i++)
 	{
-		rhs_samplef = FeatScale(samplesf[i], sample_weights[i]) + rhs_samplef;
+		rhs_samplef = FeatureScale(samplesf[i], sample_weights[i]) + rhs_samplef;
 	}
 	rhs_samplef = mtimesx(rhs_samplef, yf, 1);
 
@@ -466,8 +466,6 @@ ECO_FEATS eco_train::pcg_eco_filter(const vector<ECO_FEATS> &samplesf,
 									const ECO_FEATS &diag_M,			 // preconditionor
 									ECO_FEATS &hf)						 // the union of filter [f+delta(f) delta(p)]
 {
-	double timereco = (double)cv::getTickCount();
-	float fpseco = 0;
 	ECO_FEATS res;
 
 	int maxit = 5; // max iteration of conjugate gradient
@@ -497,18 +495,20 @@ ECO_FEATS eco_train::pcg_eco_filter(const vector<ECO_FEATS> &samplesf,
 	ECO_FEATS Ax = lhs_operation(x, samplesf, reg_filter, sample_weights);
 	//ECO_FEATS r = joint_minus(rhs_samplef, Ax);
 
-	//ECO_FEATS r = FeatMinus(rhs_samplef, Ax);
+	//ECO_FEATS r = FeautreMinus(rhs_samplef, Ax);
 	ECO_FEATS r = rhs_samplef - Ax;
 
-	fpseco = ((double)cv::getTickCount() - timereco) / 1000000;
-	debug("training time: %f", fpseco);
-	timereco = (double)cv::getTickCount();
-	debug("maxit: %d", maxit);
+	//double timereco = (double)cv::getTickCount();
+	//float fpseco = 0;
+	//fpseco = ((double)cv::getTickCount() - timereco) / 1000000;
+	//debug("training time: %f", fpseco);
+	//timereco = (double)cv::getTickCount();
+	//debug("maxit: %d", maxit);
 	for (size_t ii = 0; ii < (size_t)maxit; ii++)
 	{
 		ECO_FEATS y, z;
 		if (existM1) // exist preconditioner
-			y = FeatDotDivide(r, diag_M);
+			y = FeatureDotDivide(r, diag_M);
 		else
 			y = r;
 
@@ -534,8 +534,8 @@ ECO_FEATS eco_train::pcg_eco_filter(const vector<ECO_FEATS> &samplesf,
 				break;
 
 			beta = cv::max(0.0f, beta);
-			//p = FeatAdd(z, FeatScale(p, beta));
-			p = z + FeatScale(p, beta);
+			//p = FeatureAdd(z, FeatureScale(p, beta));
+			p = z + FeatureScale(p, beta);
 		}
 
 		ECO_FEATS q = lhs_operation(p, samplesf, reg_filter, sample_weights);
@@ -557,20 +557,20 @@ ECO_FEATS eco_train::pcg_eco_filter(const vector<ECO_FEATS> &samplesf,
 		r_prev = r;
 
 		// form new iterate
-		//x = FeatAdd(x, FeatScale(p, alpha));
-		x = x + FeatScale(p, alpha);
+		//x = FeatureAdd(x, FeatureScale(p, alpha));
+		x = x + FeatureScale(p, alpha);
 
 		if (ii < (size_t)maxit - 1)
-			//r = FeatMinus(r, FeatScale(q, alpha));
-			r = r - FeatScale(q, alpha);
+			//r = FeautreMinus(r, FeatureScale(q, alpha));
+			r = r - FeatureScale(q, alpha);
 	}
 
 	state.p = p;
 	state.rho = rho;
 	state.r_prev = r_prev;
 
-	fpseco = ((double)cv::getTickCount() - timereco) / 1000000;
-	debug("training time: %f", fpseco);
+	//fpseco = ((double)cv::getTickCount() - timereco) / 1000000;
+	//debug("training time: %f", fpseco);
 	return x;
 }
 
@@ -596,7 +596,7 @@ ECO_FEATS eco_train::lhs_operation(ECO_FEATS &hf,
 	vector<cv::Mat> sh;
 	for (size_t s = 0; s < samplesf.size(); s++)
 	{
-		vector<cv::Mat> scores = computeFeatSores(samplesf[s], hf);
+		vector<cv::Mat> scores = FeatureComputeScores(samplesf[s], hf);
 		cv::Mat sh_tmp(cv::Mat::zeros(scores[k1].size(), scores[k1].type()));
 		for (size_t i = 0; i < scores.size(); i++)
 		{
@@ -736,7 +736,7 @@ float eco_train::inner_product(const ECO_FEATS &a, const ECO_FEATS &b)
 eco_train::rl_out eco_train::rl_out::operator+(rl_out data2)
 {
 	rl_out res;
-	//res.up_part = FeatAdd(up_part, data2.up_part);
+	//res.up_part = FeatureAdd(up_part, data2.up_part);
 	res.up_part = up_part + data2.up_part;
 	res.low_part = low_part + data2.low_part;
 	//res.low_part = ProjAdd(low_part, data2.low_part);
@@ -746,17 +746,18 @@ eco_train::rl_out eco_train::rl_out::operator+(rl_out data2)
 eco_train::rl_out eco_train::rl_out::operator*(float scale)
 {
 	rl_out res;
-	res.up_part = FeatScale(up_part, scale);
-	res.low_part = ProjScale(low_part, scale);
+	res.up_part = FeatureScale(up_part, scale);
+	res.low_part = low_part * scale;
+	//res.low_part = ProjScale(low_part, scale);
 	return res;
 }
 
 eco_train::rl_out eco_train::rl_out::operator-(rl_out data)
 {
 	rl_out res;
-	//res.up_part = FeatMinus(up_part, data.up_part);
+	//res.up_part = FeautreMinus(up_part, data.up_part);
 	res.up_part = up_part - data.up_part;
-	//res.low_part = ProjMinus(low_part, data.low_part);
 	res.low_part = low_part - data.low_part;
+	//res.low_part = ProjMinus(low_part, data.low_part);
 	return res;
 }

@@ -39,10 +39,14 @@ Just ECO_HOG right:
 No one right:
 **VOT/glove**
 
-## Other tips:
+## Other programming tips:
 
 VOT dataset gives the bounding box as float, it can be used directly for ECO and GOTURN, the others needs to be converted to int.
 
+Opencv and Caffe all use BGR color, Matlab use RGB color order.
+
 For timer `double timercv = (double)getTickCount();`, it should be double, float is not enough.
 
-For `frame.copyTo(frameDraw);`, onley this way, it copy the memory, while `frameDraw = frame` does not.
+For `frame.copyTo(frameDraw);`, only this way, it copy the memory, while `frameDraw = frame` does not.
+
+For `cv::merge(mv, dst)`, mv should be 1 channel, if more than 1 channel, it has potential problems. Check the code of `feature_extractor.cpp\get_cnn_layers\input_channels`.
