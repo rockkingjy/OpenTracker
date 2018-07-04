@@ -21,7 +21,7 @@
 #include "regularization_filter.hpp"
 #include "feature_extractor.hpp"
 #include "feature_operator.hpp"
-#include "eco_sample_update.hpp"
+#include "sample_update.hpp"
 #include "optimize_scores.hpp"
 #include "training.hpp"
 #include "fftTool.hpp"
@@ -54,10 +54,10 @@ class ECO
 
 	ECO_FEATS compact_fourier_coeff(const ECO_FEATS &xf);
 
-	vector<cv::Mat> project_mat_energy(vector<cv::Mat> proj, vector<cv::Mat> yf);
-
 	ECO_FEATS full_fourier_coeff(const ECO_FEATS &xf);
 
+	vector<cv::Mat> project_mat_energy(vector<cv::Mat> proj, vector<cv::Mat> yf);
+	
 	ECO_FEATS shift_sample(ECO_FEATS &xf, cv::Point2f shift,
 						   std::vector<cv::Mat> kx, std::vector<cv::Mat> ky);
 

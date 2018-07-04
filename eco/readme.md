@@ -3,7 +3,7 @@ eco.* : main tracker functions.
 
 params.h : Parameters of ECO tracker.
 
-eco_sample_update.*: Relevant functions of updating sample model (Calculating samples distance, update sample space model, etc.).
+sample_update.*: Relevant functions of updating sample model (Calculating samples distance, update sample space model, etc.).
 
 feature_extractor.*: The function of feature extraction (sampling, cnn and hog feature extractor)
 

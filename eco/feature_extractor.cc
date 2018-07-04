@@ -14,17 +14,17 @@ ECO_FEATS FeatureExtractor::extractor(cv::Mat image,
 	cv::Mat new_deep_mean_mat;
 	if (params.useDeepFeature)
 	{
-		cnn_feat_ind = num_features;
+		cnn_feat_ind_ = num_features;
 		num_features++;
-		cnn_features = params.cnn_features;
-		this->net = net;
+		cnn_features_ = params.cnn_features;
+		this->net_ = net;
 		resize(deep_mean_mat, new_deep_mean_mat, params.cnn_features.img_input_sz, 0, 0, cv::INTER_CUBIC);
 	}
 	if (params.useHogFeature)
 	{
-		hog_feat_ind = num_features;
+		hog_feat_ind_ = num_features;
 		num_features++;
-		hog_features = params.hog_features;
+		hog_features_ = params.hog_features;
 	}
 	if (params.useCnFeature)
 	{
@@ -38,8 +38,8 @@ ECO_FEATS FeatureExtractor::extractor(cv::Mat image,
 
 		for (unsigned int j = 0; j < scales.size(); ++j) // for each scale
 		{
-			cv::Size2f img_sample_sz = (i == 0) && params.useDeepFeature ? cnn_features.img_sample_sz : hog_features.img_sample_sz;
-			cv::Size2f img_input_sz = (i == 0) && params.useDeepFeature ? cnn_features.img_input_sz : hog_features.img_input_sz;
+			cv::Size2f img_sample_sz = (i == 0) && params.useDeepFeature ? cnn_features_.img_sample_sz : hog_features_.img_sample_sz;
+			cv::Size2f img_input_sz = (i == 0) && params.useDeepFeature ? cnn_features_.img_input_sz : hog_features_.img_input_sz;
 			img_sample_sz.width *= scales[j];
 			img_sample_sz.height *= scales[j];
 			img_samples_temp[j] = sample_patch(image, pos, img_sample_sz, img_input_sz, params);
@@ -51,16 +51,16 @@ ECO_FEATS FeatureExtractor::extractor(cv::Mat image,
 	ECO_FEATS sum_features;
 	if (params.useDeepFeature)
 	{
-		sum_features = get_cnn_layers(img_samples[cnn_feat_ind], new_deep_mean_mat);
-		cnn_feature_normalization(sum_features);
+		cnn_feat_maps_ = get_cnn_layers(img_samples[cnn_feat_ind_], new_deep_mean_mat);
+		cnn_feature_normalization(cnn_feat_maps_);
+		sum_features = cnn_feat_maps_;
 	}
 
-	//cv::waitKey(0);
 	if (params.useHogFeature)
 	{
-		hog_feat_maps = get_hog(img_samples[hog_feat_ind]);
-		vector<cv::Mat> hog_maps_vec = hog_feature_normalization(hog_feat_maps);
-		sum_features.push_back(hog_maps_vec);
+		hog_feat_maps_ = get_hog_features(img_samples[hog_feat_ind_]);
+		hog_feat_maps_ = hog_feature_normalization(hog_feat_maps_);
+		sum_features.push_back(hog_feat_maps_);
 	}
 
 	if (params.useCnFeature)
@@ -132,7 +132,7 @@ cv::Mat FeatureExtractor::sample_patch(const cv::Mat &im,
 	return resized_patch;
 }
 
-vector<cv::Mat> FeatureExtractor::get_hog(vector<cv::Mat> ims)
+vector<cv::Mat> FeatureExtractor::get_hog_features(vector<cv::Mat> ims)
 {
 	if (ims.empty())
 		return vector<cv::Mat>();
@@ -158,7 +158,7 @@ vector<cv::Mat> FeatureExtractor::get_hog(vector<cv::Mat> ims)
 
 		//		debug("%d, %d", _tmpl_sz.width, _tmpl_sz.height);
 
-		int _cell_size = hog_features.fparams.cell_size;
+		int _cell_size = hog_features_.fparams.cell_size;
 		// Round to cell size and also make it even
 		if (int(_tmpl_sz.width / (_cell_size)) % 2 == 0)
 		{
@@ -223,12 +223,12 @@ vector<cv::Mat> FeatureExtractor::get_hog(vector<cv::Mat> ims)
 
 ECO_FEATS FeatureExtractor::get_cnn_layers(vector<cv::Mat> im, const cv::Mat &deep_mean_mat)
 {
-	Blob<float> *input_layer = net->input_blobs()[0];
+	Blob<float> *input_layer = net_->input_blobs()[0];
 	int width = input_layer->width();
 	int height = input_layer->height();
 	float *input_data = input_layer->mutable_cpu_data(); 
 	input_layer->Reshape(im.size(), im[0].channels(), im[0].rows, im[0].cols); // Reshape input_layer.
-	net->Reshape();															   // Forward dimension change to all layers.
+	net_->Reshape();															   // Forward dimension change to all layers.
 
 	// Preprocess the images
 	for (unsigned int i = 0; i < im.size(); ++i)
@@ -274,29 +274,29 @@ ECO_FEATS FeatureExtractor::get_cnn_layers(vector<cv::Mat> im, const cv::Mat &de
 		cv::waitKey(0);
 	}
 */
-	net->Forward();
+	net_->Forward();
 
 	ECO_FEATS feature_map;
-	for (size_t idx = 0; idx < cnn_features.fparams.output_layer.size(); ++idx)
+	for (size_t idx = 0; idx < cnn_features_.fparams.output_layer.size(); ++idx)
 	{
 		const float *pstart = NULL;
 		vector<int> shape;
-		if (cnn_features.fparams.output_layer[idx] == 3)
+		if (cnn_features_.fparams.output_layer[idx] == 3)
 		{
-			boost::shared_ptr<caffe::Blob<float>> layerData = net->blob_by_name("norm1");
+			boost::shared_ptr<caffe::Blob<float>> layerData = net_->blob_by_name("norm1");
 			pstart = layerData->cpu_data();
 			shape = layerData->shape();
 		}
-		else if (cnn_features.fparams.output_layer[idx] == 14)
+		else if (cnn_features_.fparams.output_layer[idx] == 14)
 		{
-			boost::shared_ptr<caffe::Blob<float>> layerData = net->blob_by_name("conv5");
-			//Blob<float>* layerData = net->output_blobs()[0]; // read "relu5" in the method above will cause error
+			boost::shared_ptr<caffe::Blob<float>> layerData = net_->blob_by_name("conv5");
+			//Blob<float>* layerData = net_->output_blobs()[0]; // read "relu5" in the method above will cause error
 			pstart = layerData->cpu_data();
 			shape = layerData->shape();
 		}
 
 //		debug("shape: %d, %d, %d, %d", shape[0], shape[1], shape[2], shape[3]); //num, channel, height, width
-//		debug("%d %d", cnn_features.fparams.start_ind[0 + 2 * idx] - 1, cnn_features.fparams.end_ind[0 + 2 * idx]);
+//		debug("%d %d", cnn_features_.fparams.start_ind[0 + 2 * idx] - 1, cnn_features_.fparams.end_ind[0 + 2 * idx]);
 
 		vector<cv::Mat> merge_feature;
 		for (size_t i = 0; i < (size_t)(shape[0] * shape[1]); i++) //  CNN into single channel
@@ -304,10 +304,10 @@ ECO_FEATS FeatureExtractor::get_cnn_layers(vector<cv::Mat> im, const cv::Mat &de
 			cv::Mat feat_map(shape[2], shape[3], CV_32FC1, (void *)pstart);
 			pstart += shape[2] * shape[3];
 			//  extract features according to fparams
-			CnnParameters fparams = cnn_features.fparams;
+			CnnParameters fparams = cnn_features_.fparams;
 			cv::Mat extract_map = feat_map(cv::Range(fparams.start_ind[0 + 2 * idx] - 1, fparams.end_ind[0 + 2 * idx]),
 										   cv::Range(fparams.start_ind[0 + 2 * idx] - 1, fparams.end_ind[0 + 2 * idx]));
-			extract_map = (cnn_features.fparams.downsample_factor[idx] == 1) ? extract_map : sample_pool(extract_map, 2, 2);
+			extract_map = (cnn_features_.fparams.downsample_factor[idx] == 1) ? extract_map : sample_pool(extract_map, 2, 2);
 			merge_feature.push_back(extract_map);
 		} //end for
 
@@ -339,22 +339,22 @@ void FeatureExtractor::cnn_feature_normalization(ECO_FEATS &cnn_feat_maps)
 		vector<cv::Mat> temp = cnn_feat_maps[i];
 		vector<float> sum_scales;
 		//debug("temp: %lu", temp.size());
-		for (size_t s = 0; s < temp.size(); s += cnn_features.fparams.nDim[i]) // for each scale , {96, 512} x scale
+		for (size_t s = 0; s < temp.size(); s += cnn_features_.fparams.nDim[i]) // for each scale , {96, 512} x scale
 		{
 			float sum = 0.0f;
-			for (size_t j = s; j < s + cnn_features.fparams.nDim[i]; j++) // for all the dimension
+			for (size_t j = s; j < s + cnn_features_.fparams.nDim[i]; j++) // for all the dimension
 				sum += cv::sum(temp[j].mul(temp[j]))[0];
 			sum_scales.push_back(sum);
 		}
 
 		float para = 0.0f;
 		if (i == 0)
-			para = cnn_features.data_sz_block0.area() * cnn_features.fparams.nDim[i];
+			para = cnn_features_.data_sz_block0.area() * cnn_features_.fparams.nDim[i];
 		else if (i == 1)
-			para = cnn_features.data_sz_block1.area() * cnn_features.fparams.nDim[i];
+			para = cnn_features_.data_sz_block1.area() * cnn_features_.fparams.nDim[i];
 		//debug("para: %f", para);
 		for (unsigned int k = 0; k < temp.size(); k++)
-			cnn_feat_maps[i][k] /= sqrt(sum_scales[k / cnn_features.fparams.nDim[i]] / para);
+			cnn_feat_maps[i][k] /= sqrt(sum_scales[k / cnn_features_.fparams.nDim[i]] / para);
 	}
 }
 
@@ -371,7 +371,7 @@ vector<cv::Mat> FeatureExtractor::hog_feature_normalization(vector<cv::Mat> &hog
 		cv::split(temp, temp_vec);
 		for (int j = 0; j < temp.channels(); j++)
 			sum += cv::sum(temp_vec[j].mul(temp_vec[j]))[0];
-		float para = hog_features.data_sz_block0.area() * hog_features.fparams.nDim;
+		float para = hog_features_.data_sz_block0.area() * hog_features_.fparams.nDim;
 		hog_feat_maps[i] /= sqrt(sum / para);
 
 		cv::split(hog_feat_maps[i], result_vec);

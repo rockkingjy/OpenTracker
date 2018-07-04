@@ -6,7 +6,7 @@
 #include <vector>
 #include <string>
 
-#define DEBUG 0
+#define DEBUG 1
 
 #define INF 0x7f800000 //0x7fffffff 
 
@@ -74,7 +74,7 @@ struct EcoParameters
 	HogFeatures 		hog_features; 
 
 	// Features
-	bool 	useDeepFeature 		 = true;
+	bool 	useDeepFeature 		 = false;
 	bool	useHogFeature		 = true;		// Not used yet, add later.......
 	bool	useCnFeature		 = false;		// Not used yet, add later.......
 
@@ -92,7 +92,7 @@ struct EcoParameters
 	// Learning parameters
 	float	output_sigma_factor = 0.0833333f;	// Label function sigma
 	float	learning_rate 		= 0.009;	 	// Learning rate
-	size_t	nSamples            = 10;           // Maximum number of stored training samples
+	size_t	nSamples            = 50;           // Maximum number of stored training samples
 	string	sample_replace_strategy = "lowest_prior";	// Which sample to replace when the memory is full
 	bool	lt_size			    = 0;            // The size of the long - term memory(where all samples have equal weight)
 	int 	train_gap			= 5;		    // The number of intermediate frames with no training(0 corresponds to training every frame)
@@ -135,7 +135,7 @@ struct EcoParameters
 	bool    interpolation_windowing = false;	// Do additional windowing on the Fourier coefficients of the kernel
 
 	// Scale parameters for the translation model
-	size_t  number_of_scales = 3;			    // Number of scales to run the detector
+	size_t  number_of_scales = 1;			    // Number of scales to run the detector
 	float   scale_step	= 1.02f;                // The scale factor
 	float 	min_scale_factor;
 	float	max_scale_factor;

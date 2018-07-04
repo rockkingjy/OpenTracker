@@ -36,9 +36,9 @@ public:
 		ECO_FEATS			       up_part;   // this is f + delta(f)
 		std::vector<cv::Mat>       low_part;  // this is delta(P)
 		
-		rl_out    operator*(float  scale);    // the union structure scale transformation
-		rl_out    operator+(rl_out data2);    // the union structure scale transformation
-		rl_out    operator-(rl_out data2);    // the union structure scale transformation
+		rl_out operator+(rl_out data2);
+		rl_out operator-(rl_out data2); 
+		rl_out operator*(float  scale);    
 
 	} joint_out, joint_fp;
 
@@ -121,10 +121,10 @@ private:
 
 	vector<cv::Mat>     projection_matrix, proj_energy; // projection matrix and its energy 
 	
-	EcoParameters          params;
+	EcoParameters       params;
 
 	float               resvec, resle;   	// Prellocate vector for norm of residuals  norm(b - A(x))s
 	STATE               state;
-};
-}
+}; // end of class
+} // end of namespace
 #endif

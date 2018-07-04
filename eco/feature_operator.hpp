@@ -61,7 +61,7 @@ extern vector<cv::Mat> init_projection_matrix(const ECO_FEATS &init_sample,
 extern ECO_FEATS FeatureProjection(const ECO_FEATS &x, const std::vector<cv::Mat> &projection_matrix);
 extern ECO_FEATS FeatureProjectionMultScale(const ECO_FEATS &x, const std::vector<cv::Mat> &projection_matrix);
 
-extern float FeatureComputeDistance(const ECO_FEATS &feat1, const ECO_FEATS &feat2);
+extern float FeatureComputeInnerProduct(const ECO_FEATS &feat1, const ECO_FEATS &feat2);
 extern float FeatureComputeEnergy(const ECO_FEATS &feat);
 extern ECO_FEATS FeautreComputePower2(const ECO_FEATS &feats);
 extern std::vector<cv::Mat> FeatureComputeScores(const ECO_FEATS &x, const ECO_FEATS &f); 

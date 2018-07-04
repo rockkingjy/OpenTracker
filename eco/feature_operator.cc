@@ -44,7 +44,6 @@ ECO_FEATS do_windows(const ECO_FEATS &xl, vector<cv::Mat> &cos_win)
 	return xlw;
 }
 
-
 void FilterSymmetrize(ECO_FEATS &hf)
 {
 
@@ -174,8 +173,8 @@ ECO_FEATS FeatureProjectionMultScale(const ECO_FEATS &x, const std::vector<cv::M
 	}
 	return result;
 }
-// compute the distance of two features;
-float FeatureComputeDistance(const ECO_FEATS &feat1,const ECO_FEATS &feat2)
+// inputs: a+bi, c+di; output: ac+bd;
+float FeatureComputeInnerProduct(const ECO_FEATS &feat1,const ECO_FEATS &feat2)
 {
 	if (feat1.size() != feat2.size())
 		return 0;
@@ -192,13 +191,14 @@ float FeatureComputeDistance(const ECO_FEATS &feat1,const ECO_FEATS &feat2)
 	return dist;
 }
 // compute the energy of the feature
+// input: a+bi; output: a^2+b^2;
 float FeatureComputeEnergy(const ECO_FEATS &feat)
 {
 	float res = 0;
 	if (feat.empty())
 		return res;
 
-	res = FeatureComputeDistance(feat, feat);
+	res = FeatureComputeInnerProduct(feat, feat);
 	return res;
 }
 // compute the feats^H * feats

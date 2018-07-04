@@ -15,25 +15,22 @@ class OptimizeScores
 	virtual ~OptimizeScores() {}
 
 	OptimizeScores() {} // default constructor
-	OptimizeScores(std::vector<cv::Mat> &pscores_fs, int pite)
-		: scores_fs(pscores_fs), iterations(pite) {}
+	OptimizeScores(std::vector<cv::Mat> &scores_fs, int ite)
+		: scores_fs_(scores_fs), iterations_(ite) {}
 
 	void compute_scores();
 
-	std::vector<cv::Mat> sample_fs(const std::vector<cv::Mat> &xf,
-								   cv::Size grid_sz = cv::Size(0, 0));
-
-	inline int get_scale_ind() const { return scale_ind; }
-	inline float get_disp_row() const { return disp_row; }
-	inline float get_disp_col() const { return disp_col; }
+	inline int get_scale_ind() const { return scale_ind_; }
+	inline float get_disp_row() const { return disp_row_; }
+	inline float get_disp_col() const { return disp_col_; }
 
   private:
-	std::vector<cv::Mat> scores_fs;
-	int iterations;
+	std::vector<cv::Mat> scores_fs_;
+	int iterations_;
 
-	int scale_ind;
-	float disp_row;
-	float disp_col;
+	int scale_ind_;
+	float disp_row_;
+	float disp_col_;
 };
 } // namespace eco
 #endif

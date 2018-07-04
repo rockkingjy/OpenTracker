@@ -203,8 +203,8 @@ namespace eco
 		cv::merge(planes,result);
 		return result;
 	}
-
-	float mat_sum(const cv::Mat& org)
+// sum up all the mat elements.
+	float mat_sum(const cv::Mat& org) // gpu_implemented
 	{
 		if (org.empty())
 			return 0;

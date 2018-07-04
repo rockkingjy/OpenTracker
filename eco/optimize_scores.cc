@@ -3,27 +3,20 @@
 namespace eco{
 void OptimizeScores::compute_scores()
 {
-	//std::vector<cv::Mat> sampled_scores = sample_fs(scores_fs);
-	sample_fs(scores_fs);
-}
-
-std::vector<cv::Mat> OptimizeScores::sample_fs(const std::vector<cv::Mat>& xf, cv::Size grid_sz)
-{
-	//debug("xf: %lu, %d x %d", xf.size(), xf[0].rows, xf[0].cols);
 	std::vector<cv::Mat> sampled_scores;
 	// Do inverse fft to the scores in the Fourier domain back to the spacial domain
-	for (size_t i = 0; i < xf.size(); ++i)
+	for (size_t i = 0; i < scores_fs_.size(); ++i)
 	{
-		int area = xf[i].size().area();
+		int area = scores_fs_[i].size().area();
 		// debug("area: %d", area);
-		cv::Mat tmp = fftf(fftshift(xf[i], 1, 1, 1), 1);// inverse dft
+		cv::Mat tmp = fftf(fftshift(scores_fs_[i], 1, 1, 1), 1);// inverse dft
 		sampled_scores.push_back(real(tmp * area));   	// spacial domain only contains real part
 	}
 
 	// to store the position of maximum value of response
 	std::vector<int> row, col; 
 	std::vector<float> 	init_max_score;
-	for (size_t i = 0; i < xf.size(); ++i)
+	for (size_t i = 0; i < scores_fs_.size(); ++i)
 	{
 		cv::Point pos;
 		double maxValue = 0, minValue = 0;
@@ -35,7 +28,7 @@ std::vector<cv::Mat> OptimizeScores::sample_fs(const std::vector<cv::Mat>& xf, c
 	}
 	
 	// Shift and rescale the coordinate system to [-pi, pi]
-	int h = xf[0].rows, w = xf[0].cols;
+	int h = scores_fs_[0].rows, w = scores_fs_[0].cols;
 	std::vector<float> max_pos_y, max_pos_x, init_pos_y, init_pos_x;
 	for (size_t i = 0; i < row.size(); ++i)
 	{
@@ -59,7 +52,7 @@ std::vector<cv::Mat> OptimizeScores::sample_fs(const std::vector<cv::Mat>& xf, c
 	}
 	// Pre-compute complex exponential 
 	std::vector<cv::Mat> exp_iky, exp_ikx;
-	for (unsigned int i = 0; i < xf.size(); ++i)
+	for (unsigned int i = 0; i < scores_fs_.size(); ++i)
 	{
 		cv::Mat tempy(1, h, CV_32FC2), tempx(w, 1, CV_32FC2);
 		for (int y = 0; y < h; ++y)
@@ -73,18 +66,18 @@ std::vector<cv::Mat> OptimizeScores::sample_fs(const std::vector<cv::Mat>& xf, c
 	cv::Mat kyMat(1, h, CV_32FC1, &ky[0]), kxMat(w, 1, CV_32FC1, &kx[0]);
 	cv::Mat ky2Mat(1, h, CV_32FC1, &ky2[0]), kx2Mat(w, 1, CV_32FC1, &kx2[0]);
 
-	for (int ite = 0; ite < iterations; ++ite)
+	for (int ite = 0; ite < iterations_; ++ite)
 	{
 		// Compute gradient
 		std::vector<cv::Mat> ky_exp_ky, kx_exp_kx, y_resp, resp_x, grad_y, grad_x;
 		std::vector<cv::Mat> ival, H_yy, H_xx, H_xy, det_H;
-		for (unsigned int i = 0; i < xf.size(); i++)
+		for (unsigned int i = 0; i < scores_fs_.size(); i++)
 		{
 			ky_exp_ky.push_back(complexMultiplication(real2complx(kyMat), exp_iky[i]));
 			kx_exp_kx.push_back(complexMultiplication(real2complx(kxMat), exp_ikx[i]));
 		
-			y_resp.push_back(exp_iky[i] * scores_fs[i]);
-			resp_x.push_back(scores_fs[i] * exp_ikx[i]);
+			y_resp.push_back(exp_iky[i] * scores_fs_[i]);
+			resp_x.push_back(scores_fs_[i] * exp_ikx[i]);
 
 			grad_y.push_back(-1 * imag(ky_exp_ky[i] * resp_x[i]));
 			grad_x.push_back(-1 * imag(y_resp[i] * kx_exp_kx[i]));
@@ -97,7 +90,7 @@ std::vector<cv::Mat> OptimizeScores::sample_fs(const std::vector<cv::Mat>& xf, c
 
 			H_yy.push_back(real(-1 * complexMultiplication(real2complx(ky2Mat), exp_iky[i]) * resp_x[i] + ival[i]));
 			H_xx.push_back(real(-1 * y_resp[i] * complexMultiplication(real2complx(kx2Mat), exp_ikx[i]) + ival[i]));
-			H_xy.push_back(real(-1 * ky_exp_ky[i] * (scores_fs[i] * kx_exp_kx[i])));
+			H_xy.push_back(real(-1 * ky_exp_ky[i] * (scores_fs_[i] * kx_exp_kx[i])));
 
 			det_H.push_back(H_yy[i].mul(H_xx[i]) - H_xy[i].mul(H_xy[i]));
 		
@@ -122,7 +115,7 @@ std::vector<cv::Mat> OptimizeScores::sample_fs(const std::vector<cv::Mat>& xf, c
 	std::vector<float> max_score;
 	for (size_t i = 0; i < sampled_scores.size(); ++i)
 	{
-		float new_scores = real(exp_iky[i] * scores_fs[i] * exp_ikx[i]).at<float>(0, 0);
+		float new_scores = real(exp_iky[i] * scores_fs_[i] * exp_ikx[i]).at<float>(0, 0);
 		// check for scales that have not increased in score
 		if (new_scores > init_max_score[i])
 		{
@@ -139,11 +132,11 @@ std::vector<cv::Mat> OptimizeScores::sample_fs(const std::vector<cv::Mat>& xf, c
 	 
 	// Find the scale with the maximum response 
 	std::vector<float>::iterator pos = max_element(max_score.begin(), max_score.end());
-	scale_ind = pos - max_score.begin();
+	scale_ind_ = pos - max_score.begin();
 
 	// Scale the coordinate system to output_sz
-	disp_row = (fmod(max_pos_y[scale_ind] + CV_PI, CV_PI * 2.0) - CV_PI) / (CV_PI * 2.0) * h;
-	disp_col = (fmod(max_pos_x[scale_ind] + CV_PI, CV_PI * 2.0) - CV_PI) / (CV_PI * 2.0) * w;
-	return sampled_scores;
+	disp_row_ = (fmod(max_pos_y[scale_ind_] + CV_PI, CV_PI * 2.0) - CV_PI) / (CV_PI * 2.0) * h;
+	disp_col_ = (fmod(max_pos_x[scale_ind_] + CV_PI, CV_PI * 2.0) - CV_PI) / (CV_PI * 2.0) * w;
+	//return sampled_scores;
 }
 }

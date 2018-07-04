@@ -745,15 +745,6 @@ EcoTrain::rl_out EcoTrain::rl_out::operator+(rl_out data2)
 	return res;
 }
 
-EcoTrain::rl_out EcoTrain::rl_out::operator*(float scale)
-{
-	rl_out res;
-	res.up_part = FeatureScale(up_part, scale);
-	res.low_part = low_part * scale;
-	//res.low_part = ProjScale(low_part, scale);
-	return res;
-}
-
 EcoTrain::rl_out EcoTrain::rl_out::operator-(rl_out data)
 {
 	rl_out res;
@@ -763,4 +754,14 @@ EcoTrain::rl_out EcoTrain::rl_out::operator-(rl_out data)
 	//res.low_part = ProjMinus(low_part, data.low_part);
 	return res;
 }
+
+EcoTrain::rl_out EcoTrain::rl_out::operator*(float scale)
+{
+	rl_out res;
+	res.up_part = FeatureScale(up_part, scale);
+	res.low_part = low_part * scale;
+	//res.low_part = ProjScale(low_part, scale);
+	return res;
+}
+
 }
