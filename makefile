@@ -20,7 +20,7 @@ OBJ = kcf/fhog.o kcf/kcftracker.o \
 	goturn/helper/bounding_box.o goturn/helper/helper.o goturn/helper/image_proc.o \
 	goturn/helper/high_res_timer.o goturn/tracker/tracker.o trackerscompare.o \
 	eco/fftTool.o eco/fhog.o eco/interpolator.o eco/optimize_scores.o \
-	eco/reg_filter.o eco/feature_extractor.o eco/feature_operator.o  \
+	eco/regularization_filter.o eco/feature_extractor.o eco/feature_operator.o  \
 	eco/training.o eco/eco_sample_update.o eco/eco.o \
 	inputs/readdatasets.o 
 

@@ -1,4 +1,5 @@
-#include "openpose.h"
+#include "openpose.hpp"
+
 DEFINE_int32(logging_level, 3, "The logging level. Integer in the range [0, 255]. 0 will output any log() message, while"
                                " 255 will not output any. Current OpenPose library messages are in the range 0-4: 1 for"
                                " low priority messages and 4 for important ones.");

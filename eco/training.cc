@@ -1,7 +1,9 @@
-#include "training.h"
-eco_train::eco_train() {}
-eco_train::~eco_train() {}
-void eco_train::train_init(ECO_FEATS phf,
+#include "training.hpp"
+
+namespace eco{
+EcoTrain::EcoTrain() {}
+EcoTrain::~EcoTrain() {}
+void EcoTrain::train_init(ECO_FEATS phf,
 						   ECO_FEATS phf_inc,
 						   vector<cv::Mat> pproj_matrix,
 						   ECO_FEATS pxlf,
@@ -10,7 +12,7 @@ void eco_train::train_init(ECO_FEATS phf,
 						   ECO_FEATS psample_energy,
 						   vector<float> preg_energy,
 						   vector<cv::Mat> pproj_energy,
-						   eco_params &params)
+						   EcoParameters &params)
 {
 	hf = phf;
 	hf_inc = phf_inc;
@@ -24,7 +26,7 @@ void eco_train::train_init(ECO_FEATS phf,
 	params = params;
 }
 
-void eco_train::train_joint()
+void EcoTrain::train_joint()
 {
 	//  Initial Gauss - Newton optimization of the filter and
 	//  projection matrix.
@@ -133,7 +135,7 @@ void eco_train::train_joint()
 	}
 }
 
-ECO_FEATS eco_train::mtimesx(ECO_FEATS &x, vector<cv::Mat> y, bool _conj)
+ECO_FEATS EcoTrain::mtimesx(ECO_FEATS &x, vector<cv::Mat> y, bool _conj)
 {
 	if (x.size() != y.size())
 		assert("Unmatched size");
@@ -154,7 +156,7 @@ ECO_FEATS eco_train::mtimesx(ECO_FEATS &x, vector<cv::Mat> y, bool _conj)
 	return res;
 }
 
-vector<cv::Mat> eco_train::compute_rhs2(const vector<cv::Mat> &proj_mat,
+vector<cv::Mat> EcoTrain::compute_rhs2(const vector<cv::Mat> &proj_mat,
 										const vector<cv::Mat> &X_H,
 										const ECO_FEATS &fyf,
 										const vector<int> &lf_ind)
@@ -174,7 +176,7 @@ vector<cv::Mat> eco_train::compute_rhs2(const vector<cv::Mat> &proj_mat,
 	return res;
 }
 
-vector<cv::Mat> eco_train::feat_vec(const ECO_FEATS &x)
+vector<cv::Mat> EcoTrain::feat_vec(const ECO_FEATS &x)
 {
 	if (x.empty())
 		return vector<cv::Mat>();
@@ -193,7 +195,7 @@ vector<cv::Mat> eco_train::feat_vec(const ECO_FEATS &x)
 	return res;
 }
 
-eco_train::joint_fp eco_train::pcg_eco(const ECO_FEATS &init_samplef_proj,
+EcoTrain::joint_fp EcoTrain::pcg_eco(const ECO_FEATS &init_samplef_proj,
 									   const vector<cv::Mat> &reg_filter,
 									   const ECO_FEATS &init_samplef,
 									   const vector<cv::Mat> &init_samplesf_H,
@@ -272,7 +274,7 @@ eco_train::joint_fp eco_train::pcg_eco(const ECO_FEATS &init_samplef_proj,
 	return x;
 }
 
-eco_train::joint_out eco_train::lhs_operation_joint(joint_fp &hf,
+EcoTrain::joint_out EcoTrain::lhs_operation_joint(joint_fp &hf,
 													const ECO_FEATS &samplesf,
 													const vector<cv::Mat> &reg_filter,
 													const ECO_FEATS &init_samplef,
@@ -418,7 +420,7 @@ eco_train::joint_out eco_train::lhs_operation_joint(joint_fp &hf,
 //*****                     this part is for filter training
 //*****************************************************************************
 
-void eco_train::train_filter(const vector<ECO_FEATS> &samplesf, const vector<float> &sample_weights, const ECO_FEATS &sample_energy)
+void EcoTrain::train_filter(const vector<ECO_FEATS> &samplesf, const vector<float> &sample_weights, const ECO_FEATS &sample_energy)
 {
 	double timereco = (double)cv::getTickCount();
 	float fpseco = 0;
@@ -459,7 +461,7 @@ void eco_train::train_filter(const vector<ECO_FEATS> &samplesf, const vector<flo
 	debug("training time: %f", fpseco);
 }
 
-ECO_FEATS eco_train::pcg_eco_filter(const vector<ECO_FEATS> &samplesf,
+ECO_FEATS EcoTrain::pcg_eco_filter(const vector<ECO_FEATS> &samplesf,
 									const vector<cv::Mat> &reg_filter,
 									const vector<float> &sample_weights, // right side of equation A(x)
 									const ECO_FEATS &rhs_samplef,		 // the left side of the equation
@@ -574,7 +576,7 @@ ECO_FEATS eco_train::pcg_eco_filter(const vector<ECO_FEATS> &samplesf,
 	return x;
 }
 
-ECO_FEATS eco_train::lhs_operation(ECO_FEATS &hf,
+ECO_FEATS EcoTrain::lhs_operation(ECO_FEATS &hf,
 								   const vector<ECO_FEATS> &samplesf,
 								   const vector<cv::Mat> &reg_filter,
 								   const vector<float> &sample_weights)
@@ -654,13 +656,13 @@ ECO_FEATS eco_train::lhs_operation(ECO_FEATS &hf,
 	return res;
 }
 
-ECO_FEATS eco_train::conv2std(const vector<ECO_FEATS> &samplesf) const
+ECO_FEATS EcoTrain::conv2std(const vector<ECO_FEATS> &samplesf) const
 {
 	ECO_FEATS res;
 	return res;
 }
 
-eco_train::joint_out eco_train::joint_minus(const joint_out &a, const joint_out &b)
+EcoTrain::joint_out EcoTrain::joint_minus(const joint_out &a, const joint_out &b)
 {
 	joint_out residual;
 
@@ -681,7 +683,7 @@ eco_train::joint_out eco_train::joint_minus(const joint_out &a, const joint_out 
 	return residual;
 }
 
-eco_train::joint_out eco_train::diag_precond(const joint_out &a, const joint_out &b)
+EcoTrain::joint_out EcoTrain::diag_precond(const joint_out &a, const joint_out &b)
 {
 	joint_out res;
 	ECO_FEATS up_rs;
@@ -701,7 +703,7 @@ eco_train::joint_out eco_train::diag_precond(const joint_out &a, const joint_out
 	return res;
 }
 
-float eco_train::inner_product_joint(const joint_out &a, const joint_out &b)
+float EcoTrain::inner_product_joint(const joint_out &a, const joint_out &b)
 {
 	float ip = 0;
 	for (size_t i = 0; i < a.up_part.size(); i++)
@@ -717,7 +719,7 @@ float eco_train::inner_product_joint(const joint_out &a, const joint_out &b)
 	return ip;
 }
 
-float eco_train::inner_product(const ECO_FEATS &a, const ECO_FEATS &b)
+float EcoTrain::inner_product(const ECO_FEATS &a, const ECO_FEATS &b)
 {
 	float ip = 0;
 
@@ -733,7 +735,7 @@ float eco_train::inner_product(const ECO_FEATS &a, const ECO_FEATS &b)
 	return ip;
 }
 
-eco_train::rl_out eco_train::rl_out::operator+(rl_out data2)
+EcoTrain::rl_out EcoTrain::rl_out::operator+(rl_out data2)
 {
 	rl_out res;
 	//res.up_part = FeatureAdd(up_part, data2.up_part);
@@ -743,7 +745,7 @@ eco_train::rl_out eco_train::rl_out::operator+(rl_out data2)
 	return res;
 }
 
-eco_train::rl_out eco_train::rl_out::operator*(float scale)
+EcoTrain::rl_out EcoTrain::rl_out::operator*(float scale)
 {
 	rl_out res;
 	res.up_part = FeatureScale(up_part, scale);
@@ -752,7 +754,7 @@ eco_train::rl_out eco_train::rl_out::operator*(float scale)
 	return res;
 }
 
-eco_train::rl_out eco_train::rl_out::operator-(rl_out data)
+EcoTrain::rl_out EcoTrain::rl_out::operator-(rl_out data)
 {
 	rl_out res;
 	//res.up_part = FeautreMinus(up_part, data.up_part);
@@ -760,4 +762,5 @@ eco_train::rl_out eco_train::rl_out::operator-(rl_out data)
 	res.low_part = low_part - data.low_part;
 	//res.low_part = ProjMinus(low_part, data.low_part);
 	return res;
+}
 }

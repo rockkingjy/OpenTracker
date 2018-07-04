@@ -1,14 +1,11 @@
-#include "interpolator.h"
+#include "interpolator.hpp"
 
-interpolator::interpolator()
-{
-}
+namespace eco{
+Interpolator::Interpolator(){}
 
-interpolator::~interpolator()
-{
-}
+Interpolator::~Interpolator(){}
 
-void interpolator::get_interp_fourier(cv::Size filter_sz, cv::Mat &interp1_fs,
+void Interpolator::get_interp_fourier(cv::Size filter_sz, cv::Mat &interp1_fs,
 									  cv::Mat &interp2_fs, float a)
 {
 	cv::Mat temp1(filter_sz.height, 1, CV_32FC1);
@@ -37,7 +34,7 @@ void interpolator::get_interp_fourier(cv::Size filter_sz, cv::Mat &interp1_fs,
 	interp2_fs = interp1_fs.t();
 }
 
-cv::Mat interpolator::cubic_spline_fourier(cv::Mat f, float a)
+cv::Mat Interpolator::cubic_spline_fourier(cv::Mat f, float a)
 {
 	if (f.empty())
 		return cv::Mat();
@@ -62,4 +59,5 @@ cv::Mat interpolator::cubic_spline_fourier(cv::Mat f, float a)
 	bf.at<float>(bf.rows / 2, bf.cols / 2) = 1;
 
 	return bf;
+}
 }

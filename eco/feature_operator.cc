@@ -1,5 +1,6 @@
-#include "feature_operator.h"
+#include "feature_operator.hpp"
 
+namespace eco{
 ECO_FEATS do_dft(const ECO_FEATS &xlw)
 {
 	ECO_FEATS xlf;
@@ -387,3 +388,4 @@ ECO_FEATS FeautreMinus(ECO_FEATS data1, ECO_FEATS data2)
 	return res;
 }
 */
+}

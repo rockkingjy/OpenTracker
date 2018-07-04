@@ -2,9 +2,9 @@
 #include "kcf/kcftracker.hpp"
 #include "goturn/network/regressor.h"
 #include "goturn/tracker/tracker.h"
-#include "eco/eco.h"
-#include "inputs/readdatasets.h"
-#include "inputs/openpose.h"
+#include "eco/eco.hpp"
+#include "inputs/readdatasets.hpp"
+#include "inputs/openpose.hpp"
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/tracking.hpp>

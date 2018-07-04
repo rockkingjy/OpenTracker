@@ -6,13 +6,20 @@
 #include <vector>
 #include <string>
 
-#define DEBUG 1
+#define DEBUG 0
+
+#define INF 0x7f800000 //0x7fffffff 
 
 using std::vector;
 using std::string;
 
+
+namespace eco{
+	
+typedef   std::vector<std::vector<cv::Mat> > ECO_FEATS;// ECO feature[Num_features][Dimension_of_the_feature];
+typedef   cv::Vec<float, 2>                  COMPLEX;  // represent a complex number;
 //**** hog parameters cofiguration *****
-struct hog_params
+struct HogParameters
 {
 	int           cell_size 	 = 4;
 	int           compressed_dim = 10;	// Compressed dimensionality of each output layer (ECO Paper Table 1)
@@ -22,7 +29,7 @@ struct hog_params
 };
 
 //*** cnn   feature   configuration *****
-struct cnn_params{
+struct CnnParameters{
     string 	proto 	= "/media/elab/sdd/mycodes/tracker/OpenTrackers/eco/model/imagenet-vgg-m-2048.prototxt";
     string 	model	= "/media/elab/sdd/mycodes/tracker/OpenTrackers/eco/model/VGG_CNN_M_2048.caffemodel";
     string 	mean_file = "/media/elab/sdd/mycodes/tracker/OpenTrackers/eco/model/VGG_mean.binaryproto";
@@ -42,18 +49,18 @@ struct cnn_params{
 	vector<int>     end_ind           = {106, 106, 13, 13}; // sample feature end index 
 };
 
-struct hog_feature
+struct HogFeatures
 {
-	hog_params      fparams;
+	HogParameters      fparams;
 
 	cv::Size		img_input_sz;	 // input sample size 
 	cv::Size        img_sample_sz;   // the size of sample
 	cv::Size        data_sz_block0;			   
 };
 
-struct cnn_feature
+struct CnnFeatures
 {
-	cnn_params	    fparams;
+	CnnParameters	    fparams;
 
 	cv::Size		img_input_sz = cv::Size(224, 224);  // VGG default input sample size
 	cv::Size        img_sample_sz;              		// the size of sample
@@ -61,11 +68,10 @@ struct cnn_feature
 	cv::Mat         mean;                       
 };
 
-//*** ECO parameters  configuration *****
-struct eco_params
+struct EcoParameters
 {
-	cnn_feature 		cnn_features; 
-	hog_feature 		hog_features; 
+	CnnFeatures 		cnn_features; 
+	HogFeatures 		hog_features; 
 
 	// Features
 	bool 	useDeepFeature 		 = true;
@@ -139,5 +145,5 @@ struct eco_params
 	int 	gpu_id = 0;
 
 };
-        
+}
 #endif

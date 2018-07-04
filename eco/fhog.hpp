@@ -58,7 +58,7 @@
 //#include "opencv2/imgproc.hpp"
 #include "opencv2/imgproc/imgproc_c.h"
 
-namespace HOG_ECO
+namespace eco
 {
 //modified from "_lsvmc_types.h"
 

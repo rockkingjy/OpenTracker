@@ -16,26 +16,18 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
 
-#include "params.h"
-#include "feature_type.h"
-#include "interpolator.h"
-#include "reg_filter.h"
-#include "feature_extractor.h"
-#include "feature_operator.h"
-#include "eco_sample_update.h"
-#include "optimize_scores.h"
-#include "training.h"
-#include "fftTool.h"
-#include "debug.h"
+#include "parameters.hpp"
+#include "interpolator.hpp"
+#include "regularization_filter.hpp"
+#include "feature_extractor.hpp"
+#include "feature_operator.hpp"
+#include "eco_sample_update.hpp"
+#include "optimize_scores.hpp"
+#include "training.hpp"
+#include "fftTool.hpp"
+#include "debug.hpp"
 
-#endif
-
-//using namespace std;
 using namespace caffe;
-//using namespace cv;
-using namespace FFTTools_ECO;
-using namespace RectTools_ECO;
-using namespace eco_sample_update;
 
 namespace eco
 {
@@ -70,43 +62,45 @@ class ECO
 						   std::vector<cv::Mat> kx, std::vector<cv::Mat> ky);
 
   private:
-	eco_params 			params;
-	boost::shared_ptr<Net<float>> 	net;
-	cv::Mat 			deep_mean_mat, deep_mean_mean_mat;
+	boost::shared_ptr<Net<float>> 	net_;
+	cv::Mat 			deep_mean_mat_, deep_mean_mean_mat_;
 
-	cv::Point2f 		pos; 			// final result
-	size_t 				frames_since_last_train; 	 // used for update;
+	EcoParameters 			params_;
+	cv::Point2f 		pos_; 			// final result
+	size_t 				frames_since_last_train_; 	 // used for update;
 
 	// The max size of feature and its index, output_sz is T in (9) of C-COT paper
-	size_t 				output_sz, output_index; 	
+	size_t 				output_size_, output_index_; 	
 
 	//cv::Size 			target_sz;		// Original target size
-	cv::Size2f 			base_target_sz; // target size without scale
-	cv::Size2i			img_sample_sz;  // base_target_sz * sarch_area_scale
-	cv::Size2i			img_support_sz;	// the corresponding size in the image
+	cv::Size2f 			base_target_size_; // target size without scale
+	cv::Size2i			img_sample_size_;  // base_target_sz * sarch_area_scale
+	cv::Size2i			img_support_size_;	// the corresponding size in the image
 
-	vector<cv::Size> 	feature_sz, filter_sz;
-	vector<int> 		feature_dim, compressed_dim;
+	vector<cv::Size> 	feature_size_, filter_size_;
+	vector<int> 		feature_dim_, compressed_dim_;
 
-	float 				currentScaleFactor; 		// current img scale 
+	float 				currentScaleFactor_; 		// current img scale 
 
 	// Compute the Fourier series indices 
 	// kx, ky is the k in (9) of C-COT paper, yf is the left part of (9);
-	vector<cv::Mat> 	ky, kx, yf, _cos_window; 
-	vector<cv::Mat> 	interp1_fs, interp2_fs; 	// interpl fourier series
+	vector<cv::Mat> 	ky_, kx_, yf_, cos_window_; 
+	vector<cv::Mat> 	interp1_fs_, interp2_fs_; 	// interpl fourier series
 
-	vector<cv::Mat> 	reg_filter, projection_matrix; // spatial filter
-	vector<float> 		reg_energy, scaleFactors;
+	vector<cv::Mat> 	reg_filter_, projection_matrix_; // spatial filter
+	vector<float> 		reg_energy_, scale_factors_;
 
-	feature_extractor 	feat_extrator;
+	FeatureExtractor 	feature_extractor_;
 
-	sample_update 		SampleUpdate;
+	SampleUpdate 		sample_update_;
 
-	eco_train 			eco_trainer;
+	EcoTrain 			eco_trainer_;
 
-	ECO_FEATS 			sample_energy;
-	ECO_FEATS 			hf_full;
+	ECO_FEATS 			sample_energy_;
+	ECO_FEATS 			hf_full_;
 	
 };
 
 } // namespace eco
+
+#endif

@@ -9,19 +9,17 @@
 #include <opencv2/opencv.hpp>
 #include <algorithm>
 
-#include "fftTool.h"
+#include "fftTool.hpp"
 #include "recttools.hpp"
-#include "params.h"
-#include "feature_type.h"
-#include "feature_operator.h"
+#include "parameters.hpp"
+#include "feature_operator.hpp"
 
-using namespace FFTTools_ECO;
-
-class eco_train
+namespace eco{
+class EcoTrain
 {
 public:
-	eco_train();
-	virtual ~eco_train();
+	EcoTrain();
+	virtual ~EcoTrain();
 
 	struct STATE
 	{
@@ -53,7 +51,7 @@ public:
 								  ECO_FEATS psample_energy, 
 								  vector<float> preg_energy, 
 								  vector<cv::Mat> pproj_energy,
-								  eco_params& params);
+								  EcoParameters& params);
 
 	void                train_joint();
 
@@ -123,10 +121,10 @@ private:
 
 	vector<cv::Mat>     projection_matrix, proj_energy; // projection matrix and its energy 
 	
-	eco_params          params;
+	EcoParameters          params;
 
 	float               resvec, resle;   	// Prellocate vector for norm of residuals  norm(b - A(x))s
 	STATE               state;
 };
-
+}
 #endif

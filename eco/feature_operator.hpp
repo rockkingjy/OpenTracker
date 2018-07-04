@@ -8,14 +8,14 @@
 #include <iostream>
 #include <algorithm>
 
-#include "fftTool.h"
-#include "feature_type.h"
+#include "parameters.hpp"
+#include "fftTool.hpp"
 #include "recttools.hpp"
-#include "debug.h"
+#include "debug.hpp"
 
-using namespace FFTTools_ECO;
-using namespace RectTools_ECO;
 
+namespace eco 
+{
 template <typename T>
 extern std::vector<T> operator+(const std::vector<T> &a, const std::vector<T> &b)
 {
@@ -70,5 +70,6 @@ extern std::vector<cv::Mat> FeatureVectorization(const ECO_FEATS &x);
 extern ECO_FEATS FeatureDotMultiply(const ECO_FEATS &a, const ECO_FEATS &b);
 extern ECO_FEATS FeatureDotDivide(const ECO_FEATS data1, const ECO_FEATS data2);
 extern ECO_FEATS FeatureScale(ECO_FEATS data, float scale);
+}
 
 #endif

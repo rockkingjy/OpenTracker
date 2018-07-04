@@ -1,9 +1,9 @@
-#include "feature_extractor.h"
-
-ECO_FEATS feature_extractor::extractor(cv::Mat image,
+#include "feature_extractor.hpp"
+namespace eco{
+ECO_FEATS FeatureExtractor::extractor(cv::Mat image,
 									   cv::Point2f pos,
 									   vector<float> scales,
-									   const eco_params &params,
+									   const EcoParameters &params,
 									   const cv::Mat &deep_mean_mat,
 									   const boost::shared_ptr<Net<float>> &net)
 {
@@ -72,11 +72,11 @@ ECO_FEATS feature_extractor::extractor(cv::Mat image,
 	return sum_features;
 }
 
-cv::Mat feature_extractor::sample_patch(const cv::Mat &im,
+cv::Mat FeatureExtractor::sample_patch(const cv::Mat &im,
 										const cv::Point2f &posf,
 										cv::Size2f sample_sz,
 										cv::Size2f input_sz,
-										const eco_params &gparams)
+										const EcoParameters &gparams)
 {
 	// Pos should be integer when input, but floor in just in case.
 	cv::Point pos(posf.operator cv::Point());
@@ -132,7 +132,7 @@ cv::Mat feature_extractor::sample_patch(const cv::Mat &im,
 	return resized_patch;
 }
 
-vector<cv::Mat> feature_extractor::get_hog(vector<cv::Mat> ims)
+vector<cv::Mat> FeatureExtractor::get_hog(vector<cv::Mat> ims)
 {
 	if (ims.empty())
 		return vector<cv::Mat>();
@@ -221,7 +221,7 @@ vector<cv::Mat> feature_extractor::get_hog(vector<cv::Mat> ims)
 	return hog_feats;
 }
 
-ECO_FEATS feature_extractor::get_cnn_layers(vector<cv::Mat> im, const cv::Mat &deep_mean_mat)
+ECO_FEATS FeatureExtractor::get_cnn_layers(vector<cv::Mat> im, const cv::Mat &deep_mean_mat)
 {
 	Blob<float> *input_layer = net->input_blobs()[0];
 	int width = input_layer->width();
@@ -304,7 +304,7 @@ ECO_FEATS feature_extractor::get_cnn_layers(vector<cv::Mat> im, const cv::Mat &d
 			cv::Mat feat_map(shape[2], shape[3], CV_32FC1, (void *)pstart);
 			pstart += shape[2] * shape[3];
 			//  extract features according to fparams
-			cnn_params fparams = cnn_features.fparams;
+			CnnParameters fparams = cnn_features.fparams;
 			cv::Mat extract_map = feat_map(cv::Range(fparams.start_ind[0 + 2 * idx] - 1, fparams.end_ind[0 + 2 * idx]),
 										   cv::Range(fparams.start_ind[0 + 2 * idx] - 1, fparams.end_ind[0 + 2 * idx]));
 			extract_map = (cnn_features.fparams.downsample_factor[idx] == 1) ? extract_map : sample_pool(extract_map, 2, 2);
@@ -317,7 +317,7 @@ ECO_FEATS feature_extractor::get_cnn_layers(vector<cv::Mat> im, const cv::Mat &d
 	return feature_map;
 }
 
-cv::Mat feature_extractor::sample_pool(const cv::Mat &im, int smaple_factor, int stride)
+cv::Mat FeatureExtractor::sample_pool(const cv::Mat &im, int smaple_factor, int stride)
 {
 	if (im.empty())
 		return cv::Mat();
@@ -331,7 +331,7 @@ cv::Mat feature_extractor::sample_pool(const cv::Mat &im, int smaple_factor, int
 	return new_im;
 }
 
-void feature_extractor::cnn_feature_normalization(ECO_FEATS &cnn_feat_maps)
+void FeatureExtractor::cnn_feature_normalization(ECO_FEATS &cnn_feat_maps)
 {
 	//debug("cnn_feat_maps: %lu", cnn_feat_maps.size());
 	for (size_t i = 0; i < cnn_feat_maps.size(); i++) // for each layer = 2
@@ -358,7 +358,7 @@ void feature_extractor::cnn_feature_normalization(ECO_FEATS &cnn_feat_maps)
 	}
 }
 
-vector<cv::Mat> feature_extractor::hog_feature_normalization(vector<cv::Mat> &hog_feat_maps)
+vector<cv::Mat> FeatureExtractor::hog_feature_normalization(vector<cv::Mat> &hog_feat_maps)
 {
 	vector<cv::Mat> hog_maps_vec;
 	for (size_t i = 0; i < hog_feat_maps.size(); i++)
@@ -379,4 +379,5 @@ vector<cv::Mat> feature_extractor::hog_feature_normalization(vector<cv::Mat> &ho
 	}
 
 	return hog_maps_vec;
+}
 }

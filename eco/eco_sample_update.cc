@@ -1,9 +1,9 @@
-#include "eco_sample_update.h"
+#include "eco_sample_update.hpp"
 
-namespace eco_sample_update
+namespace eco
 {
 
-void sample_update::init(const std::vector<cv::Size> &filter, const std::vector<int> &feature_dim, size_t max_samples)
+void SampleUpdate::init(const std::vector<cv::Size> &filter, const std::vector<int> &feature_dim, size_t max_samples)
 {
 	nSamples = max_samples;
 	// distance matrix initialization
@@ -51,7 +51,7 @@ void sample_update::init(const std::vector<cv::Size> &filter, const std::vector<
 */
 }
 
-void sample_update::update_sample_space_model(ECO_FEATS &new_train_sample)
+void SampleUpdate::update_sample_space_model(ECO_FEATS &new_train_sample)
 {
 	//*** Find the inner product of the new sample with existing samples ***
 	cv::Mat gram_vector = find_gram_vector(new_train_sample); // 32FC2 50 x 1
@@ -240,7 +240,7 @@ void sample_update::update_sample_space_model(ECO_FEATS &new_train_sample)
 	//debug("num_training_samples: %lu", num_training_samples);
 } // namespace eco_sample_update
 
-void sample_update::update_distance_matrix(cv::Mat &gram_vector, float new_sample_norm, int id1, int id2, float w1, float w2)
+void SampleUpdate::update_distance_matrix(cv::Mat &gram_vector, float new_sample_norm, int id1, int id2, float w1, float w2)
 {
 	 
 	float alpha1 = w1 / (w1 + w2);

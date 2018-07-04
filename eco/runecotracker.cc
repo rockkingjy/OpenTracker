@@ -11,9 +11,9 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-#include "head.h" //****** caffe C++ problem solution *******   !!!just be careful
-#include "eco.h"
-#include "debug.h"
+
+#include "eco.hpp"
+#include "debug.hpp"
 //#define USE_VIDEO
 
 using namespace std;

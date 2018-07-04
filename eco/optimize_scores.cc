@@ -1,12 +1,13 @@
-#include"optimize_scores.h"
+#include"optimize_scores.hpp"
 
-void optimize_scores::compute_scores()
+namespace eco{
+void OptimizeScores::compute_scores()
 {
 	//std::vector<cv::Mat> sampled_scores = sample_fs(scores_fs);
 	sample_fs(scores_fs);
 }
 
-std::vector<cv::Mat> optimize_scores::sample_fs(const std::vector<cv::Mat>& xf, cv::Size grid_sz)
+std::vector<cv::Mat> OptimizeScores::sample_fs(const std::vector<cv::Mat>& xf, cv::Size grid_sz)
 {
 	//debug("xf: %lu, %d x %d", xf.size(), xf[0].rows, xf[0].cols);
 	std::vector<cv::Mat> sampled_scores;
@@ -144,4 +145,5 @@ std::vector<cv::Mat> optimize_scores::sample_fs(const std::vector<cv::Mat>& xf, 
 	disp_row = (fmod(max_pos_y[scale_ind] + CV_PI, CV_PI * 2.0) - CV_PI) / (CV_PI * 2.0) * h;
 	disp_col = (fmod(max_pos_x[scale_ind] + CV_PI, CV_PI * 2.0) - CV_PI) / (CV_PI * 2.0) * w;
 	return sampled_scores;
+}
 }

@@ -1,6 +1,7 @@
-#include "reg_filter.h"
+#include "regularization_filter.hpp"
 
-cv::Mat get_reg_filter(cv::Size sz, cv::Size2f target_sz, const eco_params &params)
+namespace eco{
+cv::Mat get_regularization_filter(cv::Size sz, cv::Size2f target_sz, const EcoParameters &params)
 {
 	cv::Mat result;
 
@@ -86,4 +87,5 @@ cv::Mat get_reg_filter(cv::Size sz, cv::Size2f target_sz, const eco_params &para
 	}
 
 	return result;
+}
 }

@@ -6,7 +6,7 @@
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
  
-namespace FFTTools_ECO
+namespace eco
 {
 	// Previous declarations, to avoid warnings
 	cv::Mat fftf(const cv::Mat& img_org, bool backwards = false);

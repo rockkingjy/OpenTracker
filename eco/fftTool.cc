@@ -1,7 +1,7 @@
 
-#include "fftTool.h"
+#include "fftTool.hpp"
 
-namespace FFTTools_ECO
+namespace eco
 {
 	// Previous declarations, to avoid warnings
 	

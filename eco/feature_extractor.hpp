@@ -16,30 +16,28 @@
 #include <opencv2/objdetect/objdetect.hpp>
 #include <numeric>
 
-#include "params.h"
-#include "feature_type.h"
-#include "fftTool.h"
+#include "parameters.hpp"
+#include "fftTool.hpp"
 #include "recttools.hpp"
 #include "fhog.hpp"
-#include "debug.h"
+#include "debug.hpp"
 
-using namespace FFTTools_ECO;
-using namespace RectTools_ECO;
-using namespace HOG_ECO;
-//using namespace std;
 using namespace caffe;
 
-class feature_extractor
+namespace eco
+{
+
+class FeatureExtractor
 {
   public:
-	feature_extractor() {}
+	FeatureExtractor() {}
 
-	virtual ~feature_extractor(){};
+	virtual ~FeatureExtractor(){};
 
 	ECO_FEATS extractor(cv::Mat 			image, 
 						cv::Point2f 		pos,
 						vector<float> 		scales,
-						const eco_params 	&params,
+						const EcoParameters 	&params,
 						const cv::Mat 		&deep_mean_mat,
 						const boost::shared_ptr<Net<float>> &net = boost::shared_ptr<Net<float>>());
 
@@ -47,7 +45,7 @@ class feature_extractor
 						 const cv::Point2f &pos, 
 						 cv::Size2f sample_sz,
 						 cv::Size2f input_sz, 
-						 const eco_params &gparams);
+						 const EcoParameters &gparams);
 
 	vector<cv::Mat> get_hog(vector<cv::Mat> im);
 
@@ -64,8 +62,8 @@ class feature_extractor
 	inline vector<cv::Mat> get_hog_feats() const { return hog_feat_maps; }
 
   private:
-	cnn_feature cnn_features;
-	hog_feature hog_features;
+	CnnFeatures cnn_features;
+	HogFeatures hog_features;
 
 	int cnn_feat_ind = -1;
 	int hog_feat_ind = -1;
@@ -75,6 +73,7 @@ class feature_extractor
 	vector<cv::Mat> hog_feat_maps;
 
 	boost::shared_ptr<Net<float>> net;
-};
 
+};
+}
 #endif

@@ -1,0 +1,14 @@
+#ifndef REG_FILTER
+#define REG_FILTER
+
+#include <opencv2/features2d/features2d.hpp>
+#include <opencv2/opencv.hpp>
+#include <cmath>
+#include "parameters.hpp"
+#include "fftTool.hpp"
+#include "debug.hpp"
+
+namespace eco{
+cv::Mat  get_regularization_filter(cv::Size sz, cv::Size2f target_sz, const EcoParameters& params);
+}
+#endif 

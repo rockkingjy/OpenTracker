@@ -5,20 +5,20 @@
 #include <opencv2/opencv.hpp>
 #include <numeric>
 
-#include "feature_type.h"
-#include "fftTool.h"
-#include "feature_operator.h"
-#include "debug.h"
+#include "parameters.hpp"
+#include "fftTool.hpp"
+#include "feature_operator.hpp"
+#include "debug.hpp"
 
-using namespace FFTTools_ECO;
+//using namespace FFTTools_ECO;
 
-namespace eco_sample_update{
+namespace eco{
 
-	class sample_update
+	class SampleUpdate
 	{
 	public:
-		sample_update(){};
-		virtual ~sample_update(){};
+		SampleUpdate(){};
+		virtual ~SampleUpdate(){};
 
 		void init(const std::vector<cv::Size>& filter, const std::vector<int>& feature_dim, size_t max_samples);
 		void update_sample_space_model( ECO_FEATS& new_train_sample);
@@ -111,4 +111,4 @@ namespace eco_sample_update{
 
 	};
 
-};
+}

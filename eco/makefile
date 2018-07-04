@@ -18,7 +18,7 @@ HEADERS = $(wildcard *.h)
 #$(info DEPS is: $(DEPS))
 
 OBJS = fftTool.o fhog.o interpolator.o optimize_scores.o \
-		reg_filter.o feature_extractor.o feature_operator.o  \
+		regularization_filter.o feature_extractor.o feature_operator.o  \
 		training.o eco_sample_update.o eco.o runecotracker.o
 
 all: runecotracker.bin
