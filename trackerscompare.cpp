@@ -188,14 +188,14 @@ int main(int argc, char **argv)
 
         // Display frameDraw.=========================================================
         //cvNamedWindow("Tracking", CV_WINDOW_NORMAL);
-        imshow("Tracking", frameDraw);
+        imshow("OpenTracker", frameDraw);
 
         int c = cvWaitKey(1);
         if (c != -1)
             c = c % 256;
         if (c == 27)
         {
-            cvDestroyWindow("Tracking");
+            cvDestroyWindow("OpenTracker");
             return 0;
         }
         waitKey(1);
@@ -204,7 +204,7 @@ int main(int argc, char **argv)
         readdatasets.ReadNextFrame(bboxGroundtruth, frame);
         //cap >> frame;
     }
-    cvDestroyWindow("Tracking");
+    cvDestroyWindow("OpenTracker");
     return 0;
 
     /*

@@ -41,5 +41,5 @@ build/
 *.caffemodel
 *.bin
 .vscode/
-
+.DS_Store
 
