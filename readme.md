@@ -28,6 +28,13 @@ Included                                   | Dataset    | Reference
 -------------------------------------------|--------------|-----------
 :ballot_box_with_check:                    | OpenPose     | [Web](https://github.com/CMU-Perceptual-Computing-Lab/openpose)
 
+## Tested Operating Systems
+Included                   | OS    
+---------------------------|-------------
+:ballot_box_with_check:    | Ubuntu16.04
+ :hammer:                  | Jetson TX1/2
+ :hammer:                  | Rasperberry PI 3
+ :hammer:                  | Windows10
 
 # Quick start
 To run a test with ECO without Deep feature, no need to install Caffe, CUDA etc.
