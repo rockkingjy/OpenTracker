@@ -10,7 +10,7 @@
 #include <vector>
 #include <string>
 
-#define DEBUG 1
+#define DEBUG 0
 
 #define INF 0x7f800000 //0x7fffffff 
 

@@ -19,11 +19,7 @@
 using namespace std;
 using namespace cv;
 using namespace eco;
-// Convert to string
-/*#define SSTR(x) static_cast<std::ostringstream &>(           \
-                    (std::ostringstream() << std::dec << x)) \
-                    .str()
-                    */
+
 /*
 static string WIN_NAME = "ECO-Tracker";
 
@@ -305,12 +301,9 @@ int main(int argc, char **argv)
         }
 
         // Display FPS on frameDraw
-  /*      putText(frameDraw, "FPS: " + SSTR(float(fpseco)), Point(100, 50), FONT_HERSHEY_SIMPLEX,
-                0.75, Scalar(0, 225, 0), 2);
-*/
         ostringstream os; 
         os << float(fpseco); 
-        putText(frameDraw, "FPS: " + os.str(), Point(100, 50), FONT_HERSHEY_SIMPLEX,
+        putText(frameDraw, "FPS: " + os.str(), Point(100, 30), FONT_HERSHEY_SIMPLEX,
                 0.75, Scalar(0, 225, 0), 2);
    
         if (DEBUG == 0)

@@ -21,10 +21,6 @@ using namespace cv;
 using namespace std;
 
 // Convert to string
-#define SSTR(x) static_cast<std::ostringstream &>(           \
-                    (std::ostringstream() << std::dec << x)) \
-                    .str()
-
 int main(int argc, char **argv)
 { /*
     // Read using openpose============================================
@@ -171,8 +167,10 @@ int main(int argc, char **argv)
         readdatasets.DrawGroundTruth(bboxGroundtruth, frameDraw);
 
         // Display FPS on frameDraw
-        putText(frameDraw, "FPS: " + SSTR(long(fpseco)), Point(10, 30), FONT_HERSHEY_SIMPLEX,
-                0.75, Scalar(255, 0, 255), 2);
+        ostringstream os; 
+        os << float(fpseco); 
+        putText(frameDraw, "FPS: " + os.str(), Point(100, 30), FONT_HERSHEY_SIMPLEX,
+                0.75, Scalar(0, 225, 0), 2);
 
         // Draw the label of trackers
         putText(frameDraw, "Opencv ", cv::Point(frameDraw.cols - 180, 50), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(255, 0, 0), 2);

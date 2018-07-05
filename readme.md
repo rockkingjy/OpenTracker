@@ -1,3 +1,8 @@
+
+<p align="center">
+    <img src="images/Opentracker.gif", width="480">
+</p>
+
 **Why most of the trackers are written by matlab? Slow speed, lots of extra-packages, need loads of money to buy the licences, version compliance problems (gcc4.9 gcc5.0 oh my god)... Anyway, I hate that! C++ is fast and clear! I even doubt that the FPS measured by using matlab is really meaningful, especially for actual and embedded system use! So I will re-implement those trackers by cpp day by day, keep the clarity and less extra-packages in mind, hope you like it!**
 
 <p align="center">
