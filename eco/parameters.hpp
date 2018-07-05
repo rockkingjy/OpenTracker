@@ -10,7 +10,7 @@
 #include <vector>
 #include <string>
 
-#define DEBUG 0
+#define DEBUG 1
 
 #define INF 0x7f800000 //0x7fffffff 
 
@@ -143,7 +143,7 @@ struct EcoParameters
 	bool    interpolation_windowing = false;	// Do additional windowing on the Fourier coefficients of the kernel
 
 	// Scale parameters for the translation model
-	size_t  number_of_scales = 5;			    // Number of scales to run the detector
+	size_t  number_of_scales = 1;			    // Number of scales to run the detector
 	float   scale_step	= 1.02f;                // The scale factor
 	float 	min_scale_factor;
 	float	max_scale_factor;

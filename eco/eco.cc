@@ -381,13 +381,13 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 		cv::circle(resframe, pos_, 5, cv::Scalar(0, 255, 0));
 		cv::circle(resframe, sample_pos, 5, cv::Scalar(0, 255, 225));
 
-		cv::imshow("Tracking", resframe);
+		cv::imshow("OpenTracker", resframe);
 		int c = cvWaitKey(1);
 		if (c != -1)
 			c = c % 256;
 		if (c == 27)
 		{
-			cvDestroyWindow("Tracking");
+			cvDestroyWindow("OpenTracker");
 			assert(0);
 		}
 		//cv::waitKey(0);

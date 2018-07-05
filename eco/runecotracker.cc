@@ -315,7 +315,7 @@ int main(int argc, char **argv)
    
         if (DEBUG == 0)
         {
-            imshow("Tracking", frameDraw);
+            imshow("OpenTracker", frameDraw);
         }
 
         int c = cvWaitKey(1);
@@ -323,7 +323,7 @@ int main(int argc, char **argv)
             c = c % 256;
         if (c == 27)
         {
-            cvDestroyWindow("Tracking");
+            cvDestroyWindow("OpenTracker");
             return 0;
         }
         waitKey(1);
