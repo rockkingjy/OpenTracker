@@ -1,9 +1,11 @@
-#pragma once
+#ifndef DEBUG_HPP
+#define DEBUG_HPP
 
 #include <stdio.h>
 #include <string>
 #include <vector>
 #include <opencv2/opencv.hpp>
+#include <numeric>
 
 #define getName(var) #var
 
@@ -491,3 +493,4 @@ inline void accumulateTest()
 	debug("True sum:%f", sum);
 	printf("accumulateTest end=======================================\n");
 }
+#endif

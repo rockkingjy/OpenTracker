@@ -31,18 +31,27 @@ Included                                   | Dataset    | Reference
 ## Tested Operating Systems
 Included                   | OS    
 ---------------------------|-------------
-:ballot_box_with_check:    | Ubuntu16.04
- :hammer:                  | Jetson TX1/2
+:ballot_box_with_check:    | Ubuntu 16.04
+:ballot_box_with_check:    | macOS Sierra
+ :hammer:                  | NVIDIA Jetson TX1/2
  :hammer:                  | Rasperberry PI 3
  :hammer:                  | Windows10
 
-# Quick start
+# Quick start -- Ubuntu
 To run a test with ECO without Deep feature, no need to install Caffe, CUDA etc.
 ```
 cd eco
 make -j`nproc`
 ./runecotracker.bin
 ```
+# Quick start -- macOS
+```
+brew install tesseract
+cd eco
+make 
+./runecotracker.bin
+```
+
 
 # Compile and Run 
 --------------------------------
