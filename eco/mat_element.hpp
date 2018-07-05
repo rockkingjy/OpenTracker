@@ -1,5 +1,5 @@
-#ifndef MAT_ELEMENT_H
-#define MAT_ELEMENT_H
+#ifndef MAT_ELEMENT_HPP
+#define MAT_ELEMENT_HPP
 
 #include <iostream>
 #include <math.h>

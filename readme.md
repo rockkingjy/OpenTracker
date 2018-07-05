@@ -28,7 +28,16 @@ Included                                   | Dataset    | Reference
 -------------------------------------------|--------------|-----------
 :ballot_box_with_check:                    | OpenPose     | [Web](https://github.com/CMU-Perceptual-Computing-Lab/openpose)
 
-# Compile and Run
+
+# Quick start
+To run a test with ECO without Deep feature, no need to install Caffe, CUDA etc.
+```
+cd eco
+make -j`nproc`
+./runecotracker.bin
+```
+
+# Compile and Run 
 --------------------------------
 For the **environment settings** and detailed procedures (with all the packages from the very beginning), refer to: [[My DeeplearningSettings](https://github.com/rockkingjy/DeepLearningSettings)].
 
@@ -38,17 +47,61 @@ Of course, for trackers that use Deep features, you need to install [[**caffe**]
 
 If you want to autodetection the people with web camera, you need to install [[OpenPose](https://github.com/CMU-Perceptual-Computing-Lab/openpose)]. 
 
-## Run to compare all the trackers
+
+## Parameters setting
+If you want to use Openpose, in `./makefile`, set `OPENPOSE=1`, else set `OPENPOSE=0`.
+
+Change the datasets, in `inputs/readdatasets.hpp`, change the number of `string databaseType = databaseTypes[1];`
+
+Change the path of datasets, in `inputs/readdatasets.cc`, change the `path` to your path of data.
+
+## To use web camera with openpose
+By raising your two arms higher than your nose, it will atomatically detect the person and start the tracking programme.
+
+
+## Run to compare all the trackers at the same time
 ```
 make all
 ./trackerscompare.bin
 ```
 
-## To use web camera with openpose
-By raising your two arms higher than your nose, it will atomatically detect the person and start the tracking programme.
+## Run ECO
+### Compile without Caffe
+If you don't want to compile with Caffe, that means you cannot use Deep features, set in **eco/makefile**: `USE_CAFFE=0`.
+
+If you don't want to compile with CUDA, that means you cannot use Deep features, set in **eco/makefile**: `USE_CUDA=0`.
+
+### Compile with Caffe
+If you want to compile with Caffe, set in **eco/makefile**: `USE_CAFFE=1` (CUDA will automatically set to use), and set the according caffe path of your system in **eco/makefile**:
+```
+ifeq ($(USE_CAFFE), 1)
+CXXFLAGS+= -DUSE_CAFFE
+LDFLAGS+= -L/media/elab/sdd/mycodes/caffe/build/lib -lcaffe 
+CXXFLAGS+= -I/media/elab/sdd/mycodes/caffe/build/include/ -I/media/elab/sdd/mycodes/caffe/include/ 
+endif
+```
+
+Download a pretrained [[VGG_CNN_M_2048.caffemodel (370 MB)](https://drive.google.com/file/d/1-kYYCcTR7gBZyHM5oVChNvu0Q9XPdva3/view?usp=sharing)], put it into folder: **eco/model**
+
+For using Deep features, in **eco/parameters.cc**, change to `bool useDeepFeature = true;`.
+
+### Datasets settings
+Change the path of your test images in **eco/runecotracker.cc**.
+
+Change the datasets, in **eco/runecotracker.cc**, change the number of `string databaseType = databaseTypes[1];`.
+
+### Show heatmap
+If you want to show the heatmap of the tracking, in **eco/parameters.cc**, change to `#define DEBUG 1`.
+
+### Compile and Run:
+```
+cd eco
+make -j`nproc`
+./runecotracker.bin
+```
 
 ## Run Opencv trackers
-Change the path of your test images in **kcf/opencvtrackers.cpp**.
+Change the path of your test images in **kcf/opencvtrackers.cc**.
 ```
 cd opencvtrackers
 make 
@@ -56,22 +109,22 @@ make
 ```
 
 ## Run KCF / DSST
-Change the path of your test images in **kcf/runkcftracker.cpp**.
+Change the path of your test images in **kcf/runkcftracker.cc**.
 ```
 cd kcf
-make -j12
+make -j`nproc`
 ./runkcftracker.bin
 ```
 
 ## Run GOTURN
-Change the path of your test images in **goturn/rungoturntracker.cpp**.
+Change the path of your test images in **goturn/rungoturntracker.cc**.
 
 ### Pretrained model
 You can download a pretrained [[goturun_tracker.caffemodel (434 MB)](https://drive.google.com/file/d/1uc9k8sTqug_EY9kv1v_QnrDxjkrTJejR/view?usp=sharing)], put it into folder: **goturn/nets**
 
 ```
 cd goturn
-make -j12
+make -j`nproc`
 ./rungoturntracker.bin
 ```
 
@@ -79,12 +132,6 @@ make -j12
 ```
 ./classification.bin   /media/elab/sdd/caffe/models/bvlc_reference_caffenet/deploy.prototxt   /media/elab/sdd/caffe/models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel   /media/elab/sdd/caffe/data/ilsvrc12/imagenet_mean.binaryproto   /media/elab/sdd/caffe/data/ilsvrc12/synset_words.txt   /media/elab/sdd/caffe/examples/images/cat.jpg
 ```
-
-## Run ECO
-Change the path of your test images in **eco/runecotracker.cpp**.
-
-You can download a pretrained [[VGG_CNN_M_2048.caffemodel (370 MB)](https://drive.google.com/file/d/1-kYYCcTR7gBZyHM5oVChNvu0Q9XPdva3/view?usp=sharing)], put it into folder: **eco/model**
-
 
 # References 
 --------------------------------

@@ -1,9 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <caffe/caffe.hpp>
-#include <caffe/util/io.hpp>
-#include <caffe/caffe.hpp>
+
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/opencv.hpp>
@@ -11,13 +9,14 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+#include <gflags/gflags.h>
+#include <glog/logging.h>
 
 #include "eco.hpp"
 #include "debug.hpp"
 //#define USE_VIDEO
 
 using namespace std;
-using namespace caffe;
 using namespace cv;
 using namespace eco;
 // Convert to string
@@ -63,11 +62,11 @@ void drawBox(cv::Mat& image, cv::Rect box, cv::Scalar color, int thick){
 }
 */
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
-	::google::InitGoogleLogging(argv[0]);
+    ::google::InitGoogleLogging(argv[0]);
     // Database settings
-    string databaseTypes[4] = {"VOT-2017", "TB-2015", "TLP", "UAV123"};
+    string databaseTypes[5] = {"Demo","VOT-2017", "TB-2015", "TLP", "UAV123"};
     string databaseType = databaseTypes[0];
     // Read from the images ====================================================
     int f, isLost;
@@ -77,9 +76,48 @@ int main(int argc, char** argv)
     std::string path;
     ifstream *groundtruth;
     ostringstream osfile;
-    if (databaseType == "VOT-2017")
+    if (databaseType == "Demo")
     {
-        string folderVOT = "girl";//"iceskater1";//"road";//"drone1";//"iceskater1";//"girl"; //"road";//"bag";////"helicopter";
+        path = "../sequences/Crossing";
+        // some of the dataset has '\t' as the delimiter, so first change it to ','.
+        fstream gt(path + "/groundtruth_rect.txt");
+        string tmp;
+        size_t index = 1;
+        while (gt >> tmp)
+        {
+            if(tmp.find(',')<10)
+            {
+                break;
+            }
+            if (index%4 == 0)
+            {
+            }
+            else
+            {
+                gt << ",";
+            }
+            index++;
+        }
+        gt.close();
+        // Read the groundtruth bbox
+        groundtruth = new ifstream(path + "/groundtruth_rect.txt");
+        f = 1;
+        getline(*groundtruth, s, ',');
+        x = atof(s.c_str());
+        getline(*groundtruth, s, ',');
+        y = atof(s.c_str());
+        getline(*groundtruth, s, ',');
+        w = atof(s.c_str());
+        getline(*groundtruth, s);
+        h = atof(s.c_str());
+        cout << f << " " << x << " " << y << " " << w << " " << h << " " << endl;
+        // Read images in a folder
+        osfile << path << "/img/" << setw(4) << setfill('0') << f << ".jpg";
+        cout << osfile.str() << endl;
+    }
+    else if (databaseType == "VOT-2017")
+    {
+        string folderVOT = "girl"; //"iceskater1";//"road";//"drone1";//"iceskater1";//"girl"; //"road";//"bag";////"helicopter";
         path = "/media/elab/sdd/data/VOT/vot2017/" + folderVOT;
         // Read the groundtruth bbox
         groundtruth = new ifstream("/media/elab/sdd/data/VOT/vot2017/" + folderVOT + "/groundtruth.txt");
@@ -111,7 +149,27 @@ int main(int argc, char** argv)
     }
     else if (databaseType == "TB-2015")
     {
-        path = "/media/elab/sdd/data/TB-2015/Coke"; ///Bird1";//BlurFace";
+        path = "/media/elab/sdd/data/TB-2015/Crossing"; //Coke"; ///Bird1";//BlurFace";
+        // some of the dataset has '\t' as the delimiter, so first change it to ','.
+        fstream gt(path + "/groundtruth_rect.txt");
+        string tmp;
+        size_t index = 1;
+        while (gt >> tmp)
+        {
+            if(tmp.find(',')<10)
+            {
+                break;
+            }
+            if (index%4 == 0)
+            {
+            }
+            else
+            {
+                gt << ",";
+            }
+            index++;
+        }
+        gt.close();
         // Read the groundtruth bbox
         groundtruth = new ifstream(path + "/groundtruth_rect.txt");
         f = 1;
@@ -130,7 +188,7 @@ int main(int argc, char** argv)
     }
     else if (databaseType == "TLP")
     {
-        path = "/media/elab/sdd/data/TLP/Drone3";//Bike";//Drone2";//Alladin";//IceSkating";//Sam";//
+        path = "/media/elab/sdd/data/TLP/Drone3"; //Bike";//Drone2";//Alladin";//IceSkating";//Sam";//
         // Read the groundtruth bbox
         groundtruth = new ifstream(path + "/groundtruth_rect.txt");
         getline(*groundtruth, s, ',');
@@ -152,7 +210,7 @@ int main(int argc, char** argv)
     }
     else if (databaseType == "UAV123")
     {
-        string folderUAV = "bike1";//"person23";//"building1";//"wakeboard2"; //"person3";//
+        string folderUAV = "bike1"; //"person23";//"building1";//"wakeboard2"; //"person3";//
         path = "/media/elab/sdd/data/UAV123/data_seq/UAV123/" + folderUAV;
         // Read the groundtruth bbox
         groundtruth = new ifstream("/media/elab/sdd/data/UAV123/anno/UAV123/" + folderUAV + ".txt");
@@ -248,7 +306,7 @@ int main(int argc, char** argv)
         // Display FPS on frameDraw
         putText(frameDraw, "FPS: " + SSTR(float(fpseco)), Point(100, 50), FONT_HERSHEY_SIMPLEX,
                 0.75, Scalar(0, 225, 0), 2);
-        
+
         if (DEBUG == 0)
         {
             imshow("Tracking", frameDraw);
@@ -267,7 +325,22 @@ int main(int argc, char** argv)
         f++;
         osfile.str("");
         cout << "Frame:" << f << " FPS:" << fpseco << endl;
-        if (databaseType == "TLP")
+        if (databaseType == "Demo")
+        {
+            getline(*groundtruth, s, ',');
+            x = atof(s.c_str());
+            getline(*groundtruth, s, ',');
+            y = atof(s.c_str());
+            getline(*groundtruth, s, ',');
+            w = atof(s.c_str());
+            getline(*groundtruth, s);
+            h = atof(s.c_str());
+            //cout << f << " " << x << " " << y << " " << w << " " << h << " " << isLost << endl;
+            // Read images in a folder
+            osfile << path << "/img/" << setw(4) << setfill('0') << f << ".jpg";
+            //cout << osfile.str() << endl;
+        }
+        else if (databaseType == "TLP")
         {
             // Read the groundtruth bbox
             getline(*groundtruth, s, ',');

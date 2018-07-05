@@ -5,7 +5,46 @@ ReadDatasets::~ReadDatasets(){};
 void ReadDatasets::IniRead(cv::Rect2f &bboxGroundtruth, cv::Mat &frame)
 {
     // Read from the images ====================================================
-    if (databaseType == "VOT-2017")
+    if (databaseType == "Demo")
+    {
+        path = "sequences/Crossing";
+        // some of the dataset has '\t' as the delimiter, so first change it to ','.
+        fstream gt(path + "/groundtruth_rect.txt");
+        string tmp;
+        size_t index = 1;
+        while (gt >> tmp)
+        {
+            if (tmp.find(',') < 10)
+            {
+                break;
+            }
+            if (index % 4 == 0)
+            {
+            }
+            else
+            {
+                gt << ",";
+            }
+            index++;
+        }
+        gt.close();
+        // Read the groundtruth bbox
+        groundtruth = new ifstream(path + "/groundtruth_rect.txt");
+        f = 1;
+        getline(*groundtruth, s, ',');
+        x = atof(s.c_str());
+        getline(*groundtruth, s, ',');
+        y = atof(s.c_str());
+        getline(*groundtruth, s, ',');
+        w = atof(s.c_str());
+        getline(*groundtruth, s);
+        h = atof(s.c_str());
+        cout << f << " " << x << " " << y << " " << w << " " << h << " " << endl;
+        // Read images in a folder
+        osfile << path << "/img/" << setw(4) << setfill('0') << f << ".jpg";
+        cout << osfile.str() << endl;
+    }
+    else if (databaseType == "VOT-2017")
     {
         string folderVOT = "graduate"; //"glove";//"drone1"; //"iceskater1";//"girl"; //"road";//"iceskater1";//"helicopter";//"matrix";//"leaves";//"sheep";//"racing";//"girl";//"road"; //"uav2";//
         path = "/media/elab/sdd/data/VOT/vot2017/" + folderVOT;
@@ -39,7 +78,27 @@ void ReadDatasets::IniRead(cv::Rect2f &bboxGroundtruth, cv::Mat &frame)
     }
     else if (databaseType == "TB-2015")
     {
-        path = "/media/elab/sdd/data/TB-2015/Coke"; ///Bird1";//BlurFace";
+        path = "/media/elab/sdd/data/TB-2015/Crossing"; //Coke"; ///Bird1";//BlurFace";
+        // some of the dataset has '\t' as the delimiter, so first change it to ','.
+        fstream gt(path + "/groundtruth_rect.txt");
+        string tmp;
+        size_t index = 1;
+        while (gt >> tmp)
+        {
+            if (tmp.find(',') < 10)
+            {
+                break;
+            }
+            if (index % 4 == 0)
+            {
+            }
+            else
+            {
+                gt << ",";
+            }
+            index++;
+        }
+        gt.close();
         // Read the groundtruth bbox
         groundtruth = new ifstream(path + "/groundtruth_rect.txt");
         f = 1;
@@ -140,8 +199,22 @@ void ReadDatasets::ReadNextFrame(Rect2f &bboxGroundtruth, cv::Mat &frame)
     // Read next image======================================================
     f++;
     osfile.str("");
-
-    if (databaseType == "TLP")
+    if (databaseType == "Demo")
+    {
+        getline(*groundtruth, s, ',');
+        x = atof(s.c_str());
+        getline(*groundtruth, s, ',');
+        y = atof(s.c_str());
+        getline(*groundtruth, s, ',');
+        w = atof(s.c_str());
+        getline(*groundtruth, s);
+        h = atof(s.c_str());
+        //cout << f << " " << x << " " << y << " " << w << " " << h << " " << isLost << endl;
+        // Read images in a folder
+        osfile << path << "/img/" << setw(4) << setfill('0') << f << ".jpg";
+        //cout << osfile.str() << endl;
+    }
+    else if (databaseType == "TLP")
     {
         // Read the groundtruth bbox
         getline(*groundtruth, s, ',');

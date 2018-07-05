@@ -1,5 +1,5 @@
-#ifndef REG_FILTER
-#define REG_FILTER
+#ifndef REGULARIZATION_FILTER_HPP
+#define REGULARIZATION_FILTER_HPP
 
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/opencv.hpp>

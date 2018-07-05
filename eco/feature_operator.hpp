@@ -1,5 +1,5 @@
-#ifndef FEATURE_OPERATOR
-#define FEATURE_OPERATOR
+#ifndef FEATURE_OPERATOR_HPP
+#define FEATURE_OPERATOR_HPP
 
 #include <opencv2/features2d/features2d.hpp>
 #include "opencv2/core/core.hpp"

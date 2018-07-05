@@ -1,25 +1,27 @@
 #include "feature_extractor.hpp"
-namespace eco{
+namespace eco
+{
 ECO_FEATS FeatureExtractor::extractor(cv::Mat image,
-									   cv::Point2f pos,
-									   vector<float> scales,
-									   const EcoParameters &params,
-									   const cv::Mat &deep_mean_mat,
-									   const boost::shared_ptr<Net<float>> &net)
+									  cv::Point2f pos,
+									  vector<float> scales,
+									  const EcoParameters &params)
 {
 	//double timereco = (double)cv::getTickCount();
 	//float fpseco = 0;
 
 	int num_features = 0, num_scales = scales.size();
+#ifdef USE_CAFFE
 	cv::Mat new_deep_mean_mat;
 	if (params.useDeepFeature)
 	{
 		cnn_feat_ind_ = num_features;
 		num_features++;
 		cnn_features_ = params.cnn_features;
-		this->net_ = net;
-		resize(deep_mean_mat, new_deep_mean_mat, params.cnn_features.img_input_sz, 0, 0, cv::INTER_CUBIC);
+		this->net_ = params.cnn_features.fparams.net;
+		resize(params.cnn_features.fparams.deep_mean_mat, new_deep_mean_mat,
+			   params.cnn_features.img_input_sz, 0, 0, cv::INTER_CUBIC);
 	}
+#endif
 	if (params.useHogFeature)
 	{
 		hog_feat_ind_ = num_features;
@@ -38,8 +40,22 @@ ECO_FEATS FeatureExtractor::extractor(cv::Mat image,
 
 		for (unsigned int j = 0; j < scales.size(); ++j) // for each scale
 		{
-			cv::Size2f img_sample_sz = (i == 0) && params.useDeepFeature ? cnn_features_.img_sample_sz : hog_features_.img_sample_sz;
-			cv::Size2f img_input_sz = (i == 0) && params.useDeepFeature ? cnn_features_.img_input_sz : hog_features_.img_input_sz;
+			cv::Size2f img_sample_sz;
+			cv::Size2f img_input_sz;
+			//cv::Size2f img_sample_sz = (i == 0) && params.useDeepFeature ? cnn_features_.img_sample_sz : hog_features_.img_sample_sz;
+			//cv::Size2f img_input_sz = (i == 0) && params.useDeepFeature ? cnn_features_.img_input_sz : hog_features_.img_input_sz;
+			if((i == 0) && params.useDeepFeature)
+			{
+#ifdef USE_CAFFE				
+				img_sample_sz = cnn_features_.img_sample_sz;
+				img_input_sz = cnn_features_.img_input_sz;
+#endif
+			}
+			else
+			{
+				img_sample_sz = hog_features_.img_sample_sz;
+				img_input_sz = hog_features_.img_input_sz;
+			}
 			img_sample_sz.width *= scales[j];
 			img_sample_sz.height *= scales[j];
 			img_samples_temp[j] = sample_patch(image, pos, img_sample_sz, img_input_sz, params);
@@ -49,13 +65,14 @@ ECO_FEATS FeatureExtractor::extractor(cv::Mat image,
 
 	// Extract feature maps for each feature in the list
 	ECO_FEATS sum_features;
+#ifdef USE_CAFFE
 	if (params.useDeepFeature)
 	{
 		cnn_feat_maps_ = get_cnn_layers(img_samples[cnn_feat_ind_], new_deep_mean_mat);
 		cnn_feature_normalization(cnn_feat_maps_);
 		sum_features = cnn_feat_maps_;
 	}
-
+#endif
 	if (params.useHogFeature)
 	{
 		hog_feat_maps_ = get_hog_features(img_samples[hog_feat_ind_]);
@@ -73,10 +90,10 @@ ECO_FEATS FeatureExtractor::extractor(cv::Mat image,
 }
 
 cv::Mat FeatureExtractor::sample_patch(const cv::Mat &im,
-										const cv::Point2f &posf,
-										cv::Size2f sample_sz,
-										cv::Size2f input_sz,
-										const EcoParameters &gparams)
+									   const cv::Point2f &posf,
+									   cv::Size2f sample_sz,
+									   cv::Size2f input_sz,
+									   const EcoParameters &gparams)
 {
 	// Pos should be integer when input, but floor in just in case.
 	cv::Point pos(posf.operator cv::Point());
@@ -220,15 +237,15 @@ vector<cv::Mat> FeatureExtractor::get_hog_features(vector<cv::Mat> ims)
 
 	return hog_feats;
 }
-
+#ifdef USE_CAFFE
 ECO_FEATS FeatureExtractor::get_cnn_layers(vector<cv::Mat> im, const cv::Mat &deep_mean_mat)
 {
-	Blob<float> *input_layer = net_->input_blobs()[0];
+	caffe::Blob<float> *input_layer = net_->input_blobs()[0];
 	int width = input_layer->width();
 	int height = input_layer->height();
-	float *input_data = input_layer->mutable_cpu_data(); 
+	float *input_data = input_layer->mutable_cpu_data();
 	input_layer->Reshape(im.size(), im[0].channels(), im[0].rows, im[0].cols); // Reshape input_layer.
-	net_->Reshape();															   // Forward dimension change to all layers.
+	net_->Reshape();														   // Forward dimension change to all layers.
 
 	// Preprocess the images
 	for (unsigned int i = 0; i < im.size(); ++i)
@@ -295,8 +312,8 @@ ECO_FEATS FeatureExtractor::get_cnn_layers(vector<cv::Mat> im, const cv::Mat &de
 			shape = layerData->shape();
 		}
 
-//		debug("shape: %d, %d, %d, %d", shape[0], shape[1], shape[2], shape[3]); //num, channel, height, width
-//		debug("%d %d", cnn_features_.fparams.start_ind[0 + 2 * idx] - 1, cnn_features_.fparams.end_ind[0 + 2 * idx]);
+		//		debug("shape: %d, %d, %d, %d", shape[0], shape[1], shape[2], shape[3]); //num, channel, height, width
+		//		debug("%d %d", cnn_features_.fparams.start_ind[0 + 2 * idx] - 1, cnn_features_.fparams.end_ind[0 + 2 * idx]);
 
 		vector<cv::Mat> merge_feature;
 		for (size_t i = 0; i < (size_t)(shape[0] * shape[1]); i++) //  CNN into single channel
@@ -316,7 +333,7 @@ ECO_FEATS FeatureExtractor::get_cnn_layers(vector<cv::Mat> im, const cv::Mat &de
 
 	return feature_map;
 }
-
+#endif
 cv::Mat FeatureExtractor::sample_pool(const cv::Mat &im, int smaple_factor, int stride)
 {
 	if (im.empty())
@@ -330,7 +347,7 @@ cv::Mat FeatureExtractor::sample_pool(const cv::Mat &im, int smaple_factor, int 
 	}
 	return new_im;
 }
-
+#ifdef USE_CAFFE
 void FeatureExtractor::cnn_feature_normalization(ECO_FEATS &cnn_feat_maps)
 {
 	//debug("cnn_feat_maps: %lu", cnn_feat_maps.size());
@@ -357,7 +374,7 @@ void FeatureExtractor::cnn_feature_normalization(ECO_FEATS &cnn_feat_maps)
 			cnn_feat_maps[i][k] /= sqrt(sum_scales[k / cnn_features_.fparams.nDim[i]] / para);
 	}
 }
-
+#endif
 vector<cv::Mat> FeatureExtractor::hog_feature_normalization(vector<cv::Mat> &hog_feat_maps)
 {
 	vector<cv::Mat> hog_maps_vec;
@@ -380,4 +397,4 @@ vector<cv::Mat> FeatureExtractor::hog_feature_normalization(vector<cv::Mat> &hog
 
 	return hog_maps_vec;
 }
-}
+} // namespace eco

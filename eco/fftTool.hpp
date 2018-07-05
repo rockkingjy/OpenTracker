@@ -1,5 +1,5 @@
-#ifndef FFTTOOL_H
-#define FFTTOOL_H
+#ifndef FFTTOOL_HPP
+#define FFTTOOL_HPP
 
 #include <opencv2/features2d/features2d.hpp>
 #include "opencv2/core/core.hpp"

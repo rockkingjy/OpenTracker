@@ -1,12 +1,16 @@
 // Set the value the same as testing_ECO_gpu.m
+#ifndef PARAMETERS_HPP
+#define PARAMETERS_HPP
 
-#ifndef PARAMS_H
-#define PARAMS_H
+#ifdef USE_CAFFE
+#include <caffe/caffe.hpp>
+#include <caffe/util/io.hpp>
+#endif
 
 #include <vector>
 #include <string>
 
-#define DEBUG 1
+#define DEBUG 0
 
 #define INF 0x7f800000 //0x7fffffff 
 
@@ -18,22 +22,16 @@ namespace eco{
 	
 typedef   std::vector<std::vector<cv::Mat> > ECO_FEATS;// ECO feature[Num_features][Dimension_of_the_feature];
 typedef   cv::Vec<float, 2>                  COMPLEX;  // represent a complex number;
-//**** hog parameters cofiguration *****
-struct HogParameters
-{
-	int           cell_size 	 = 4;
-	int           compressed_dim = 10;	// Compressed dimensionality of each output layer (ECO Paper Table 1)
-	int           nOrients		 = 9;
-	size_t        nDim			 = 31; 	// Original dimension of feature	
-	float         penalty		 = 0;
-};
 
 //*** cnn   feature   configuration *****
+#ifdef USE_CAFFE
 struct CnnParameters{
     string 	proto 	= "/media/elab/sdd/mycodes/tracker/OpenTrackers/eco/model/imagenet-vgg-m-2048.prototxt";
     string 	model	= "/media/elab/sdd/mycodes/tracker/OpenTrackers/eco/model/VGG_CNN_M_2048.caffemodel";
     string 	mean_file = "/media/elab/sdd/mycodes/tracker/OpenTrackers/eco/model/VGG_mean.binaryproto";
-    //string 	mean_yml  = "model/mean.yml";
+
+	boost::shared_ptr<caffe::Net<float>> net;
+	cv::Mat 			deep_mean_mat, deep_mean_mean_mat;
 
 	string 			nn_name = "imagenet-vgg-m-2048.mat"; 
 	vector<int>     stride            = { 2, 16 };  // stride in total 
@@ -48,33 +46,43 @@ struct CnnParameters{
 	vector<int>     start_ind		  = {3, 3, 1, 1};   	// sample feature start index 
 	vector<int>     end_ind           = {106, 106, 13, 13}; // sample feature end index 
 };
-
-struct HogFeatures
-{
-	HogParameters      fparams;
-
-	cv::Size		img_input_sz;	 // input sample size 
-	cv::Size        img_sample_sz;   // the size of sample
-	cv::Size        data_sz_block0;			   
-};
-
 struct CnnFeatures
 {
-	CnnParameters	    fparams;
+	CnnParameters	fparams;
 
 	cv::Size		img_input_sz = cv::Size(224, 224);  // VGG default input sample size
 	cv::Size        img_sample_sz;              		// the size of sample
 	cv::Size        data_sz_block0, data_sz_block1;
 	cv::Mat         mean;                       
 };
+#endif
+//**** hog parameters cofiguration *****
+struct HogParameters
+{
+	int           cell_size 	 = 4;
+	int           compressed_dim = 10;	// Compressed dimensionality of each output layer (ECO Paper Table 1)
+	int           nOrients		 = 9;
+	size_t        nDim			 = 31; 	// Original dimension of feature	
+	float         penalty		 = 0;
+};
+struct HogFeatures
+{
+	HogParameters   fparams;
+
+	cv::Size		img_input_sz;	 // input sample size 
+	cv::Size        img_sample_sz;   // the size of sample
+	cv::Size        data_sz_block0;			   
+};
 
 struct EcoParameters
 {
+#ifdef USE_CAFFE
 	CnnFeatures 		cnn_features; 
+#endif
 	HogFeatures 		hog_features; 
 
 	// Features
-	bool 	useDeepFeature 		 = false;
+	bool 	useDeepFeature 		 = true;
 	bool	useHogFeature		 = true;		// Not used yet, add later.......
 	bool	useCnFeature		 = false;		// Not used yet, add later.......
 
@@ -135,7 +143,7 @@ struct EcoParameters
 	bool    interpolation_windowing = false;	// Do additional windowing on the Fourier coefficients of the kernel
 
 	// Scale parameters for the translation model
-	size_t  number_of_scales = 1;			    // Number of scales to run the detector
+	size_t  number_of_scales = 5;			    // Number of scales to run the detector
 	float   scale_step	= 1.02f;                // The scale factor
 	float 	min_scale_factor;
 	float	max_scale_factor;

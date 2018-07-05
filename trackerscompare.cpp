@@ -6,6 +6,8 @@
 #include "inputs/readdatasets.hpp"
 #include "inputs/openpose.hpp"
 
+#include <gflags/gflags.h>
+#include <glog/logging.h>
 #include <opencv2/opencv.hpp>
 #include <opencv2/tracking.hpp>
 #include <opencv2/core/ocl.hpp>

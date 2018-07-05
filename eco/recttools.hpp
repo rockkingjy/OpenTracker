@@ -33,22 +33,16 @@ or tort (including negligence or otherwise) arising in any way out of
 the use of this software, even if advised of the possibility of such damage.
 */
 
-#pragma once
 
-//#include <cv.h>
+#ifndef RECTTOOLS_HPP
+#define RECTTOOLS_HPP
+
 #include <math.h>
-
-#ifndef _OPENCV_RECTTOOLS_HPP_
-#define _OPENCV_RECTTOOLS_HPP_
-#endif
-
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/opencv.hpp>
 
-
 namespace eco
 {
-
 	template <typename t>
 	inline cv::Vec<t, 2 > center(const cv::Rect_<t> &rect)
 	{
@@ -145,3 +139,5 @@ namespace eco
 	}
 
 }
+
+#endif

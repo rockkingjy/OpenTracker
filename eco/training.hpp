@@ -1,5 +1,5 @@
-#ifndef TRAINING_H
-#define TRAINING_H
+#ifndef TRAINING_HPP
+#define TRAINING_HPP
 
 #include <iostream>
 #include <string>

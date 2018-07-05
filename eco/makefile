@@ -1,21 +1,30 @@
 
+USE_CAFFE=0
+USE_CUDA=0
+
 CC=gcc
 CXX=g++
 
-#VPATH=./helper:./loader:./network:./tracker:/media/elab/sdd/caffe
+LDFLAGS= `pkg-config --libs opencv`  -lstdc++ -lm \
+	-lboost_system -lboost_filesystem -lboost_regex -lglog  -lprotobuf 
 
-LDFLAGS= `pkg-config --libs opencv` -L/media/elab/sdd/mycodes/caffe/build/lib -lcaffe   \
-	-L/usr/local/cuda/lib64 -lcuda -lcudart -lcublas -lcurand -lcudnn \
-	-lboost_system -lboost_filesystem -lboost_regex -lglog  -lprotobuf \
-	-lstdc++ -lm 
-
-CXXFLAGS= -g -Wall `pkg-config --cflags opencv` -lstdc++ -lm -std=c++0x \
-	-I/media/elab/sdd/mycodes/caffe/build/include/ -I/media/elab/sdd/mycodes/caffe/include/ \
-	-I/usr/local/cuda/include/ 
-
+CXXFLAGS= -g -Wall `pkg-config --cflags opencv` -lstdc++ -lm -std=c++0x 
+	
 HEADERS = $(wildcard *.h)
 
-#$(info DEPS is: $(DEPS))
+
+ifeq ($(USE_CAFFE), 1)
+USE_CUDA=1
+CXXFLAGS+= -DUSE_CAFFE
+LDFLAGS+= -L/media/elab/sdd/mycodes/caffe/build/lib -lcaffe 
+CXXFLAGS+= -I/media/elab/sdd/mycodes/caffe/build/include/ -I/media/elab/sdd/mycodes/caffe/include/ 
+endif
+
+ifeq ($(USE_CUDA), 1)
+CXXFLAGS+= -DUSE_CUDA
+LDFLAGS+= -L/usr/local/cuda/lib64 -lcuda -lcudart -lcublas -lcurand -lcudnn 
+CXXFLAGS+= -I/usr/local/cuda/include/ 
+endif
 
 OBJS = fftTool.o fhog.o interpolator.o optimize_scores.o \
 		regularization_filter.o feature_extractor.o feature_operator.o  \

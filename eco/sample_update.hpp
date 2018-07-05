@@ -1,4 +1,6 @@
-#pragma once
+#ifndef SAMPLE_UPDATE_HPP
+#define SAMPLE_UPDATE_HPP
+
 
 #include <vector>
 #include <opencv2/features2d/features2d.hpp>
@@ -115,3 +117,5 @@ class SampleUpdate
 };
 
 } // namespace eco
+
+#endif

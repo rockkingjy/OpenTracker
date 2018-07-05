@@ -22,7 +22,7 @@ class ReadDatasets
     void DrawGroundTruth(cv::Rect2f &bboxGroundtruth, cv::Mat &frameDraw);
 
   private:
-    string databaseTypes[4] = {"VOT-2017", "TB-2015", "TLP", "UAV123"};
+    string databaseTypes[5] = {"Demo", "VOT-2017", "TB-2015", "TLP", "UAV123"};
     string databaseType = databaseTypes[0];
     int f;      // file index
     int isLost; // lost flag
