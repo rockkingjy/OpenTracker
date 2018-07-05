@@ -1,6 +1,7 @@
 #include "feature_operator.hpp"
 
-namespace eco{
+namespace eco
+{
 ECO_FEATS do_dft(const ECO_FEATS &xlw)
 {
 	ECO_FEATS xlf;
@@ -11,10 +12,10 @@ ECO_FEATS do_dft(const ECO_FEATS &xlw)
 		{
 			int size = xlw[i][j].rows;
 			if (size % 2 == 1)
-				temp.push_back( fftshift( fftf(xlw[i][j])));
+				temp.push_back(fftshift(fftf(xlw[i][j])));
 			else
 			{
-				cv::Mat xf =  fftshift( fftf(xlw[i][j]));
+				cv::Mat xf = fftshift(fftf(xlw[i][j]));
 				cv::Mat xf_pad = subwindow(xf, cv::Rect(cv::Point(0, 0), cv::Size(size + 1, size + 1)));
 				for (size_t k = 0; k < (size_t)xf_pad.rows; k++)
 				{
@@ -63,8 +64,8 @@ void FilterSymmetrize(ECO_FEATS &hf)
 }
 
 vector<cv::Mat> init_projection_matrix(const ECO_FEATS &init_sample,
-											const vector<int> &compressed_dim,
-											const vector<int> &feature_dim)
+									   const vector<int> &compressed_dim,
+									   const vector<int> &feature_dim)
 {
 	vector<cv::Mat> result;
 	for (size_t i = 0; i < init_sample.size(); i++) // for each feature
@@ -117,18 +118,18 @@ ECO_FEATS FeatureProjection(const ECO_FEATS &x, const std::vector<cv::Mat> &proj
 			x_mat.push_back(cv::Mat(1, x[i][j].size().area(), CV_32FC2, t.data)); // vectorize each channel map to row vector
 		}
 		//debug("x_mat %lu: %d x %d", i, x_mat.rows, x_mat.cols);
-		x_mat = x_mat.t(); 
+		x_mat = x_mat.t();
 		// do projection by matrix production
 		cv::Mat res_temp = x_mat * projection_matrix[i]; // each col is a reduced feature
 
-		// transform back to standard formation 
+		// transform back to standard formation
 		std::vector<cv::Mat> temp;
 		for (size_t j = 0; j < (size_t)res_temp.cols; j++) // for each channel of reduced feature
 		{
 			cv::Mat temp2 = res_temp.col(j); // just a header of the col, no data copied
 			cv::Mat tt;
 			temp2.copyTo(tt); // the memory should be continous, prepare for transform back
-			cv::Mat temp3(x[i][0].cols, x[i][0].rows, CV_32FC2, tt.data); 
+			cv::Mat temp3(x[i][0].cols, x[i][0].rows, CV_32FC2, tt.data);
 			temp.push_back(temp3.t());
 		}
 		result.push_back(temp);
@@ -157,7 +158,7 @@ ECO_FEATS FeatureProjectionMultScale(const ECO_FEATS &x, const std::vector<cv::M
 
 			x_mat = x_mat.t();
 
-			cv::Mat res_temp = x_mat *  real(projection_matrix[i]);
+			cv::Mat res_temp = x_mat * real(projection_matrix[i]);
 
 			//**** reconver to standard formation ****
 			for (size_t j = 0; j < (size_t)res_temp.cols; j++)
@@ -174,7 +175,7 @@ ECO_FEATS FeatureProjectionMultScale(const ECO_FEATS &x, const std::vector<cv::M
 	return result;
 }
 // inputs: a+bi, c+di; output: ac+bd;
-float FeatureComputeInnerProduct(const ECO_FEATS &feat1,const ECO_FEATS &feat2)
+float FeatureComputeInnerProduct(const ECO_FEATS &feat1, const ECO_FEATS &feat2)
 {
 	if (feat1.size() != feat2.size())
 		return 0;
@@ -184,8 +185,8 @@ float FeatureComputeInnerProduct(const ECO_FEATS &feat1,const ECO_FEATS &feat2)
 	{
 		for (size_t j = 0; j < feat1[i].size(); j++)
 		{
-			cv::Mat feat2_conj =  mat_conj(feat2[i][j]);
-			dist +=  mat_sum( real( complexMultiplication(feat1[i][j], feat2_conj)));
+			cv::Mat feat2_conj = mat_conj(feat2[i][j]);
+			dist += mat_sum(real(complexMultiplication(feat1[i][j], feat2_conj)));
 		}
 	}
 	return dist;
@@ -213,7 +214,7 @@ ECO_FEATS FeautreComputePower2(const ECO_FEATS &feats)
 
 	for (size_t i = 0; i < feats.size(); i++) // for each feature
 	{
-		std::vector<cv::Mat> feat_vec; 
+		std::vector<cv::Mat> feat_vec;
 		for (size_t j = 0; j < (size_t)feats[i].size(); j++)
 		{
 			cv::Mat temp(feats[i][0].size(), CV_32FC2);
@@ -270,6 +271,30 @@ std::vector<cv::Mat> FeatureVectorization(const ECO_FEATS &x)
 	}
 	return res;
 }
+
+ECO_FEATS FeatureVectorMultiply(const ECO_FEATS &x,
+								const std::vector<cv::Mat> y,
+								const bool _conj)
+{
+	if (x.size() != y.size())
+		assert("Feature and Vector Size Unmatched!");
+
+	ECO_FEATS res;
+	for (size_t i = 0; i < x.size(); i++)
+	{
+		vector<cv::Mat> temp;
+		for (size_t j = 0; j < x[i].size(); j++)
+		{
+			if (_conj)
+				temp.push_back(complexMultiplication(mat_conj(x[i][j]), y[i]));
+			else
+				temp.push_back(complexMultiplication(x[i][j], y[i]));
+		}
+		res.push_back(temp);
+	}
+	return res;
+}
+
 /*
 // projection operation 
 std::vector<cv::Mat> ProjScale(std::vector<cv::Mat> data, float scale)
@@ -302,7 +327,7 @@ std::vector<cv::Mat> ProjMinus(std::vector<cv::Mat> data1, std::vector<cv::Mat> 
 	return res;
 }
 */
-// features operation 
+// features operation
 ECO_FEATS FeatureDotMultiply(const ECO_FEATS &a, const ECO_FEATS &b)
 {
 	ECO_FEATS res;
@@ -332,7 +357,7 @@ ECO_FEATS FeatureDotDivide(const ECO_FEATS a, const ECO_FEATS b)
 		std::vector<cv::Mat> temp;
 		for (size_t j = 0; j < a[i].size(); j++)
 		{
-			temp.push_back( complexDivision(a[i][j], b[i][j]));
+			temp.push_back(complexDivision(a[i][j], b[i][j]));
 		}
 		res.push_back(temp);
 	}
@@ -388,4 +413,4 @@ ECO_FEATS FeautreMinus(ECO_FEATS data1, ECO_FEATS data2)
 	return res;
 }
 */
-}
+} // namespace eco

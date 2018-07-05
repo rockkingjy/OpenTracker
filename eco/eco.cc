@@ -205,7 +205,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	xlf_porj = FeatureProjection(xlf, projection_matrix_);
 	debug("xlf_porj size: %lu, %lu, %d x %d", xlf_porj.size(), xlf_porj[0].size(), xlf_porj[0][0].rows, xlf_porj[0][0].cols);
 
-	sample_update_.replace_sample(xlf_porj, 0);
+	sample_update_.replace_sample(xlf_porj, 0); // put xlf_proj to the smaples_f_[0].
 
 	// 14. Update distance matrix of sample space. Find the norm of the reprojected sample
 	float new_sample_norm = FeatureComputeEnergy(xlf_porj);
@@ -419,18 +419,20 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 
 	// 3: Update the samples space to include the new sample, the distance matrix,
 	// kernel matrix and prior weight are also updated
+	//debug("get_merged_sample_id: %d, get_new_sample_id: %d", sample_update_.get_merged_sample_id(), sample_update_.get_new_sample_id());
 	sample_update_.update_sample_space_model(xlf_proj);
-
+	//debug("get_merged_sample_id: %d, get_new_sample_id: %d", sample_update_.get_merged_sample_id(), sample_update_.get_new_sample_id());
+/*
 	// merge new sample or replace
-	if (sample_update_.get_merge_id() > 0)
+	if (sample_update_.get_merged_sample_id() > 0)
 	{
-		sample_update_.replace_sample(xlf_proj, sample_update_.get_merge_id());
+		sample_update_.replace_sample(xlf_proj, sample_update_.get_merged_sample_id());
 	}
-	if (sample_update_.get_new_id() > 0)
+	if (sample_update_.get_new_sample_id() > 0)
 	{
-		sample_update_.replace_sample(xlf_proj, sample_update_.get_new_id());
+		sample_update_.replace_sample(xlf_proj, sample_update_.get_new_sample_id());
 	}
-
+*/
 	// 4: Train the tracker every Nsth frame, Ns in ECO paper
 	bool train_tracker = frames_since_last_train_ >= (size_t)params_.train_gap;
 	if (train_tracker)
@@ -438,7 +440,9 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 		//debug("%lu %lu", sample_energy_.size(), FeautreComputePower2(xlf_proj).size());
 		sample_energy_ = FeatureScale(sample_energy_, 1 - params_.learning_rate) +
 						 FeatureScale(FeautreComputePower2(xlf_proj), params_.learning_rate);
-		eco_trainer_.train_filter(sample_update_.get_samples(), sample_update_.get_samples_weight(), sample_energy_);
+		eco_trainer_.train_filter(sample_update_.get_samples(),
+								  sample_update_.get_prior_weights(),
+								  sample_energy_);
 		frames_since_last_train_ = 0;
 	}
 	else
@@ -484,8 +488,8 @@ void ECO::init_features()
 		}
 
 		params_.cnn_features.fparams.net.reset(new caffe::Net<float>(params_.cnn_features.fparams.proto, caffe::TEST)); // Read prototxt
-		params_.cnn_features.fparams.net->CopyTrainedLayersFrom(params_.cnn_features.fparams.model);	  // Read model
-		read_deep_mean(params_.cnn_features.fparams.mean_file);											   // Read mean file
+		params_.cnn_features.fparams.net->CopyTrainedLayersFrom(params_.cnn_features.fparams.model);					// Read model
+		read_deep_mean(params_.cnn_features.fparams.mean_file);															// Read mean file
 
 		params_.cnn_features.img_input_sz = img_sample_size_; //250
 		params_.cnn_features.img_sample_sz = img_sample_size_;

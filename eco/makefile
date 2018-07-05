@@ -1,6 +1,6 @@
 
-USE_CAFFE=0
-USE_CUDA=0
+USE_CAFFE=1
+USE_CUDA=1
 
 CC=gcc
 CXX=g++

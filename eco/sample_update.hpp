@@ -12,8 +12,6 @@
 #include "feature_operator.hpp"
 #include "debug.hpp"
 
-//using namespace FFTTools_ECO;
-
 namespace eco
 {
 
@@ -86,11 +84,11 @@ class SampleUpdate
 		gram_matrix_.at<float>(r, c) = val;
 	};
 
-	int get_merge_id() const { return merged_sample_id_; }
+	int get_merged_sample_id() const { return merged_sample_id_; }
 
-	int get_new_id() const { return new_sample_id_; }
+	int get_new_sample_id() const { return new_sample_id_; }
 
-	std::vector<float> get_samples_weight() const { return prior_weights_; }
+	std::vector<float> get_prior_weights() const { return prior_weights_; }
 
 	std::vector<ECO_FEATS> get_samples() const { return samples_f_; }
 
@@ -113,7 +111,7 @@ class SampleUpdate
 
 	ECO_FEATS new_sample_, merged_sample_;
 
-	int merged_sample_id_ = -1, new_sample_id_ = -1;
+	int new_sample_id_ = -1, merged_sample_id_ = -1;
 };
 
 } // namespace eco

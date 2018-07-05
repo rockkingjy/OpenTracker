@@ -67,7 +67,7 @@ int main(int argc, char **argv)
     ::google::InitGoogleLogging(argv[0]);
     // Database settings
     string databaseTypes[5] = {"Demo","VOT-2017", "TB-2015", "TLP", "UAV123"};
-    string databaseType = databaseTypes[0];
+    string databaseType = databaseTypes[1];
     // Read from the images ====================================================
     int f, isLost;
     float x, y, w, h;
