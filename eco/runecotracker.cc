@@ -308,6 +308,11 @@ int main(int argc, char **argv)
   /*      putText(frameDraw, "FPS: " + SSTR(float(fpseco)), Point(100, 50), FONT_HERSHEY_SIMPLEX,
                 0.75, Scalar(0, 225, 0), 2);
 */
+        ostringstream os; 
+        os << float(fpseco); 
+        putText(frameDraw, "FPS: " + os.str(), Point(100, 50), FONT_HERSHEY_SIMPLEX,
+                0.75, Scalar(0, 225, 0), 2);
+   
         if (DEBUG == 0)
         {
             imshow("Tracking", frameDraw);

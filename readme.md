@@ -48,7 +48,7 @@ make -j`nproc`
 ```
 brew install tesseract
 cd eco
-make 
+make  -j`nproc`
 ./runecotracker.bin
 ```
 
