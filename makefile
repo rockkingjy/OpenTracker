@@ -21,7 +21,7 @@ OBJ = kcf/fhog.o kcf/kcftracker.o \
 	eco/fftTool.o eco/fhog.o eco/interpolator.o eco/optimize_scores.o \
 	eco/regularization_filter.o eco/feature_extractor.o eco/feature_operator.o  \
 	eco/training.o eco/sample_update.o eco/eco.o \
-	inputs/readdatasets.o 
+	inputs/readdatasets.o inputs/readvideo.o
 
 
 ifeq ($(USE_CAFFE), 1)

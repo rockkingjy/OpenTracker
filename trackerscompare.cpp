@@ -5,6 +5,7 @@
 #include "eco/eco.hpp"
 #include "inputs/readdatasets.hpp"
 #include "inputs/openpose.hpp"
+#include "inputs/readvideo.hpp"
 
 #include <gflags/gflags.h>
 #include <glog/logging.h>
@@ -24,32 +25,53 @@ using namespace std;
 
 // Convert to string
 int main(int argc, char **argv)
-{ /*
+{
+    /*
     // Read using openpose============================================
     cv::Rect2f bboxGroundtruth;
     cv::Mat frame, frameDraw;
 
     OpenPose openpose;
     openpose.IniRead(bboxGroundtruth);
-    VideoCapture cap(0); // open the default camera
-    if (!cap.isOpened()) // check if we succeeded
+    VideoCapture capture(0); // open the default camera
+    if (!capture.isOpened()) // check if we succeeded
         return -1;
-    cap.set(CV_CAP_PROP_FRAME_WIDTH, 1280);
-    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 720);
-    cap >> frame;
+    capture.set(CV_CAP_PROP_FRAME_WIDTH, 1280);
+    capture.set(CV_CAP_PROP_FRAME_HEIGHT, 720);
+    capture >> frame;
     //frame.copyTo(frameDraw);
     //rectangle(frameDraw, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
     //imshow("Tracking", frameDraw);
     */
-   
-    // Read from the datasets==========================================
+
+    // Read from Video and choose a bbox===============================
     ::google::InitGoogleLogging(argv[0]);
+    cv::Rect2f bboxGroundtruth;
+    cv::Mat frame, frameDraw;
+    cv::VideoCapture capture;
+    capture.open("sequences/tracking.mp4");
+    if (!capture.isOpened())
+    {
+        std::cout << "Capture device failed to open!" << std::endl;
+        return -1;
+    }
+    capture >> frameDraw;
+    frameDraw.copyTo(frame);
+
+    std::string window_name = "OpenTracker";
+    cv::namedWindow(window_name);
+    ReadVideo readvideo;
+    readvideo.IniRead(bboxGroundtruth, frameDraw, window_name);
+
+    // Read from the datasets==========================================
+    /*   ::google::InitGoogleLogging(argv[0]);
     cv::Rect2f bboxGroundtruth;
     cv::Mat frame, frameDraw;
     ReadDatasets readdatasets;
     readdatasets.IniRead(bboxGroundtruth, frame);
     frame.copyTo(frameDraw);
     readdatasets.DrawGroundTruth(bboxGroundtruth, frameDraw);
+*/
     // Init the trackers=================================================
     // Create Opencv tracker:
     string trackerTypes[6] = {"BOOSTING", "MIL", "KCF", "TLD", "MEDIANFLOW", "GOTURN"};
@@ -166,11 +188,11 @@ int main(int argc, char **argv)
                     0.75, Scalar(255, 0, 255), 2);
         }
         // Draw ground truth box===========================================
-        readdatasets.DrawGroundTruth(bboxGroundtruth, frameDraw);
+        //readdatasets.DrawGroundTruth(bboxGroundtruth, frameDraw);
 
         // Display FPS on frameDraw
-        ostringstream os; 
-        os << float(fpseco); 
+        ostringstream os;
+        os << float(fpseco);
         putText(frameDraw, "FPS: " + os.str(), Point(100, 30), FONT_HERSHEY_SIMPLEX,
                 0.75, Scalar(0, 225, 0), 2);
 
@@ -201,77 +223,12 @@ int main(int argc, char **argv)
         waitKey(1);
 
         // Read the next frame
-        readdatasets.ReadNextFrame(bboxGroundtruth, frame);
-        //cap >> frame;
+        //readdatasets.ReadNextFrame(bboxGroundtruth, frame);
+
+        capture >> frame;
+        if (frame.empty())
+            return false;
     }
     cvDestroyWindow("OpenTracker");
     return 0;
-
-    /*
-// Read from the video ====================================================
-    // Read video
-    VideoCapture video("videos/chaplin.mp4");
-     
-    // Exit if video is not opened
-    if(!video.isOpened())
-    {
-        cout << "Could not read video file" << endl;
-        return 1;      
-    }
-     
-    // Read first frame
-    Mat frame;
-    bool ok = video.read(frame);
-     
-    // Define initial boundibg box
-    Rect2d bbox(287, 23, 86, 320);
-     
-    // Uncomment the line below to select a different bounding box
-    bbox = selectROI(frame, false);
- 
-    // Display bounding box.
-    rectangle(frame, bbox, Scalar( 255, 0, 0 ), 2, 1 );
-    imshow("Tracking", frame);
-   
-    while(video.read(frame))
-    {     
-        // Start timer
-        double timer = (double)getTickCount();
-         
-        // Update the tracking result
-        bool ok = tracker->update(frame, bbox);
-         
-        // Calculate Frames per second (FPS)
-        float fps = getTickFrequency() / ((double)getTickCount() - timer);
-         
-        if (ok)
-        {
-            // Tracking success : Draw the tracked object
-            rectangle(frame, bbox, Scalar( 255, 0, 0 ), 2, 1 );
-        }
-        else
-        {
-            // Tracking failure detected.
-            putText(frame, "Tracking failure detected", Point(100,80), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,0,255),2);
-        }
-         
-        // Display tracker type on frame
-        putText(frame, trackerType + " Tracker", Point(100,20), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(50,170,50),2);
-         
-        // Display FPS on frame
-        putText(frame, "FPS : " + SSTR(int(fps)), Point(100,50), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(50,170,50), 2);
- 
-        // Display frame.
-        imshow("Tracking", frame);
-         
-        // Exit if ESC pressed.
-        int k = waitKey(1);
-        if(k == 27)
-        {
-            break;
-        }
- 
-    }
-
-*/
 }

@@ -14,8 +14,16 @@ Open Tracker is a open sourced repository for Visual Tracking. It's written in C
 <p align="center">
     <img src="images/Crossing.gif", width="480">
 </p>
+<p align="center">
+    <img src="images/trackingdemo.gif", width="480">
+</p>
 
-**2018/06/28 -- New features** Now it support automatic initialization with Web camera using OpenPose.
+
+**2018/06/28 -- New features** Now it support automatic initialization with Web camera using OpenPose!
+
+**2018/07/05 -- New features** Now it support macOS!
+
+**2018/07/06 -- New features** Now it support Nvidia Jetson TX1/2!
 
 ## Supported tracker (more in progressing):
 Included                                   | Tracker    
@@ -48,12 +56,15 @@ Included                   | OS
 ---------------------------|-------------
 :ballot_box_with_check:    | Ubuntu 16.04
 :ballot_box_with_check:    | macOS Sierra
- :hammer:                  | NVIDIA Jetson TX1/2
- :hammer:                  | Rasperberry PI 3
+:ballot_box_with_check:    | NVIDIA Jetson TX1/2 (with Ubuntu installed)
+ :hammer:                  | Rasperberry PI 3 
  :hammer:                  | Windows10
 
 # Quick start
-With quick start, you can have a quick first taste of this repository, without any panic. No ned to install Caffe, CUDA etc. (But you have to install Opencv 3.0 first).
+--------------------------------
+With quick start, you can have a quick first taste of this repository, without any panic. No ned to install Caffe, CUDA etc. (**But of course you have to install OpenCV 3.0 first**).
+
+OpenCV 3.0 Install on Ubuntu check this [[Tutorial](https://www.learnopencv.com/install-opencv3-on-ubuntu/)].
 
 ## Quick start -- Ubuntu
 ```
@@ -71,7 +82,6 @@ make  -j`nproc`
 ./runecotracker.bin
 ```
 ## Quick start -- Raspberry PI 3
-First install OpenCV 3.0, then 
 ```
 git clone https://github.com/rockkingjy/OpenTracker
 cd OpenTracker/eco

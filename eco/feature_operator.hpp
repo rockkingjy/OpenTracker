@@ -1,13 +1,10 @@
 #ifndef FEATURE_OPERATOR_HPP
 #define FEATURE_OPERATOR_HPP
 
-#include <opencv2/features2d/features2d.hpp>
-#include "opencv2/core/core.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
-#include "opencv2/highgui/highgui.hpp"
-
 #include <iostream>
 #include <algorithm>
+
+#include <opencv2/core.hpp>
 
 #include "parameters.hpp"
 #include "fftTool.hpp"

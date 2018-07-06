@@ -172,7 +172,6 @@ void ReadDatasets::IniRead(cv::Rect2f &bboxGroundtruth, cv::Mat &frame)
 }
 void ReadDatasets::DrawGroundTruth(cv::Rect2f &bboxGroundtruth, cv::Mat &frameDraw)
 {
-
     // Draw gt;
     if (databaseType == "TLP")
     {

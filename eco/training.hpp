@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <algorithm>
 
-#include <opencv2/features2d/features2d.hpp>
+//#include <opencv2/features2d/features2d.hpp>
 #include <opencv2/opencv.hpp>
 
 #include "fftTool.hpp"

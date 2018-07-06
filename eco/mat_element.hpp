@@ -5,8 +5,6 @@
 #include <math.h>
 #include <vector>
 
-#include <opencv2/features2d/features2d.hpp>
-
 namespace eco{
 
 inline float mat_cos1(float x)

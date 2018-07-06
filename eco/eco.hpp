@@ -10,11 +10,7 @@
 #include <caffe/util/io.hpp>
 #endif
 
-#include <opencv2/features2d/features2d.hpp>
-#include <opencv2/opencv.hpp>
 #include <opencv2/core.hpp>
-#include <opencv2/imgproc.hpp>
-#include <opencv2/highgui.hpp>
 
 #include "parameters.hpp"
 #include "interpolator.hpp"

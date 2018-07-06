@@ -1,7 +1,7 @@
 #ifndef OPTIMIZE_SCORES_HPP
 #define OPTIMIZE_SCORES_HPP
 
-#include <opencv2/features2d/features2d.hpp>
+//#include <opencv2/features2d/features2d.hpp>
 #include <opencv2/opencv.hpp>
 
 #include "fftTool.hpp"
