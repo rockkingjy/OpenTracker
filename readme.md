@@ -4,7 +4,7 @@
 </p>
 
 # What is Visual Tracking?
-Visual Tracking is to track someone or something by just using one or two simple web camera.
+Visual Tracking is to track someone or something by just using one or two simple web camera(s).
 
 # What is OpenTracker?
 OpenTracker is a open sourced repository for Visual Tracking. It's written in C++, high speed, easy to use, and easy to implemented in embedded system. And this is not only codes, the implement details and complicate maths are explained fully in the **notes/OpenTrackerNotes.pdf**(draft).
@@ -22,9 +22,9 @@ OpenTracker is a open sourced repository for Visual Tracking. It's written in C+
 
 **2018/06/28 -- New features** Now it support automatic initialization with Web camera using **OpenPose**!
 
-**2018/07/05 -- New features** Now it support macOS!
+**2018/07/05 -- New features** Now it support **macOS**!
 
-**2018/07/06 -- New features** Now it support Nvidia Jetson TX1/2!
+**2018/07/06 -- New features** Now it support **Nvidia Jetson TX1/2**!
 
 **2018/07/07 -- New features** OpenTracker Implement Notes draft published! Check **notes/OpenTrackerNotes.pdf**. Complete version is comming!
 
@@ -134,15 +134,15 @@ CAFFE_PATH=<YOUR_CAFFE_PATH>
 
 Download a pretrained [[VGG_CNN_M_2048.caffemodel (370 MB)](https://drive.google.com/file/d/1-kYYCcTR7gBZyHM5oVChNvu0Q9XPdva3/view?usp=sharing)], put it into folder: **eco/model**
 
-If you could not download through the link above (especially for the people from main land of China), check this [[link](https://gist.github.com/ksimonyan/78047f3591446d1d7b91#file-readme-md)] and download. 
+If you could not download through the link above (especially for the people from Mainland China), check this [[link](https://gist.github.com/ksimonyan/78047f3591446d1d7b91#file-readme-md)] and download. 
 
-For ECO_Deep, means using Deep features and HOG feature, in **eco/parameters.cc**, change:
+For ECO_Deep, means using Deep features and HOG feature, in **eco/parameters.cc**, change to:
 ```
 	bool 	useDeepFeature 		 = true;
 	bool	useHogFeature		 = true;	
 ```
 
-For ECO_HC, means just HOG feature, in **eco/parameters.cc**, change:
+For ECO_HC, means just HOG feature, in **eco/parameters.cc**, change to:
 ```
 	bool 	useDeepFeature 		 = false;
 	bool	useHogFeature		 = true;	

@@ -42,7 +42,7 @@ the use of this software, even if advised of the possibility of such damage.
 #define _OPENCV_RECTTOOLS_HPP_
 #endif
 
-namespace RectTools
+namespace kcf
 {
 
 template <typename t>
@@ -119,12 +119,12 @@ inline cv::Rect getBorder(const cv::Rect_<t > &original, cv::Rect_<t > & limited
 inline cv::Mat subwindow(const cv::Mat &in, const cv::Rect & window, int borderType = cv::BORDER_CONSTANT)
 {
     cv::Rect cutWindow = window;
-    RectTools::limit(cutWindow, in.cols, in.rows); //limit cutwindow inside Mat in;
+    limit(cutWindow, in.cols, in.rows); //limit cutwindow inside Mat in;
 
     if (cutWindow.height <= 0 || cutWindow.width <= 0) assert(0); 
     //    return cv::Mat(window.height,window.width,in.type(),0) ;
 
-    cv::Rect border = RectTools::getBorder(window, cutWindow); //get the border of cutWindow in window;
+    cv::Rect border = getBorder(window, cutWindow); //get the border of cutWindow in window;
     cv::Mat res = in(cutWindow);
 
     if (border != cv::Rect(0, 0, 0, 0))
@@ -153,16 +153,16 @@ inline cv::Mat extractImage(const cv::Mat &in, float cx, float cy, float patch_w
 {
 
     float xs_s = floor(cx) - floor(patch_width / 2);
-    RectTools::cutOutsize(xs_s, in.cols);
+    cutOutsize(xs_s, in.cols);
 
     float xs_e = floor(cx + patch_width - 1) - floor(patch_width / 2);
-    RectTools::cutOutsize(xs_e, in.cols);
+    cutOutsize(xs_e, in.cols);
 
     float ys_s = floor(cy) - floor(patch_height / 2);
-    RectTools::cutOutsize(ys_s, in.rows);
+    cutOutsize(ys_s, in.rows);
 
     float ys_e = floor(cy + patch_height - 1) - floor(patch_height / 2);
-    RectTools::cutOutsize(ys_e, in.rows);
+    cutOutsize(ys_e, in.rows);
 
 
     return in(cv::Rect(xs_s, ys_s, xs_e - xs_s, ys_e - ys_s));

@@ -87,6 +87,8 @@ the use of this software, even if advised of the possibility of such damage.
 #define _OPENCV_KCFTRACKER_HPP_
 #endif
 
+namespace kcf
+{
 class KCFTracker
 {
 public:
@@ -203,3 +205,4 @@ private:
     cv::Mat _prob_dsst;
 //============    
 };
+}

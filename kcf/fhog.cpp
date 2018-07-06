@@ -63,7 +63,8 @@
 #define min(a,b)            (((a) < (b)) ? (a) : (b))
 #endif
 
-
+namespace kcf
+{
 /*
 // Getting feature map for the selected subimage
 //
@@ -77,7 +78,7 @@
 // RESULT
 // Error status
 */
-int HOG_KCF::getFeatureMaps(const IplImage* image, const int k, CvLSVMFeatureMapCaskade **map)
+int getFeatureMaps(const IplImage* image, const int k, CvLSVMFeatureMapCaskade **map)
 {
     int sizeX, sizeY;
     int p, px, stringSize;
@@ -287,7 +288,7 @@ int HOG_KCF::getFeatureMaps(const IplImage* image, const int k, CvLSVMFeatureMap
 // RESULT
 // Error status
 */
-int HOG_KCF::normalizeAndTruncate(CvLSVMFeatureMapCaskade *map, const float alfa)
+int normalizeAndTruncate(CvLSVMFeatureMapCaskade *map, const float alfa)
 {
     int i,j, ii;
     int sizeX, sizeY, p, pos, pp, xp, pos1, pos2;
@@ -411,7 +412,7 @@ int HOG_KCF::normalizeAndTruncate(CvLSVMFeatureMapCaskade *map, const float alfa
 // RESULT
 // Error status
 */
-int HOG_KCF::PCAFeatureMaps(CvLSVMFeatureMapCaskade *map)
+int PCAFeatureMaps(CvLSVMFeatureMapCaskade *map)
 { 
     int i,j, ii, jj, k;
     int sizeX, sizeY, p,  pp, xp, yp, pos1, pos2;
@@ -484,7 +485,7 @@ int HOG_KCF::PCAFeatureMaps(CvLSVMFeatureMapCaskade *map)
 
 //modified from "lsvmc_routine.cpp"
 
-int HOG_KCF::allocFeatureMapObject(CvLSVMFeatureMapCaskade **obj, const int sizeX, 
+int allocFeatureMapObject(CvLSVMFeatureMapCaskade **obj, const int sizeX, 
                           const int sizeY, const int numFeatures)
 {
     int i;
@@ -501,11 +502,12 @@ int HOG_KCF::allocFeatureMapObject(CvLSVMFeatureMapCaskade **obj, const int size
     return LATENT_SVM_OK;
 }
 
-int HOG_KCF::freeFeatureMapObject (HOG_KCF::CvLSVMFeatureMapCaskade **obj)
+int freeFeatureMapObject (CvLSVMFeatureMapCaskade **obj)
 {
     if(*obj == NULL) return LATENT_SVM_MEM_NULL;
     free((*obj)->map);
     free(*obj);
     (*obj) = NULL;
     return LATENT_SVM_OK;
+}
 }

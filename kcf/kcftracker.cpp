@@ -88,9 +88,8 @@ the use of this software, even if advised of the possibility of such damage.
 #include "labdata.hpp"
 #endif
 
-using namespace FFTTools_KCF;
-using namespace HOG_KCF;
-
+namespace kcf
+{
 // Constructor
 KCFTracker::KCFTracker(bool hog, bool fixed_window, bool multiscale, bool lab, bool dsst)
 {
@@ -585,7 +584,7 @@ cv::Mat KCFTracker::getFeatures(const cv::Mat &image, bool inithann, float scale
 
     //printf("extracted_roi:%d,%d,%d,%d\n", extracted_roi.x, extracted_roi.y, extracted_roi.width, extracted_roi.height);
     cv::Mat FeaturesMap;
-    cv::Mat z = RectTools::subwindow(image, extracted_roi, cv::BORDER_REPLICATE);
+    cv::Mat z = subwindow(image, extracted_roi, cv::BORDER_REPLICATE);
 
     if (z.cols != _tmpl_sz.width || z.rows != _tmpl_sz.height)
     {
@@ -666,7 +665,7 @@ cv::Mat KCFTracker::getFeatures(const cv::Mat &image, bool inithann, float scale
     }
     else //CSK
     {
-        FeaturesMap = RectTools::getGrayImage(z);
+        FeaturesMap = getGrayImage(z);
         FeaturesMap -= (float)0.5; // CSK p10;
         _size_patch[0] = z.rows;
         _size_patch[1] = z.cols;
@@ -841,7 +840,7 @@ cv::Mat KCFTracker::get_sample_dsst(const cv::Mat &image)
         float cy = _roi.y + _roi.height / 2.0f;
 
         // Get the subwindow
-        cv::Mat im_patch = RectTools::extractImage(image, cx, cy, patch_width, patch_height);
+        cv::Mat im_patch = extractImage(image, cx, cy, patch_width, patch_height);
         cv::Mat im_patch_resized;
 
         //printf("cx:%f,cy:%f\n",cx,cy);
@@ -930,4 +929,5 @@ cv::Mat KCFTracker::createHanningMats_dsst()
         hann_s.at<float>(0, i) = 0.5 * (1 - std::cos(2 * 3.14159265358979323846 * i / (hann_s.cols - 1)));
 
     return hann_s;
+}
 }
