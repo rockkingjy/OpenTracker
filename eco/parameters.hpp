@@ -17,7 +17,6 @@
 using std::vector;
 using std::string;
 
-
 namespace eco{
 	
 typedef   std::vector<std::vector<cv::Mat> > ECO_FEATS;// ECO feature[Num_features][Dimension_of_the_feature];
@@ -83,7 +82,7 @@ struct EcoParameters
 
 	// Features
 	bool 	useDeepFeature 		 = false;
-	bool	useHogFeature		 = true;		// Not used yet, add later.......
+	bool	useHogFeature		 = true;		
 	bool	useCnFeature		 = false;		// Not used yet, add later.......
 
 	// img sample parameters 

@@ -5,8 +5,10 @@ Interpolator::Interpolator(){}
 
 Interpolator::~Interpolator(){}
 
-void Interpolator::get_interp_fourier(cv::Size filter_sz, cv::Mat &interp1_fs,
-									  cv::Mat &interp2_fs, float a)
+void Interpolator::get_interp_fourier(cv::Size filter_sz, 
+									  cv::Mat &interp1_fs,
+									  cv::Mat &interp2_fs, 
+									  float a)
 {
 	cv::Mat temp1(filter_sz.height, 1, CV_32FC1);
 	cv::Mat temp2(1, filter_sz.width, CV_32FC1);

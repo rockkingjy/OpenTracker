@@ -24,6 +24,10 @@ class SampleUpdate
 	void init(const std::vector<cv::Size> &filter,
 			  const std::vector<int> &feature_dim,
 			  const size_t max_samples);
+	
+	void reset(const std::vector<cv::Size> &filter,
+			  const std::vector<int> &feature_dim,
+			  const size_t max_samples);
 
 	void update_sample_space_model(const ECO_FEATS &new_train_sample); // gpu_implemented
 

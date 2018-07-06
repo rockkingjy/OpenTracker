@@ -42,4 +42,11 @@ build/
 *.bin
 .vscode/
 .DS_Store
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.toc
+*.synctex.gz
 

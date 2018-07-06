@@ -4,7 +4,7 @@ namespace eco
 {
 void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 {
-	printf("\n=========================================================\n");
+	printf("\n=========================Init================================\n");
 	// 1. Initialize all the parameters.
 	// Image infomations
 	imgInfo(im);
@@ -130,14 +130,14 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 																	   im.rows / (float)base_target_size_.height)) /
 													std::log(params_.scale_step)));
 	}
-	debug("scale:%d, %d", scalemin, scalemax);
+	debug("scale: min:%d, max:%d", scalemin, scalemax);
 	debug("scalefactor min: %f max: %f", params_.min_scale_factor, params_.max_scale_factor);
 	debug("scale_factors_:");
 	for (size_t i = 0; i < params_.number_of_scales; i++)
 	{
 		printf("%lu:%f; ", i, scale_factors_[i]);
 	}
-	printf("\n======================================================================\n");
+	printf("\n-------------------------------------------------------------\n");
 	ECO_FEATS xl, xlw, xlf, xlf_porj;
 
 	// 2. Extract features from the first frame.
@@ -194,7 +194,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	eco_trainer_.train_joint();
 
 	// 12. Update project matrix P.
-	projection_matrix_ = eco_trainer_.get_proj(); //*** exect to matlab tracker
+	projection_matrix_ = eco_trainer_.get_proj(); 
 	for (size_t i = 0; i < projection_matrix_.size(); ++i)
 	{
 		double maxValue = 0, minValue = 0;
@@ -218,6 +218,113 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 		debug("hf_full_: %lu, %lu, %d x %d", i, hf_full_[i].size(), hf_full_[i][0].rows, hf_full_[i][0].cols);
 	}
 	frames_since_last_train_ = 0;
+	printf("\n=======================End of Init===============================\n");
+}
+
+void ECO::reset(cv::Mat &im, const cv::Rect2f &rect)
+{
+	printf("\n=======================Reset Tracker=============================\n");
+	// 1. Initialize all the parameters.
+	// Image infomations
+	imgInfo(im);
+	debug("rect: %f, %f, %f, %f", rect.x, rect.y, rect.width, rect.height);
+
+	// Get the ini position
+	pos_.x = rect.x + (rect.width - 1.0) / 2.0;
+	pos_.y = rect.y + (rect.height - 1.0) / 2.0;
+	debug("pos_:%f, %f", pos_.y, pos_.x);
+
+	// Calculate search area and initial scale factor
+	float search_area = rect.area() * std::pow(params_.search_area_scale, 2);
+	debug("search_area:%f", search_area);
+	if (search_area > params_.max_image_sample_size)
+		currentScaleFactor_ = sqrt((float)search_area / params_.max_image_sample_size);
+	else if (search_area < params_.min_image_sample_size)
+		currentScaleFactor_ = sqrt((float)search_area / params_.min_image_sample_size);
+	else
+		currentScaleFactor_ = 1.0;
+	debug("currentscale:%f", currentScaleFactor_);
+
+	ECO_FEATS xl, xlw, xlf, xlf_porj;
+	// 2. Extract features from the first frame.
+	xl = feature_extractor_.extractor(im, pos_, vector<float>(1, currentScaleFactor_), params_);
+	debug("xl size: %lu, %lu, %d x %d", xl.size(), xl[0].size(), xl[0][0].rows, xl[0][0].cols);
+
+	// 3. Do windowing of features.
+	xl = do_windows(xl, cos_window_);
+
+	// 4. Compute the fourier series.
+	xlf = do_dft(xl);
+
+	// 5. Interpolate features to the continuous domain.
+	xlf = interpolate_dft(xlf, interp1_fs_, interp2_fs_);
+
+	xlf = compact_fourier_coeff(xlf); // take half of the cols
+	for (size_t i = 0; i < xlf.size(); i++)
+	{
+		debug("xlf feature %lu 's size: %lu, %d x %d", i, xlf[i].size(), xlf[i][0].rows, xlf[i][0].cols);
+	}
+	// 6. Initialize projection matrix P.
+	projection_matrix_ = init_projection_matrix(xl, compressed_dim_, feature_dim_); // 32FC2 31x10
+	for (size_t i = 0; i < projection_matrix_.size(); i++)
+	{
+		debug("projection_matrix %lu 's size: %d x %d", i, projection_matrix_[i].rows, projection_matrix_[i].cols);
+	}
+	// 7. project sample, feature reduction.
+	xlf_porj = FeatureProjection(xlf, projection_matrix_);
+	for (size_t i = 0; i < xlf.size(); i++)
+	{
+		debug("xlf_porj feature %lu 's size: %lu, %d x %d", i, xlf_porj[i].size(), xlf_porj[i][0].rows, xlf_porj[i][0].cols);
+	}
+	// 8. Initialize and update sample space.
+	// The distance matrix, kernel matrix and prior weight are also updated
+	sample_update_.reset(filter_size_, compressed_dim_, params_.nSamples);
+	sample_update_.update_sample_space_model(xlf_porj);
+
+	// 9. Calculate sample energy and projection map energy.
+	sample_energy_ = FeautreComputePower2(xlf_porj);
+
+	vector<cv::Mat> proj_energy = project_mat_energy(projection_matrix_, yf_);
+
+	// 10. Initialize filter and it's derivative.
+	ECO_FEATS hf, hf_inc;
+	for (size_t i = 0; i < xlf.size(); i++)
+	{
+		hf.push_back(vector<cv::Mat>(xlf_porj[i].size(), cv::Mat::zeros(xlf_porj[i][0].size(), CV_32FC2)));
+		hf_inc.push_back(vector<cv::Mat>(xlf_porj[i].size(), cv::Mat::zeros(xlf_porj[i][0].size(), CV_32FC2)));
+	}
+	// 11. Train the tracker.
+	eco_trainer_.train_init(hf, hf_inc, projection_matrix_, xlf, yf_, reg_filter_,
+							sample_energy_, reg_energy_, proj_energy, params_);
+
+	eco_trainer_.train_joint();
+
+	// 12. Update project matrix P.
+	projection_matrix_ = eco_trainer_.get_proj(); 
+	for (size_t i = 0; i < projection_matrix_.size(); ++i)
+	{
+		double maxValue = 0, minValue = 0;
+		cv::minMaxLoc(projection_matrix_[i], &minValue, &maxValue, NULL, NULL);
+		debug("projection_matrix_ %lu: value: %lf %lf", i, minValue, maxValue);
+	}
+	// 13. Re-project the sample and update the sample space.
+	xlf_porj = FeatureProjection(xlf, projection_matrix_);
+	debug("xlf_porj size: %lu, %lu, %d x %d", xlf_porj.size(), xlf_porj[0].size(), xlf_porj[0][0].rows, xlf_porj[0][0].cols);
+
+	sample_update_.replace_sample(xlf_porj, 0); // put xlf_proj to the smaples_f_[0].
+
+	// 14. Update distance matrix of sample space. Find the norm of the reprojected sample
+	float new_sample_norm = FeatureComputeEnergy(xlf_porj);
+	sample_update_.set_gram_matrix(0, 0, 2 * new_sample_norm);
+
+	// 15. Update filter f.
+	hf_full_ = full_fourier_coeff(eco_trainer_.get_hf());
+	for (size_t i = 0; i < hf_full_.size(); i++)
+	{
+		debug("hf_full_: %lu, %lu, %d x %d", i, hf_full_[i].size(), hf_full_[i][0].rows, hf_full_[i][0].cols);
+	}
+	frames_since_last_train_ = 0;
+	printf("\n========================End of Reset============================\n");
 }
 
 bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)

@@ -55,6 +55,59 @@ void SampleUpdate::init(const std::vector<cv::Size> &filter,
 	printf("\n");
 }
 
+void SampleUpdate::reset(const std::vector<cv::Size> &filter,
+						const std::vector<int> &feature_dim,
+						const size_t max_samples)
+{
+	nSamples_ = max_samples;
+	// Reset distance matrix to INF
+	for (size_t i = 0; i < (size_t)distance_matrix_.rows; i++)
+	{
+		for (size_t j = 0; j < (size_t)distance_matrix_.cols; j++)
+		{
+			distance_matrix_.at<cv::Vec<float, 2>>(i, j) = cv::Vec<float, 2>(INF, 0);
+			gram_matrix_.at<cv::Vec<float, 2>>(i, j) = cv::Vec<float, 2>(INF, 0);
+		}
+	}
+
+	// Samples memory reset
+	samples_f_.clear();
+	for (size_t n = 0; n < nSamples_; n++)
+	{
+		ECO_FEATS temp;
+		for (size_t j = 0; j < (size_t)feature_dim.size(); j++) // for each feature
+		{
+			std::vector<cv::Mat> temp_single_feat;
+			for (size_t i = 0; i < (size_t)feature_dim[j]; i++) // for each dimension of the feature
+				temp_single_feat.push_back(cv::Mat::zeros(
+					cv::Size((filter[j].height + 1) / 2, filter[j].width),
+					CV_32FC2));
+			temp.push_back(temp_single_feat);
+		}
+		samples_f_.push_back(temp);
+	}
+
+	// resize prior weights to the same as nSamples_
+	prior_weights_.clear();
+	prior_weights_.resize(nSamples_);
+
+	// Show debug.
+	for (size_t j = 0; j < (size_t)feature_dim.size(); j++)
+	{
+		debug("samples: %lu, feature %lu, size: %lu, mat: %d x %d",
+			  nSamples_, j, samples_f_[nSamples_ - 1][j].size(),
+			  samples_f_[nSamples_ - 1][j][feature_dim[j] - 1].rows,
+			  samples_f_[nSamples_ - 1][j][feature_dim[j] - 1].cols);
+	}
+	//showmat1chall(real(distance_matrix_), 2);
+	debug("prior_weights_ size: %lu ", prior_weights_.size());
+	for (size_t j = 0; j < (size_t)prior_weights_.size(); j++)
+	{
+		printf("%f ", prior_weights_[j]);
+	}
+	printf("\n");
+}
+
 void SampleUpdate::update_sample_space_model(const ECO_FEATS &new_train_sample)
 {
 	// Calculate the distance

@@ -4,10 +4,10 @@
 </p>
 
 # What is Visual Tracking?
-Visual Tracking is to track someone or something by just using a simple web camera.
+Visual Tracking is to track someone or something by just using one or two simple web camera.
 
 # What is OpenTracker?
-Open Tracker is a open sourced repository for Visual Tracking. It's written in C++, high speed, easy to use, and also easy to implemented in embedded system. 
+OpenTracker is a open sourced repository for Visual Tracking. It's written in C++, high speed, easy to use, and easy to implemented in embedded system. And this is not only codes, the implement details and complicate maths are explained fully in the **notes/OpenTrackerNotes.pdf**(draft).
 
 **Why most of the modern trackers are written by matlab? Slow speed, lots of extra-packages, need loads of money to buy the licences, version compliance problems (gcc4.9 gcc5.0 oh my god)... Anyway, I hate that! C++ is fast and clear! I even doubt that the FPS measured by using matlab is really meaningful, especially for actual and embedded system use! So I will re-implement those trackers by cpp day by day, keep the clarity and less extra-packages in mind, hope you like it!**
 
@@ -18,12 +18,15 @@ Open Tracker is a open sourced repository for Visual Tracking. It's written in C
     <img src="images/trackingdemo.gif", width="480">
 </p>
 
+**Attention!** OpenTracker is not designed just for tracking human beings as the demo images, it can track everything, even some special points!
 
-**2018/06/28 -- New features** Now it support automatic initialization with Web camera using OpenPose!
+**2018/06/28 -- New features** Now it support automatic initialization with Web camera using **OpenPose**!
 
 **2018/07/05 -- New features** Now it support macOS!
 
 **2018/07/06 -- New features** Now it support Nvidia Jetson TX1/2!
+
+**2018/07/07 -- New features** OpenTracker Implement Notes draft published! Check **notes/OpenTrackerNotes.pdf**. Complete version is comming!
 
 ## Supported tracker (more in progressing):
 Included                                   | Tracker    
@@ -124,18 +127,28 @@ If you don't want to compile with Caffe, that means you cannot use Deep features
 If you don't want to compile with CUDA, that means you cannot use Deep features, set in **eco/makefile**: `USE_CUDA=0`.
 
 ### Compile with Caffe
-If you want to compile with Caffe, set in **eco/makefile**: `USE_CAFFE=1` (CUDA will automatically set to use), and set the according caffe path of your system in **eco/makefile**:
+If you want to compile with Caffe, set in **makefile** and **eco/makefile**: `USE_CAFFE=1`, and set the according caffe path of your system in **eco/makefile**:
 ```
-ifeq ($(USE_CAFFE), 1)
-CXXFLAGS+= -DUSE_CAFFE
-LDFLAGS+= -L/media/elab/sdd/mycodes/caffe/build/lib -lcaffe 
-CXXFLAGS+= -I/media/elab/sdd/mycodes/caffe/build/include/ -I/media/elab/sdd/mycodes/caffe/include/ 
-endif
+CAFFE_PATH=<YOUR_CAFFE_PATH>
 ```
 
 Download a pretrained [[VGG_CNN_M_2048.caffemodel (370 MB)](https://drive.google.com/file/d/1-kYYCcTR7gBZyHM5oVChNvu0Q9XPdva3/view?usp=sharing)], put it into folder: **eco/model**
 
-For using Deep features, in **eco/parameters.cc**, change to `bool useDeepFeature = true;`.
+If you could not download through the link above (especially for the people from main land of China), check this [[link](https://gist.github.com/ksimonyan/78047f3591446d1d7b91#file-readme-md)] and download. 
+
+For ECO_Deep, means using Deep features and HOG feature, in **eco/parameters.cc**, change:
+```
+	bool 	useDeepFeature 		 = true;
+	bool	useHogFeature		 = true;	
+```
+
+For ECO_HC, means just HOG feature, in **eco/parameters.cc**, change:
+```
+	bool 	useDeepFeature 		 = false;
+	bool	useHogFeature		 = true;	
+```
+
+CN feature not implemented yet, comes later.
 
 ### Datasets settings
 Change the path of your test images in **eco/runecotracker.cc**.

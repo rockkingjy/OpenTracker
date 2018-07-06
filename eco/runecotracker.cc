@@ -374,6 +374,12 @@ int main(int argc, char **argv)
         bboxGroundtruth.width = w;
         bboxGroundtruth.height = h;
         frame = cv::imread(osfile.str().c_str(), CV_LOAD_IMAGE_UNCHANGED);
+/*
+        if(f%10==0)
+        {
+            ecotracker.reset(frame, bboxGroundtruth);
+        }
+*/      
     }
     return 0;
 }
