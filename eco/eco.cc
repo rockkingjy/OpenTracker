@@ -55,7 +55,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	for (size_t i = 0; i < filter_size_.size(); ++i) // for each filter
 	{
 		cv::Mat_<float> tempy(filter_size_[i].height, 1, CV_32FC1);
-		cv::Mat_<float> tempx(1, filter_size_[i].height / 2 + 1, CV_32FC1); // why 1/2 in x?===========????
+		cv::Mat_<float> tempx(1, filter_size_[i].height / 2 + 1, CV_32FC1);
 
 		// ky in [-(N-1)/2, (N-1)/2], because N = filter_size_[i].height is odd (check above), N x 1;
 		for (int j = 0; j < tempy.rows; j++)
@@ -333,7 +333,7 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 		cv::applyColorMap(cm_img, cm_img, cv::COLORMAP_JET);
 
 		// Merge these two images
-		float alpha_vis = 0.5;
+		float alpha_vis = 0.3;
 		int x_vis = std::max(0, sample_pos.x - cm_img.cols / 2);
 		int y_vis = std::max(0, sample_pos.y - cm_img.rows / 2);
 		int w_vis = 0;

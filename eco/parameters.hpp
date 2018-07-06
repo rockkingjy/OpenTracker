@@ -10,7 +10,7 @@
 #include <vector>
 #include <string>
 
-#define DEBUG 0
+#define DEBUG 1
 
 #define INF 0x7f800000 //0x7fffffff 
 
@@ -26,9 +26,9 @@ typedef   cv::Vec<float, 2>                  COMPLEX;  // represent a complex nu
 //*** cnn   feature   configuration *****
 #ifdef USE_CAFFE
 struct CnnParameters{
-    string 	proto 	= "/media/elab/sdd/mycodes/tracker/OpenTrackers/eco/model/imagenet-vgg-m-2048.prototxt";
-    string 	model	= "/media/elab/sdd/mycodes/tracker/OpenTrackers/eco/model/VGG_CNN_M_2048.caffemodel";
-    string 	mean_file = "/media/elab/sdd/mycodes/tracker/OpenTrackers/eco/model/VGG_mean.binaryproto";
+    string 	proto 	= "/media/elab/sdd/mycodes/tracker/OpenTracker/eco/model/imagenet-vgg-m-2048.prototxt";
+    string 	model	= "/media/elab/sdd/mycodes/tracker/OpenTracker/eco/model/VGG_CNN_M_2048.caffemodel";
+    string 	mean_file = "/media/elab/sdd/mycodes/tracker/OpenTracker/eco/model/VGG_mean.binaryproto";
 
 	boost::shared_ptr<caffe::Net<float>> net;
 	cv::Mat 			deep_mean_mat, deep_mean_mean_mat;
@@ -59,7 +59,7 @@ struct CnnFeatures
 //**** hog parameters cofiguration *****
 struct HogParameters
 {
-	int           cell_size 	 = 4;
+	int           cell_size 	 = 6;
 	int           compressed_dim = 10;	// Compressed dimensionality of each output layer (ECO Paper Table 1)
 	int           nOrients		 = 9;
 	size_t        nDim			 = 31; 	// Original dimension of feature	
@@ -143,7 +143,7 @@ struct EcoParameters
 	bool    interpolation_windowing = false;	// Do additional windowing on the Fourier coefficients of the kernel
 
 	// Scale parameters for the translation model
-	size_t  number_of_scales = 1;			    // Number of scales to run the detector
+	size_t  number_of_scales = 3;			    // Number of scales to run the detector
 	float   scale_step	= 1.02f;                // The scale factor
 	float 	min_scale_factor;
 	float	max_scale_factor;

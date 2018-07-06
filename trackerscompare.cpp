@@ -8,11 +8,13 @@
 
 #include <gflags/gflags.h>
 #include <glog/logging.h>
+
 #include <opencv2/opencv.hpp>
 #include <opencv2/tracking.hpp>
 #include <opencv2/core/ocl.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
+
 #include <iostream>
 #include <fstream>
 #include <string>

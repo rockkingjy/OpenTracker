@@ -5,6 +5,7 @@
 #include <string>
 #include <math.h>
 #include <vector>
+#include <numeric>
 
 #ifdef USE_CAFFE
 #include <caffe/caffe.hpp>
@@ -16,7 +17,6 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/objdetect/objdetect.hpp>
-#include <numeric>
 
 #include "parameters.hpp"
 #include "fftTool.hpp"

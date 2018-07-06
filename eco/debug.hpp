@@ -4,8 +4,9 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
-#include <opencv2/opencv.hpp>
 #include <numeric>
+
+#include <opencv2/opencv.hpp>
 
 #define getName(var) #var
 

@@ -3,7 +3,13 @@
     <img src="images/Opentracker.png", width="480">
 </p>
 
-**Why most of the trackers are written by matlab? Slow speed, lots of extra-packages, need loads of money to buy the licences, version compliance problems (gcc4.9 gcc5.0 oh my god)... Anyway, I hate that! C++ is fast and clear! I even doubt that the FPS measured by using matlab is really meaningful, especially for actual and embedded system use! So I will re-implement those trackers by cpp day by day, keep the clarity and less extra-packages in mind, hope you like it!**
+# What is Visual Tracking?
+Visual Tracking is to track someone or something by just using a simple web camera.
+
+# What is OpenTracker?
+Open Tracker is a open sourced repository for Visual Tracking. It's written in C++, high speed, easy to use, and also easy to implemented in embedded system. 
+
+**Why most of the modern trackers are written by matlab? Slow speed, lots of extra-packages, need loads of money to buy the licences, version compliance problems (gcc4.9 gcc5.0 oh my god)... Anyway, I hate that! C++ is fast and clear! I even doubt that the FPS measured by using matlab is really meaningful, especially for actual and embedded system use! So I will re-implement those trackers by cpp day by day, keep the clarity and less extra-packages in mind, hope you like it!**
 
 <p align="center">
     <img src="images/Crossing.gif", width="480">
@@ -46,21 +52,32 @@ Included                   | OS
  :hammer:                  | Rasperberry PI 3
  :hammer:                  | Windows10
 
-# Quick start -- Ubuntu
-To run a test with ECO without Deep feature, no need to install Caffe, CUDA etc.
+# Quick start
+With quick start, you can have a quick first taste of this repository, without any panic. No ned to install Caffe, CUDA etc. (But you have to install Opencv 3.0 first).
+
+## Quick start -- Ubuntu
 ```
-cd eco
+git clone https://github.com/rockkingjy/OpenTracker
+cd OpenTracker/eco
 make -j`nproc`
 ./runecotracker.bin
 ```
-# Quick start -- macOS
+## Quick start -- macOS
 ```
 brew install tesseract
-cd eco
+git clone https://github.com/rockkingjy/OpenTracker
+cd OpenTracker/eco
 make  -j`nproc`
 ./runecotracker.bin
 ```
-
+## Quick start -- Raspberry PI 3
+First install OpenCV 3.0, then 
+```
+git clone https://github.com/rockkingjy/OpenTracker
+cd OpenTracker/eco
+make
+./runecotracker.bin
+```
 
 # Compile and Run 
 --------------------------------

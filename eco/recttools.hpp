@@ -38,6 +38,7 @@ the use of this software, even if advised of the possibility of such damage.
 #define RECTTOOLS_HPP
 
 #include <math.h>
+
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/opencv.hpp>
 

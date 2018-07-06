@@ -9,8 +9,8 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-#include <gflags/gflags.h>
-#include <glog/logging.h>
+//#include <gflags/gflags.h>
+//#include <glog/logging.h>
 
 #include "eco.hpp"
 #include "debug.hpp"
@@ -61,10 +61,10 @@ void drawBox(cv::Mat& image, cv::Rect box, cv::Scalar color, int thick){
 
 int main(int argc, char **argv)
 {
-    ::google::InitGoogleLogging(argv[0]);
+    //::google::InitGoogleLogging(argv[0]);
     // Database settings
     string databaseTypes[5] = {"Demo","VOT-2017", "TB-2015", "TLP", "UAV123"};
-    string databaseType = databaseTypes[0];
+    string databaseType = databaseTypes[4];
     // Read from the images ====================================================
     int f, isLost;
     float x, y, w, h;
@@ -185,7 +185,7 @@ int main(int argc, char **argv)
     }
     else if (databaseType == "TLP")
     {
-        path = "/media/elab/sdd/data/TLP/Drone3"; //Bike";//Drone2";//Alladin";//IceSkating";//Sam";//
+        path = "/media/elab/sdd/data/TLP/Drone1";//Sam";//Drone2"; //Bike";//Alladin";//IceSkating";//
         // Read the groundtruth bbox
         groundtruth = new ifstream(path + "/groundtruth_rect.txt");
         getline(*groundtruth, s, ',');

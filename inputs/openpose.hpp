@@ -1,5 +1,5 @@
-#pragma once
-
+#ifndef OPENPOSE_HPP
+#define OPENPOSE_HPP
 
 #include <chrono> // `std::chrono::` functions and classes, e.g. std::chrono::milliseconds
 #include <thread> // std::this_thread
@@ -45,3 +45,4 @@ class OpenPose
     virtual ~OpenPose();
     void IniRead(cv::Rect2f &bboxGroundtruth);
 };
+#endif
