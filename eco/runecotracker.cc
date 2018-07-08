@@ -5,6 +5,7 @@
 #include <opencv2/opencv.hpp>
 
 #include "eco.hpp"
+#include "metrics.hpp"
 #include "debug.hpp"
 
 using namespace std;
@@ -17,6 +18,15 @@ int main(int argc, char **argv)
     string databaseTypes[5] = {"Demo","VOT-2017", "TB-2015", "TLP", "UAV123"};
     string databaseType = databaseTypes[0];
     // Read from the images ====================================================
+    std::vector<float> CenterError;
+    std::vector<float> Iou;
+    std::vector<float> FpsEco;
+    float SuccessRate = 0.0f;
+    float AvgPrecision = 0.0f;
+    float AvgIou = 0.0f;
+    float AvgFps = 0.0f;
+    Metrics metrics;
+
     int f, isLost;
     float x, y, w, h;
     float x1, y1, x2, y2, x3, y3, x4, y4; //gt for vot
@@ -188,7 +198,11 @@ int main(int argc, char **argv)
         return -1;
     }
     // Draw gt;
-    if (databaseType == "TLP")
+    if (databaseType == "Demo")
+    {
+        rectangle(frameDraw, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
+    }
+    else if (databaseType == "TLP")
     {
         rectangle(frameDraw, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
     }
@@ -231,7 +245,11 @@ int main(int argc, char **argv)
         }
 
         // Draw ground truth box
-        if (databaseType == "TLP")
+        if (databaseType == "Demo")
+        {
+            rectangle(frameDraw, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
+        }
+        else if (databaseType == "TLP")
         {
             rectangle(frameDraw, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
         }
@@ -374,6 +392,27 @@ int main(int argc, char **argv)
         bboxGroundtruth.width = w;
         bboxGroundtruth.height = h;
         frame = cv::imread(osfile.str().c_str(), CV_LOAD_IMAGE_UNCHANGED);
+        if(!frame.data)
+        {
+            break;
+        }
+        // Calculate the metrics;
+        float centererror = metrics.center_error(ecobbox, bboxGroundtruth);
+        float iou = metrics.iou(ecobbox, bboxGroundtruth);
+        CenterError.push_back(centererror);
+        Iou.push_back(iou);
+        FpsEco.push_back(fpseco);
+
+        cout << "iou:" << iou << std::endl;
+
+        if(centererror <= 20)
+        {
+            AvgPrecision++;
+        }
+        if(iou >= 0.5)
+        {
+            SuccessRate++;
+        }
 /*
         if(f%10==0)
         {
@@ -381,5 +420,14 @@ int main(int argc, char **argv)
         }
 */      
     }
+    AvgPrecision /= (float)(f - 2);
+    SuccessRate /= (float)(f - 2);
+    AvgIou = std::accumulate(Iou.begin(), Iou.end(), 0.0f) / Iou.size();
+    AvgFps = std::accumulate(FpsEco.begin(), FpsEco.end(), 0.0f) / FpsEco.size();
+    cout << "Frames:" << f - 2
+         << " AvgPrecision:" << AvgPrecision
+         << " AvgIou:" << AvgIou 
+         << " SuccessRate:" << SuccessRate
+         << " AvgFps:" << AvgFps << std::endl;
     return 0;
 }

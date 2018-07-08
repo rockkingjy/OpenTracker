@@ -33,11 +33,11 @@ endif
 
 OBJS = fftTool.o fhog.o interpolator.o optimize_scores.o \
 		regularization_filter.o feature_extractor.o feature_operator.o  \
-		training.o sample_update.o eco.o runecotracker.o
+		training.o sample_update.o eco.o metrics.o
 
 all: runecotracker.bin
 
-runecotracker.bin: $(OBJS) 
+runecotracker.bin: $(OBJS) runecotracker.o
 	$(CC) -o $@ $^ $(LDFLAGS) 
 
 %.o: %.c $(HEADERS)
