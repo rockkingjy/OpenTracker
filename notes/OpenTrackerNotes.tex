@@ -655,13 +655,13 @@ So the Fourier transformation of $y_j(t)$ is:
 where $K=max_d K_d$.
 %--------------------------------------------------
 \subsection{Interpolation function $b_d$}
-Standard cubic spline kernel: 
+Standard cubic spline kernel \cite{szeliski2010computer} (3.79): 
 \begin{equation}
 	b(t)=
 	\begin{cases}
-		(a+2)\abs{t}^3-(a+3)t^2+1 & \abs{t} \leq 1 \\
-		a\abs{t}^3-5at^2+8a\abs{t}-4a & 1 < \abs{t} \leq 2\\
-		0	& \abs{t} > 2
+		(a+2)\abs{t}^3-(a+3)t^2+1 & \text{if } \abs{t} < 1 \\
+		a\abs{t}^3-5at^2+8a\abs{t}-4a & \text{if } 1 \leq \abs{t} < 2\\
+		0	& \text{otherwise,}
     	\end{cases}
 \end{equation} \par
 First rescaling b to the sample interval $T/N_d$, then shifted half an interval $T/(2N_d)$ to align the origin of the continuous coordinate system with the sampling intervals of the feature map: 
@@ -676,7 +676,7 @@ The Fourier transformation of it is:
 			&= e^{-i\pi \frac{T}{N_d} k} \frac{T}{N_d} \int^{\infty}_{-\infty} b(\tau')e^{-i2\pi k \frac{T}{N_d} \tau' } d\tau' \\
 			&= \frac{T}{N_d} e^{-i\pi \frac{T}{N_d} k} \hat{b}(\frac{T}{N_d}k) 
 \end{split}\end{align} \par
-$b_d(t)=\sum^{\infty}_{n=-\infty}c_d(t-nT)$  is the periodic repetition of $c_d(t)$, it's Fourier transformation is:
+$b_d(t)=\sum^{\infty}_{n=-\infty}c_d(t-nT)$  is the periodic repetition of $c_d(t)$, its Fourier transformation is:
 \begin{align}\begin{split}
 	\hat{b}_d[k] 
 	&\stackrel{(\ref{eq:fouriergT})}{=} \frac{1}{T} \hat{c}_d(\frac{k}{T}) \\

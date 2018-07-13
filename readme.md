@@ -7,7 +7,29 @@
 Visual Tracking is to track someone or something by just using one or two simple web camera(s).
 
 # What is OpenTracker?
-OpenTracker is a open sourced repository for Visual Tracking. It's written in C++, high speed, easy to use, and easy to implemented in embedded system. And this is not only codes, the implement details and complicate maths are explained fully in the **notes/OpenTrackerNotes.pdf**(draft).
+OpenTracker is a open sourced repository for Visual Tracking. It's written in C++, high speed, easy to use, and easy to implemented in embedded system.
+```diff
+- And this is not only boring Codes, 
++ It also has Maths and Implement Notes! (Check **notes/OpenTrackerNotes.pdf**(draft now)). All the maths details of the Not-that-easy algorithms are explaned fully from the very beginning. If you have headache of reading the papers(as most of us have), this is a good tutorial. 
+```
+If you don't exact know what this means:
+\begin{equation}
+	\begin{bmatrix}
+		A^H_PA_P+W^HW & A^H_PB_f \\
+		B^H_fA_P			& B^H_fB_f+\lambda I
+	\end{bmatrix}
+	\begin{bmatrix}
+		\bm{\hat{f}_{i, \Delta}} \\
+		\bm{\Delta p}
+	\end{bmatrix}
+	=
+	\begin{bmatrix}
+		A^H_P\bm{\hat{y}} \\
+		B^H_f\bm{\hat{y}} -\lambda \bm{p}
+	\end{bmatrix}
+\end{equation} \par
+Don't worry, it will be explained in the notes.
+
 
 **Why most of the modern trackers are written by matlab? Slow speed, lots of extra-packages, need loads of money to buy the licences, version compliance problems (gcc4.9 gcc5.0 oh my god)... Anyway, I hate that! C++ is fast and clear! I even doubt that the FPS measured by using matlab is really meaningful, especially for actual and embedded system use! So I will re-implement those trackers by cpp day by day, keep the clarity and less extra-packages in mind, hope you like it!**
 
@@ -65,7 +87,7 @@ Included                   | OS
 
 # Quick start
 --------------------------------
-With quick start, you can have a quick first taste of this repository, without any panic. No ned to install Caffe, CUDA etc. (**But of course you have to install OpenCV 3.0 first**).
+With quick start, you can have a quick first taste of this repository, without any panic. No need to install Caffe, CUDA etc. (**But of course you have to install OpenCV 3.0 first**).
 
 OpenCV 3.0 Install on Ubuntu check this [[Tutorial](https://www.learnopencv.com/install-opencv3-on-ubuntu/)].
 
