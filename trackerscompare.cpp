@@ -94,13 +94,13 @@ int main(int argc, char **argv)
 
     // Create KCFTracker:
     bool HOG = true, FIXEDWINDOW = true, MULTISCALE = true, LAB = true, DSST = false; //LAB color space features
-    KCFTracker kcftracker(HOG, FIXEDWINDOW, MULTISCALE, LAB, DSST);
+    kcf::KCFTracker kcftracker(HOG, FIXEDWINDOW, MULTISCALE, LAB, DSST);
     Rect2d kcfbbox((int)bboxGroundtruth.x, (int)bboxGroundtruth.y, (int)bboxGroundtruth.width, (int)bboxGroundtruth.height);
     kcftracker.init(frame, kcfbbox);
 
     // Create DSSTTracker:
     DSST = true;
-    KCFTracker dssttracker(HOG, FIXEDWINDOW, MULTISCALE, LAB, DSST);
+    kcf::KCFTracker dssttracker(HOG, FIXEDWINDOW, MULTISCALE, LAB, DSST);
     Rect2d dsstbbox((int)bboxGroundtruth.x, (int)bboxGroundtruth.y, (int)bboxGroundtruth.width, (int)bboxGroundtruth.height);
     dssttracker.init(frame, dsstbbox);
 
@@ -174,6 +174,7 @@ int main(int argc, char **argv)
         float fpsgoturn = getTickFrequency() / ((double)getTickCount() - timergoturn);
         rectangle(frameDraw, goturnbbox, Scalar(255, 255, 0), 2, 1);
 
+
         //ECO========================
         double timeeco = (double)getTickCount();
         bool okeco = ecotracker.update(frame, ecobbox);
@@ -187,6 +188,7 @@ int main(int argc, char **argv)
             putText(frameDraw, "ECO tracking failure detected", cv::Point(10, 30), FONT_HERSHEY_SIMPLEX,
                     0.75, Scalar(255, 0, 255), 2);
         }
+
         // Draw ground truth box===========================================
         //readdatasets.DrawGroundTruth(bboxGroundtruth, frameDraw);
 

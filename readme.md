@@ -69,6 +69,13 @@ With quick start, you can have a quick first taste of this repository, without a
 
 OpenCV 3.0 Install on Ubuntu check this [[Tutorial](https://www.learnopencv.com/install-opencv3-on-ubuntu/)].
 
+In `makefile`, make sure change to:
+```
+USE_CAFFE=0
+USE_CUDA=0
+USE_BOOST=0
+```
+
 ## Quick start -- Ubuntu
 ```
 git clone https://github.com/rockkingjy/OpenTracker
