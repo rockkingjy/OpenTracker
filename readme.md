@@ -12,13 +12,13 @@ OpenTracker is a open sourced repository for Visual Tracking. It's written in C+
 - And this is not only boring Codes, 
 + It also has Maths and Implement Notes!
 ```
-If you don't exact know what this means:
+If you don't exactly know what this means:
 
 <p align="center">
     <img src="images/equation.png", width="480">
 </p>
 
-**Don't worry**, it will be explained in the notes. All the maths details of the Not-that-easy algorithms are explaned fully from the very beginning. If you have headache of reading the papers(as most of us have), this is a good tutorial. 
+**Don't worry**, it will be explained fully in the [Notes](https://github.com/rockkingjy/OpenTracker/tree/master/notes). All the maths details of the Not-that-easy algorithms are explaned fully from the very beginning. If **you have headache of reading the papers**(as most of us have), this is a good tutorial. 
 (Check [Notes](https://github.com/rockkingjy/OpenTracker/tree/master/notes)(draft now)). 
 
 Or, **if you have problems with implement a complicate cutting-edge algorithms, check this! You will get something!**
@@ -32,7 +32,7 @@ Or, **if you have problems with implement a complicate cutting-edge algorithms, 
 
 Why most of the modern trackers are written by matlab? Slow speed, lots of extra-packages, need loads of money to buy the licences, version compliance problems (gcc4.9 gcc5.0 oh my god)... Anyway, I hate that! C++ is fast and clear! I even doubt that the FPS measured by using matlab is really meaningful, especially for actual and embedded system use! So I will re-implement those trackers by cpp day by day, keep the clarity and less extra-packages in mind, hope you like it!
 
-**Attention!** OpenTracker is not designed just for tracking human beings as the demo images, it can track everything, even some special points!
+**Attention!** OpenTracker is **NOT** designed just for tracking human beings as the demo images, it can track **everything**, even some special points!
 
 **2018/06/28 -- New features** Now it support automatic initialization with Web camera using **OpenPose**!
 
