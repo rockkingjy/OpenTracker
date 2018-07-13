@@ -10,7 +10,7 @@ Visual Tracking is to track someone or something by just using one or two simple
 OpenTracker is a open sourced repository for Visual Tracking. It's written in C++, high speed, easy to use, and easy to implemented in embedded system.
 ```diff
 - And this is not only boring Codes, 
-+ It also has Maths and Implement Notes! (Check [**notes**(https://github.com/rockkingjy/OpenTracker/tree/master/notes)](draft now)). 
++ It also has Maths and Implement Notes! (Check [**notes**](https://github.com/rockkingjy/OpenTracker/tree/master/notes)(draft now)). 
 ```
 If you don't exact know what this means:
 
