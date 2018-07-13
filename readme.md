@@ -10,25 +10,15 @@ Visual Tracking is to track someone or something by just using one or two simple
 OpenTracker is a open sourced repository for Visual Tracking. It's written in C++, high speed, easy to use, and easy to implemented in embedded system.
 ```diff
 - And this is not only boring Codes, 
-+ It also has Maths and Implement Notes! (Check **notes/OpenTrackerNotes.pdf**(draft now)). All the maths details of the Not-that-easy algorithms are explaned fully from the very beginning. If you have headache of reading the papers(as most of us have), this is a good tutorial. 
++ It also has Maths and Implement Notes! (Check [**notes**(https://github.com/rockkingjy/OpenTracker/tree/master/notes)](draft now)). 
 ```
 If you don't exact know what this means:
-\begin{equation}
-	\begin{bmatrix}
-		A^H_PA_P+W^HW & A^H_PB_f \\
-		B^H_fA_P			& B^H_fB_f+\lambda I
-	\end{bmatrix}
-	\begin{bmatrix}
-		\bm{\hat{f}_{i, \Delta}} \\
-		\bm{\Delta p}
-	\end{bmatrix}
-	=
-	\begin{bmatrix}
-		A^H_P\bm{\hat{y}} \\
-		B^H_f\bm{\hat{y}} -\lambda \bm{p}
-	\end{bmatrix}
-\end{equation} \par
-Don't worry, it will be explained in the notes.
+
+<p align="center">
+    <img src="images/equation.png", width="480">
+</p>
+
+**Don't worry**, it will be explained in the notes. All the maths details of the Not-that-easy algorithms are explaned fully from the very beginning. If you have headache of reading the papers(as most of us have), this is a good tutorial. 
 
 
 **Why most of the modern trackers are written by matlab? Slow speed, lots of extra-packages, need loads of money to buy the licences, version compliance problems (gcc4.9 gcc5.0 oh my god)... Anyway, I hate that! C++ is fast and clear! I even doubt that the FPS measured by using matlab is really meaningful, especially for actual and embedded system use! So I will re-implement those trackers by cpp day by day, keep the clarity and less extra-packages in mind, hope you like it!**
