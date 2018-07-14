@@ -74,5 +74,5 @@ cleanroot:
 	rm *.o
 
 clean:
-	rm -rf */*/*.o */*.o *.o */*.bin *.bin
+	rm -rf */*/*.o */*.o *.o */*.bin *.bin *.so */*.so
 

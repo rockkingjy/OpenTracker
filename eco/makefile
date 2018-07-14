@@ -14,6 +14,7 @@ CXXFLAGS= -g -Wall `pkg-config --cflags opencv` -lstdc++ -lm -std=c++0x
 	
 HEADERS = $(wildcard *.h)
 
+TARGET_LIB = libeco.so # target lib
 
 ifeq ($(USE_CAFFE), 1)
 CXXFLAGS+= -DUSE_CAFFE
@@ -35,10 +36,13 @@ OBJS = fftTool.o fhog.o interpolator.o optimize_scores.o \
 		regularization_filter.o feature_extractor.o feature_operator.o  \
 		training.o sample_update.o eco.o metrics.o
 
-all: runecotracker.bin
+all: runecotracker.bin 
 
 runecotracker.bin: $(OBJS) runecotracker.o
 	$(CC) -o $@ $^ $(LDFLAGS) 
+
+$(TARGET_LIB): $(OBJS)
+	$(CC) ${LDFLAGS} -shared -o $@ $^
 
 %.o: %.c $(HEADERS)
 	$(CC) -c -o $@ $< $(CFLAGS)
@@ -49,4 +53,4 @@ runecotracker.bin: $(OBJS) runecotracker.o
 .PHONY: clean
 
 clean:
-	rm -rf ./.d */*.o *.o *.bin
+	rm -rf ./.d *.o *.bin *.so

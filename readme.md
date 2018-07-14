@@ -3,9 +3,6 @@
     <img src="images/Opentracker.png", width="480">
 </p>
 
-# What is Visual Tracking?
-Visual Tracking is to track someone or something by just using one or two simple web camera(s).
-
 # What is OpenTracker?
 OpenTracker is a open sourced repository for Visual Tracking. It's written in C++, high speed, easy to use, and easy to be implemented in embedded system.
 ```diff
@@ -81,24 +78,53 @@ With quick start, you can have a quick first taste of this repository, without a
 
 OpenCV 3.0 Install on Ubuntu check this [[Tutorial](https://www.learnopencv.com/install-opencv3-on-ubuntu/)].
 
+## Quick Run KCF and DSST Tracker:
+In `eco/runecotracker.cc`, make sure to choose the dataset `Demo`:
+``` 
+    string databaseType = databaseTypes[0];
+```
+### Quick start -- Ubuntu
+```
+git clone https://github.com/rockkingjy/OpenTracker
+cd OpenTracker/kcf
+make 
+./runkcftracker.bin
+```
+### Quick start -- macOS
+```
+brew install tesseract
+git clone https://github.com/rockkingjy/OpenTracker
+cd OpenTracker/kcv
+make
+./runkcftracker.bin
+```
+### Quick start -- Raspberry PI 3
+```
+git clone https://github.com/rockkingjy/OpenTracker
+cd OpenTracker/kcf
+make
+./runkcftracker.bin
+```
+
+## Quick Run ECO Tracker:
 In `makefile`, make sure change to:
 ```
 USE_CAFFE=0
 USE_CUDA=0
 USE_BOOST=0
 ```
-and in `eco/runecotracker.cc`, make sure to set the dataset Demo:
+and in `eco/runecotracker.cc`, make sure to choose the dataset `Demo`:
 ``` 
     string databaseType = databaseTypes[0];
 ```
-## Quick start -- Ubuntu
+### Quick start -- Ubuntu
 ```
 git clone https://github.com/rockkingjy/OpenTracker
 cd OpenTracker/eco
 make -j`nproc`
 ./runecotracker.bin
 ```
-## Quick start -- macOS
+### Quick start -- macOS
 ```
 brew install tesseract
 git clone https://github.com/rockkingjy/OpenTracker
@@ -106,7 +132,7 @@ cd OpenTracker/eco
 make  -j`nproc`
 ./runecotracker.bin
 ```
-## Quick start -- Raspberry PI 3
+### Quick start -- Raspberry PI 3
 ```
 git clone https://github.com/rockkingjy/OpenTracker
 cd OpenTracker/eco
@@ -219,6 +245,36 @@ make -j`nproc`
 ```
 ./classification.bin   /media/elab/sdd/caffe/models/bvlc_reference_caffenet/deploy.prototxt   /media/elab/sdd/caffe/models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel   /media/elab/sdd/caffe/data/ilsvrc12/imagenet_mean.binaryproto   /media/elab/sdd/caffe/data/ilsvrc12/synset_words.txt   /media/elab/sdd/caffe/examples/images/cat.jpg
 ```
+
+# How to use the API of the trackers / how to merge the trackers into your code?
+To use the API of the trackers is really simple, just two steps.
+
+Two most important API are given, take ECO for example:
+```
+    ecotracker.init(frame, ecobbox);
+    ecotracker.update(frame, ecobbox);
+```
+`init` is for initialization of the tracker by the first `frame` and the bounding box `ecobbox` given.
+
+`update` is for update for the `frame` now, and update the result to `ecobbox`(so you can read the result from `ecobbox` directly).
+
+Isn't that simple enough? :bird: :blush:
+
+First, trackers should be created and initialized with grounding truth bonding box / first frame bonding box, take the example of ECO tracker:
+```
+    eco::ECO ecotracker;
+    Rect2f ecobbox(bboxGroundtruth.x, bboxGroundtruth.y, bboxGroundtruth.width, bboxGroundtruth.height);
+    ecotracker.init(frame, ecobbox);
+```
+here, `ecobbox` is the bondding box for the first frame.
+
+Then, update the tracker for each `frame`:
+```
+    ecotracker.update(frame, ecobbox);
+```
+it will update the bonding box to `ecobbox`, and that is the result.
+
+For GOTURN is a bit more complicate(not too much), check file `trackerscompare.cpp` for the examples.
 
 # References 
 --------------------------------
