@@ -4,13 +4,12 @@
 #include <iostream>
 #include <string>
 #include <math.h>
+#include <opencv2/core.hpp>
 
 #ifdef USE_CAFFE
 #include <caffe/caffe.hpp>
 #include <caffe/util/io.hpp>
 #endif
-
-#include <opencv2/core.hpp>
 
 #include "parameters.hpp"
 #include "interpolator.hpp"

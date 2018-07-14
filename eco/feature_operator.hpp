@@ -3,14 +3,11 @@
 
 #include <iostream>
 #include <algorithm>
-
 #include <opencv2/core.hpp>
-
 #include "parameters.hpp"
 #include "fftTool.hpp"
 #include "recttools.hpp"
 #include "debug.hpp"
-
 
 namespace eco 
 {

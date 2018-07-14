@@ -6,14 +6,13 @@
 #include <math.h>
 #include <vector>
 #include <numeric>
+#include <opencv2/core/core.hpp>
 
 #ifdef USE_CAFFE
 #include <caffe/caffe.hpp>
 #include <caffe/util/io.hpp>
 #include <caffe/caffe.hpp>
 #endif
-
-#include <opencv2/core/core.hpp>
 
 #include "parameters.hpp"
 #include "fftTool.hpp"
@@ -27,7 +26,6 @@ class FeatureExtractor
 {
   public:
 	FeatureExtractor() {}
-
 	virtual ~FeatureExtractor(){};
 
 	ECO_FEATS extractor(cv::Mat image,

@@ -21,7 +21,7 @@ If you don't exactly know what this means:
 **Don't worry**, it will be explained fully in the [Notes](https://github.com/rockkingjy/OpenTracker/tree/master/notes). All the maths details of the Not-that-easy algorithms are explaned fully from the very beginning. If **you have headache of reading the papers**(as most of us have), this is a good tutorial. 
 (Check [Notes](https://github.com/rockkingjy/OpenTracker/tree/master/notes)(draft now)). 
 
-Or, **if you have problems with implement a complicate cutting-edge algorithms, check this! You will get something!**
+Or, **if you have problems with the implementation of a complicate cutting-edge algorithms, check this! You will get something!**
 
 <p align="center">
     <img src="images/Crossing.gif", width="480">
@@ -87,7 +87,10 @@ USE_CAFFE=0
 USE_CUDA=0
 USE_BOOST=0
 ```
-
+and in `eco/runecotracker.cc`, make sure to set the dataset Demo:
+``` 
+    string databaseType = databaseTypes[0];
+```
 ## Quick start -- Ubuntu
 ```
 git clone https://github.com/rockkingjy/OpenTracker
