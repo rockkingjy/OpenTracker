@@ -49,6 +49,8 @@
 \newpage
 %=======================================
 \section{Math Foundation}
+We use \bm{$n$} for original Discrete Space Domain, \bm{$t$} or \bm{$x$} for original Continuos Space Domain. \par
+\bm{$k$} for Discrete Fourier Domain, and \bm{$\xi$} for Continuos Fourier Domain. 
 \subsection{Basic Notations}
 Complex-value functions $g, h: \mathbb{R} \rightarrow \mathbb{C}$ are periodic with period $T > 0$. \par
 Space $L^2(T)$ : Hilbert space equipped with an inner product $\langle \cdot , \cdot \rangle$ of periodic functions with period $T>0$. \par
@@ -112,7 +114,7 @@ Inverse Fourier transformation:
 	f(x) = \int_{-\infty}^{\infty} \hat f(\xi)\ e^{2 \pi i x \xi}\,d\xi
 \end{equation} \par
 
-For discrete points: $\left \{ \mathbf{ x_n } \right \} := x_0, x_1, \ldots, x_{N-1}$ and 
+For \textbf{discrete} points: $\left \{ \mathbf{ x_n } \right \} := x_0, x_1, \ldots, x_{N-1}$ and 
 $\left \{ \mathbf{X_k} \right \} := X_0, X_1, \ldots, X_{N-1}$, we have: \par
 Discrete Fourier transformation: 
 \begin{equation}\label{eq:fourierdisc}
@@ -371,8 +373,8 @@ Color names (CN) are linguistic color labels assigned by humans to represent col
 Color naming is an operation that associates RGB observations with linguistic color labels.  \par
 In \cite{van2007learning}, it provides the mapping automatically learned from images retrieved with Google-image search. It maps the RGB values to a probabilistic 11 dimensional color representation which sums up to 1. \par
 %=======================================
-\section{Deep feature \cite{chatfield2014return}}
-	\begin{table}[h!]
+\section{Deep features \cite{chatfield2014return}}
+	\begin{table}[h!] 
   		\centering
   		\begin{tabular}{c|c|c|c|c|c|c|c}
    			Layer & Name & size & stride&rFieldStride& pad        & input         & output\\
@@ -393,11 +395,15 @@ In \cite{van2007learning}, it provides the mapping automatically learned from im
 			13      & conv5 & [3,3,512,512]  & [1, 1] &16&[1,1,1,1]    & 13 x 13 & 13 x 13\\ 
 	     \textbf{14} & \textbf{relu5}   &                        &          &16&                 & 13 x 13 & 13 x 13\\  
   		\end{tabular}
+		\caption{Neural Network Structure used in C-COT(Chapter \ref{ch:ccot}) and ECO(Chapter \ref{ch:eco})}
+		\label{tab:deep}
 	\end{table} \par
+Some trackers like C-COT, ECO etc. using deep features\cite{Goodfellow-et-al-2016-Book} to get the abstract high-level feature of the image. \par
 Equation to calculate output size from input for convolution layer:
 \begin{equation}
 	\abs{Ouput} = \lfloor{\frac{\abs{Input} - size + pad1 + pad2}{stride}}\rfloor + 1
-\end{equation}	
+\end{equation}	 \par
+Table (\ref{tab:deep}) is the network structure used in C-COT(Chapter \ref{ch:ccot}) and ECO(Chapter \ref{ch:eco}), and it just use the \textbf{3th} and \textbf{14th} layer. \par
 %=======================================
 \section{MOSSE \cite{bolme2010visual}}
 $x_i$: training images ; $f$: filter; $g_i$: actual target; $y_i$: desired target, here we choose 2D Gaussian centered on the target in training image. \par
@@ -461,13 +467,13 @@ where $g_{max}$ is the peak values and $\mu_{s1}$ and $\theta_{s1}$ are the mean
 \section{KCF / DCF \cite{henriques2015high}}
 
 %=======================================
-\section{C-COT \cite{DanelljanECCV2016}}
+\section{C-COT \cite{DanelljanECCV2016}} \label{ch:ccot}
 
 %--------------------------------------------------
 \subsection{Continuous Learning Formulation}
 $x_j$: Training Samples. \par
 $d \in \{1, \cdots , D\}$: Feature channel of training samples (ex. if choose deep layer 1, 5 as features, then $D = 2$). \par
-$N_d$: Number of spatial sample points in feature channel d (ex. for HOG feature $N_{HOG}=31 \times 105$ \autoref{ch:hog}). \par
+$N_d$: Number of spatial sample points in feature channel d (ex. for HOG feature $N_{HOG}=31 \times 105$ chapter \ref{ch:hog}). \par
 $\chi=\mathbb{R}^{N_1} \times \cdots \times \mathbb{R}^{N_D}$. \par
 $\{x^d_j[n]\}, n \in \{0, \cdots, N_d -1\}$: Feature points in channel d of training sample $x_j$.\par
 $[0, T) \subset \mathbb{R} $: Spatial support of the feature map, where $T$ is the size of the support region.\par
@@ -670,11 +676,11 @@ First rescaling b to the sample interval $T/N_d$, then shifted half an interval 
 \end{equation} \par
 The Fourier transformation of it is:
 \begin{align}\begin{split}\label{eq:fouriercd}
-	\hat{c}_d(k) &= \int^{\infty}_{-\infty} c_d(t) e^{-i 2 \pi k t}dt \\
-			&= \int^{\infty}_{-\infty} b(\frac{N_d}{T}(t-\frac{T}{2N_d})) e^{-i 2 \pi k t}dt \\
-			&= \int^{\infty}_{-\infty} b(\frac{N_d}{T}\tau) e^{-i 2 \pi k (\tau + \frac{T}{2N_d} )} d\tau \\
-			&= e^{-i\pi \frac{T}{N_d} k} \frac{T}{N_d} \int^{\infty}_{-\infty} b(\tau')e^{-i2\pi k \frac{T}{N_d} \tau' } d\tau' \\
-			&= \frac{T}{N_d} e^{-i\pi \frac{T}{N_d} k} \hat{b}(\frac{T}{N_d}k) 
+	\hat{c}_d(\xi) &= \int^{\infty}_{-\infty} c_d(t) e^{-i 2 \pi \xi t}dt \\
+			&= \int^{\infty}_{-\infty} b(\frac{N_d}{T}(t-\frac{T}{2N_d})) e^{-i 2 \pi \xi t}dt \\
+			&= \int^{\infty}_{-\infty} b(\frac{N_d}{T}\tau) e^{-i 2 \pi \xi (\tau + \frac{T}{2N_d} )} d\tau \text{, where } \tau = t-\frac{T}{2N_d}\\
+			&= e^{-i\pi \frac{T}{N_d} k} \frac{T}{N_d} \int^{\infty}_{-\infty} b(\tau')e^{-i2\pi \xi \frac{T}{N_d} \tau' } d\tau' \text{, where } \tau' = \frac{N_d}{T}\tau\\
+			&= \frac{T}{N_d} e^{-i\pi \frac{T}{N_d} k} \hat{b}(\frac{T}{N_d} \xi) 
 \end{split}\end{align} \par
 $b_d(t)=\sum^{\infty}_{n=-\infty}c_d(t-nT)$  is the periodic repetition of $c_d(t)$, its Fourier transformation is:
 \begin{align}\begin{split}
@@ -682,11 +688,53 @@ $b_d(t)=\sum^{\infty}_{n=-\infty}c_d(t-nT)$  is the periodic repetition of $c_d(
 	&\stackrel{(\ref{eq:fouriergT})}{=} \frac{1}{T} \hat{c}_d(\frac{k}{T}) \\
 	&\stackrel{(\ref{eq:fouriercd})}{=}\frac{1}{N_d}e^{-i\frac{\pi}{N_d}k} \hat{b}(\frac{k}{N_d})
 \end{split}\end{align} \par
-where the Fourier transformation of $b(t)$ is:
-\begin{equation}
-	\hat{b}[k] = \frac{6(1-cos2\pi k)+3a(1-cos4\pi k) - (6+8a) \pi k \sin 2 \pi k - 2a \pi k \sin 4\pi k}{4k^4\pi^4}
-\end{equation}
+where the Fourier transformation(\ref{eq:fourierTrans}) of $b(t)$ is:
+\begin{align}\begin{split}
+	\hat{b}[\xi] &=  \int_{-\infty}^{\infty} b(t)\ e^{-2\pi i t \xi} dt \\
+	&=  \int_{-2}^{-1}\{a\abs{t}^3-5at^2+8a\abs{t}-4a \}e^{-2\pi i t \xi} dt  + \int_{-1}^{1}\{(a+2)\abs{t}^3-(a+3)t^2+1\} e^{-2\pi i t \xi}dt \\
+	&\ \ \ \ + \int_{1}^{2}\{a\abs{t}^3-5at^2+8a\abs{t}-4a \}e^{-2\pi i t \xi} dt \\
+	&=  \int_{-2}^{-1}\{-at^3-5at^2-8at-4a \}e^{-2\pi i t \xi} dt  + \int_{-1}^{0}\{-(a+2)t^3-(a+3)t^2+1\} e^{-2\pi i t \xi}dt \\
+	&\ \ \ \ + \int_{1}^{2}\{at^3-5at^2+8at-4a \}e^{-2\pi i t \xi} dt   + \int_{0}^{1}\{(a+2)t^3-(a+3)t^2+1\} e^{-2\pi i t \xi}dt \\
+	&= \int_{1}^{2}(at^3-5at^2+8at-4a )(e^{-2\pi i t \xi}-e^{2\pi i t \xi})dt  + \int_{0}^{1}\{(a+2)t^3-(a+3)t^2+1\} (e^{-2\pi i t \xi}-e^{2\pi i t \xi})dt\\
+	&= \int_{1}^{2}(at^3-5at^2+8at-4a )(-2i)\sin(2\pi t \xi)dt  + \int_{0}^{1}\{(a+2)t^3-(a+3)t^2+1\}(-2i)\sin(2\pi t \xi)dt\\
+	&= \frac{6(1-cos2\pi \xi)+3a(1-cos4\pi \xi) - (6+8a) \pi \xi \sin 2 \pi \xi - 2a \pi \xi \sin 4\pi \xi}{4\xi^4\pi^4}
+\end{split}\end{align} \par
+The last line just calculate with some attention. \par
+Some calculation notes: 
+\begin{align}\begin{split}
+	\int_{b}^{c} \sin(2\pi t \xi)dt = \frac{1}{2\pi \xi} [\cos(2\pi c \xi) - \cos(2\pi b \xi)]
+\end{split}\end{align} \par
+\begin{align}\begin{split}
+	\int_{b}^{c}t \sin(2\pi t \xi)dt &= \frac{1}{2\pi \xi} [t\cos(2\pi t \xi)|_b^c-\int_{b}^{c} \cos(2\pi t \xi)dt] \\
+	&= \frac{1}{2\pi \xi}[c\cos(2\pi c \xi)-b\cos(2\pi b \xi)]+\frac{1}{(2\pi \xi)^2}[\sin(2\pi c \xi)-\sin(2\pi b \xi)]
+\end{split}\end{align} \par
+\begin{align}\begin{split}
+	\int_{b}^{c}t^2 \sin(2\pi t \xi)dt &= \frac{1}{2\pi \xi} [t^2\cos(2\pi t \xi)|_b^c-2\int_{b}^{c} t\cos(2\pi t \xi)dt] \\
+\end{split}\end{align} \par
 
+\begin{align}\begin{split}
+	\int_{a}^{b} e^{-2\pi i t \xi} dt = \frac{1}{-2\pi i \xi} e^{-2\pi i t \xi} |_a^b = \frac{1}{-2\pi i \xi}(e^{-2\pi i b \xi}-e^{-2\pi i a \xi})
+\end{split}\end{align} \par
+\begin{align}\begin{split}
+	\int_{a}^{b} t e^{-2\pi i t \xi} dt &= \int_{a}^{b} \frac{1}{-2\pi i \xi} t \ de^{-2\pi i t \xi} \\
+	&= \frac{1}{-2\pi i \xi} [te^{-2\pi i t \xi} |_a^b - \int_{a}^{b} e^{-2\pi i t \xi} dt ]\\
+	&= \frac{1}{-2\pi i \xi} (be^{-2\pi i b \xi}-ae^{-2\pi i a \xi}+\frac{1}{2\pi i \xi}e^{-2\pi i b \xi}-\frac{1}{2\pi i \xi}e^{-2\pi i a \xi})
+\end{split}\end{align} \par
+\begin{align}\begin{split}
+	\int_{a}^{b} t^2 e^{-2\pi i t \xi} dt &= \int_{a}^{b} \frac{1}{-2\pi i \xi} t^2 \ de^{-2\pi i t \xi} \\
+	&= \frac{1}{-2\pi i \xi} [t^2 e^{-2\pi i t \xi} |_a^b - 2 \int_{a}^{b} te^{-2\pi i t \xi} dt ]\\
+	&= \frac{1}{-2\pi i \xi}[(b^2e^{-2\pi i b \xi}-a^2e^{-2\pi i a \xi})\\
+	&\ \ \ \ +\frac{1}{\pi i \xi}(be^{-2\pi i b \xi}-ae^{-2\pi i a \xi}+\frac{1}{2\pi i \xi}e^{-2\pi i b \xi}-\frac{1}{2\pi i \xi}e^{-2\pi i a \xi})]\\
+	&= \frac{1}{-2\pi i \xi}[(b^2+\frac{1}{\pi i \xi}b+\frac{1}{2(\pi i \xi)^2})e^{-2\pi i b \xi}+(-a^2-\frac{1}{\pi i \xi}a-\frac{1}{2(\pi i \xi)^2})e^{-2\pi i a \xi}]
+\end{split}\end{align} \par
+\begin{align}\begin{split}
+	\int_{a}^{b} t^3 e^{-2\pi i t \xi} dt &= \int_{a}^{b} \frac{1}{-2\pi i \xi} t^3 \ de^{-2\pi i t \xi} \\
+	&= \frac{1}{-2\pi i \xi} [t^3 e^{-2\pi i t \xi} |_a^b - 3 \int_{a}^{b} t^2e^{-2\pi i t \xi} dt ]\\
+	&= \frac{1}{-2\pi i \xi} \{b^3 e^{-2\pi i b \xi}-a^3 e^{-2\pi i a \xi} \\
+	&\ \ \ \ + \frac{3}{2\pi i \xi}[(b^2+\frac{1}{\pi i \xi}b+\frac{1}{2(\pi i \xi)^2})e^{-2\pi i b \xi}+(-a^2-\frac{1}{\pi i \xi}a-\frac{1}{2(\pi i \xi)^2})e^{-2\pi i a \xi}]\}\\
+	&= \frac{1}{-2\pi i \xi} [(b^3 + \frac{3}{2\pi i \xi}b^2+\frac{3}{2(\pi i \xi)^2}b+\frac{3}{4(\pi i \xi)^3})e^{-2\pi i b \xi}\\
+	&\ \ \ \ - (a^3 + \frac{3}{2\pi i \xi}a^2+\frac{3}{2(\pi i \xi)^2}a+\frac{3}{4(\pi i \xi)^3})e^{-2\pi i a \xi}]
+\end{split}\end{align} \par
 %-----------------------------------------------
 \subsection{Spatially Regularization $W$ \cite{danelljan2015learning}}
 To resolve the problem of unwanted boundary effects of discriminatively learned correlation filters, a spatially regularization is introduced:
@@ -727,7 +775,7 @@ For each frame $j$, add one training sample $x_j$. The weights for each sample s
 \subsubsection{Parameters}
 Check file params.h in the code \url{https://github.com/rockkingjy/OpenTrackers}. 
 %=======================================
-\section{ECO \cite{DanelljanCVPR2017}} 
+\section{ECO \cite{DanelljanCVPR2017}} \label{ch:eco}
 %-----------------------------------------------
 \subsection{Factorized Convolution Operator}
 \subsubsection{Factorized convolution}
