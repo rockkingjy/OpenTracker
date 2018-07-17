@@ -295,38 +295,6 @@ ECO_FEATS FeatureVectorMultiply(const ECO_FEATS &x,
 	return res;
 }
 
-/*
-// projection operation 
-std::vector<cv::Mat> ProjScale(std::vector<cv::Mat> data, float scale)
-{
-	std::vector<cv::Mat> res;
-	for (size_t i = 0; i < data.size(); i++)
-	{
-		res.push_back(data[i] * scale);
-	}
-	return res;
-}
-
-std::vector<cv::Mat> ProjAdd(std::vector<cv::Mat> data1, std::vector<cv::Mat> data2)
-{
-	std::vector<cv::Mat> res;
-	for (size_t i = 0; i < data1.size(); i++)
-	{
-		res.push_back(data1[i] + data2[i]);
-	}
-	return res;
-}
-
-std::vector<cv::Mat> ProjMinus(std::vector<cv::Mat> data1, std::vector<cv::Mat> data2)
-{
-	std::vector<cv::Mat> res;
-	for (size_t i = 0; i < data1.size(); i++)
-	{
-		res.push_back(data1[i] - data2[i]);
-	}
-	return res;
-}
-*/
 // features operation
 ECO_FEATS FeatureDotMultiply(const ECO_FEATS &a, const ECO_FEATS &b)
 {
@@ -378,39 +346,4 @@ ECO_FEATS FeatureScale(ECO_FEATS data, float scale)
 	}
 	return res;
 }
-/*
-ECO_FEATS FeatureAdd(ECO_FEATS data1, ECO_FEATS data2)
-{
-	ECO_FEATS res;
-
-	for (size_t i = 0; i < data1.size(); i++)
-	{
-		std::vector<cv::Mat> tmp;
-		for (size_t j = 0; j < data1[i].size(); j++)
-		{
-			tmp.push_back(data1[i][j] + data2[i][j]);
-		}
-		res.push_back(tmp);
-	}
-
-	return res;
-}
-
-ECO_FEATS FeautreMinus(ECO_FEATS data1, ECO_FEATS data2)
-{
-	ECO_FEATS res;
-
-	for (size_t i = 0; i < data1.size(); i++)
-	{
-		std::vector<cv::Mat> tmp;
-		for (size_t j = 0; j < data1[i].size(); j++)
-		{
-			tmp.push_back(data1[i][j] - data2[i][j]);
-		}
-		res.push_back(tmp);
-	}
-
-	return res;
-}
-*/
 } // namespace eco

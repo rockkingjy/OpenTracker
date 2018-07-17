@@ -10,7 +10,10 @@
 #include "fftTool.hpp"
 #include "debug.hpp"
 
-namespace eco{
-cv::Mat  get_regularization_filter(cv::Size sz, cv::Size2f target_sz, const EcoParameters& params);
+namespace eco
+{
+cv::Mat get_regularization_filter(cv::Size sz,
+                                  cv::Size2f target_sz,
+                                  const EcoParameters &params);
 }
-#endif 
+#endif

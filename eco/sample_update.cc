@@ -16,7 +16,8 @@ void SampleUpdate::init(const std::vector<cv::Size> &filter,
 		for (size_t j = 0; j < (size_t)distance_matrix_.cols; j++)
 		{
 			distance_matrix_.at<cv::Vec<float, 2>>(i, j) = cv::Vec<float, 2>(INF, 0);
-			gram_matrix_.at<cv::Vec<float, 2>>(i, j) = cv::Vec<float, 2>(INF, 0);
+			gram_matrix_.at<cv::Vec<float, 2>>(i, j) =
+				cv::Vec<float, 2>(INF, 0);
 		}
 	}
 	// Samples memory initialization
@@ -56,8 +57,8 @@ void SampleUpdate::init(const std::vector<cv::Size> &filter,
 }
 
 void SampleUpdate::reset(const std::vector<cv::Size> &filter,
-						const std::vector<int> &feature_dim,
-						const size_t max_samples)
+						 const std::vector<int> &feature_dim,
+						 const size_t max_samples)
 {
 	nSamples_ = max_samples;
 	// Reset distance matrix to INF
@@ -119,7 +120,8 @@ void SampleUpdate::update_sample_space_model(const ECO_FEATS &new_train_sample)
 		// a^2 + b^2 + c^2 + d^2 - 2(ac+bd)
 		float temp = new_train_sample_norm + gram_matrix_.at<cv::Vec<float, 2>>(i, i)[0] - 2 * gram_vector.at<cv::Vec<float, 2>>(i, 0)[0];
 		if (i < (size_t)num_training_samples_)
-			distance.at<cv::Vec<float, 2>>(i, 0) = cv::Vec<float, 2>(std::max(temp, 0.0f), 0);
+			distance.at<cv::Vec<float, 2>>(i, 0) =
+				cv::Vec<float, 2>(std::max(temp, 0.0f), 0);
 		else
 			distance.at<cv::Vec<float, 2>>(i, 0) = cv::Vec<float, 2>(INF, 0);
 	}
@@ -142,7 +144,8 @@ void SampleUpdate::update_sample_space_model(const ECO_FEATS &new_train_sample)
 			float sum = std::accumulate(prior_weights_.begin(), prior_weights_.end(), 0.0f);
 			for (size_t i = 0; i < (size_t)nSamples_; i++)
 			{
-				prior_weights_[i] = prior_weights_[i] * (1 - learning_rate_) / sum;
+				prior_weights_[i] = prior_weights_[i] *
+									(1 - learning_rate_) / sum;
 			}
 			// set the new sample's weight as learning_rate_
 			prior_weights_[min_sample_id] = learning_rate_;
@@ -187,10 +190,11 @@ void SampleUpdate::update_sample_space_model(const ECO_FEATS &new_train_sample)
 				ECO_FEATS existing_sample_to_merge = samples_f_[merged_sample_id_];
 
 				// Merge the new_train_sample with existing sample
-				merged_sample_ = merge_samples(existing_sample_to_merge,
-											   new_train_sample,
-											   prior_weights_[merged_sample_id_], learning_rate_,
-											   std::string("merge"));
+				merged_sample_ =
+					merge_samples(existing_sample_to_merge,
+								  new_train_sample,
+								  prior_weights_[merged_sample_id_], learning_rate_,
+								  std::string("merge"));
 
 				// Update distance matrix and the gram matrix
 				update_distance_matrix(gram_vector, new_train_sample_norm, merged_sample_id_, -1,
@@ -211,24 +215,28 @@ void SampleUpdate::update_sample_space_model(const ECO_FEATS &new_train_sample)
 					prior_weights_[i] *= (1 - learning_rate_);
 
 				// Ensure that the sample with higher prior weight is assigned id1.
-				if (prior_weights_[closest_exist_sample_pair.x] > prior_weights_[closest_exist_sample_pair.y])
-					std::swap(closest_exist_sample_pair.x, closest_exist_sample_pair.y);
+				if (prior_weights_[closest_exist_sample_pair.x] >
+					prior_weights_[closest_exist_sample_pair.y])
+					std::swap(closest_exist_sample_pair.x,
+							  closest_exist_sample_pair.y);
 
 				// Merge the existing closest samples
-				merged_sample_ = merge_samples(samples_f_[closest_exist_sample_pair.x],
-											   samples_f_[closest_exist_sample_pair.y],
-											   prior_weights_[closest_exist_sample_pair.x], prior_weights_[closest_exist_sample_pair.y],
-											   std::string("merge"));
+				merged_sample_ =
+					merge_samples(samples_f_[closest_exist_sample_pair.x],
+								  samples_f_[closest_exist_sample_pair.y],
+								  prior_weights_[closest_exist_sample_pair.x], prior_weights_[closest_exist_sample_pair.y],
+								  std::string("merge"));
 
 				// Update distance matrix and the gram matrix
 				update_distance_matrix(gram_vector, new_train_sample_norm, closest_exist_sample_pair.x, closest_exist_sample_pair.y,
 									   prior_weights_[closest_exist_sample_pair.x], prior_weights_[closest_exist_sample_pair.y]);
 
 				// Update prior weights for the merged sample and the new sample
-				prior_weights_[closest_exist_sample_pair.x] += prior_weights_[closest_exist_sample_pair.y];
+				prior_weights_[closest_exist_sample_pair.x] +=
+					prior_weights_[closest_exist_sample_pair.y];
 				prior_weights_[closest_exist_sample_pair.y] = learning_rate_;
 
-				// Update the merged sample and insert new sample 
+				// Update the merged sample and insert new sample
 				merged_sample_id_ = closest_exist_sample_pair.x;
 				new_sample_id_ = closest_exist_sample_pair.y;
 				new_sample_ = new_train_sample;
@@ -271,7 +279,7 @@ void SampleUpdate::update_distance_matrix(cv::Mat &gram_vector, float new_sample
 	{
 		COMPLEX norm_id1 = gram_matrix_.at<COMPLEX>(id1, id1);
 
-		// update the matrix 
+		// update the matrix
 		if (alpha1 == 0)
 		{
 			gram_vector.col(0).copyTo(gram_matrix_.col(id1));
@@ -281,7 +289,7 @@ void SampleUpdate::update_distance_matrix(cv::Mat &gram_vector, float new_sample
 		}
 		else if (alpha2 == 0)
 		{
-			//  do nothing discard new sample 
+			//  do nothing discard new sample
 		}
 		else
 		{ // The new sample is merge with an existing sample
@@ -293,11 +301,13 @@ void SampleUpdate::update_distance_matrix(cv::Mat &gram_vector, float new_sample
 				COMPLEX(std::pow(alpha1, 2) * norm_id1[0] + std::pow(alpha2, 2) * new_sample_norm + 2 * alpha1 * alpha2 * gram_vector.at<COMPLEX>(id1)[0], 0);
 		}
 
-		// Update distance matrix 
+		// Update distance matrix
 		cv::Mat distance(nSamples_, 1, CV_32FC2);
 		for (size_t i = 0; i < nSamples_; i++)
 		{
-			float temp = gram_matrix_.at<COMPLEX>(id1, id1)[0] + gram_matrix_.at<COMPLEX>(i, i)[0] - 2 * gram_matrix_.at<COMPLEX>(i, id1)[0];
+			float temp = gram_matrix_.at<COMPLEX>(id1, id1)[0] +
+						 gram_matrix_.at<COMPLEX>(i, i)[0] -
+						 2 * gram_matrix_.at<COMPLEX>(i, id1)[0];
 			distance.at<COMPLEX>(i, 0) = COMPLEX(std::max(temp, 0.0f), 0);
 		}
 		distance.col(0).copyTo(distance_matrix_.col(id1));
@@ -310,13 +320,15 @@ void SampleUpdate::update_distance_matrix(cv::Mat &gram_vector, float new_sample
 		if (alpha1 == 0 || alpha2 == 0)
 			assert("alpha1 or alpha2 = 0");
 
-		// Two existing samples are merged and the new sample fills the empty 
+		// Two existing samples are merged and the new sample fills the empty
 		COMPLEX norm_id1 = gram_matrix_.at<COMPLEX>(id1, id1);
 		COMPLEX norm_id2 = gram_matrix_.at<COMPLEX>(id2, id2);
 		COMPLEX ip_id1_id2 = gram_matrix_.at<COMPLEX>(id1, id2);
 		//debug("%d %d, %f %f, %f %f %f", id1, id2, w1, w2, norm_id1[0], norm_id2[0], ip_id1_id2[0]);
-		// Handle the merge of existing samples 
-		cv::Mat t = alpha1 * gram_matrix_.col(id1) + alpha2 * gram_matrix_.col(id2), t_t;
+		// Handle the merge of existing samples
+		cv::Mat t = alpha1 * gram_matrix_.col(id1) +
+					alpha2 * gram_matrix_.col(id2),
+				t_t;
 
 		t.col(0).copyTo(gram_matrix_.col(id1));
 
@@ -324,24 +336,31 @@ void SampleUpdate::update_distance_matrix(cv::Mat &gram_vector, float new_sample
 		tt.row(0).copyTo(gram_matrix_.row(id1));
 
 		gram_matrix_.at<COMPLEX>(id1, id1) =
-			COMPLEX(std::pow(alpha1, 2) * norm_id1[0] + std::pow(alpha2, 2) * norm_id2[0] + 2 * alpha1 * alpha2 * ip_id1_id2[0], 0);
+			COMPLEX(std::pow(alpha1, 2) * norm_id1[0] +
+						std::pow(alpha2, 2) * norm_id2[0] +
+						2 * alpha1 * alpha2 * ip_id1_id2[0],
+					0);
 		gram_vector.at<COMPLEX>(id1) =
-			COMPLEX(alpha1 * gram_vector.at<COMPLEX>(id1, 0)[0] + alpha2 * gram_vector.at<COMPLEX>(id2, 0)[0], 0);
+			COMPLEX(alpha1 * gram_vector.at<COMPLEX>(id1, 0)[0] +
+						alpha2 * gram_vector.at<COMPLEX>(id2, 0)[0],
+					0);
 
-		// Handle the new sample 
+		// Handle the new sample
 		gram_vector.col(0).copyTo(gram_matrix_.col(id2));
 		tt = gram_vector.t();
 		tt.row(0).copyTo(gram_matrix_.row(id2));
 		gram_matrix_.at<COMPLEX>(id2, id2) = new_sample_norm;
 
-		// Update the distance matrix 
+		// Update the distance matrix
 		cv::Mat distance(nSamples_, 1, CV_32FC2);
 		std::vector<int> id({id1, id2});
 		for (size_t i = 0; i < 2; i++)
 		{
 			for (size_t j = 0; j < nSamples_; j++)
 			{
-				float temp = gram_matrix_.at<COMPLEX>(id[i], id[i])[0] + gram_matrix_.at<COMPLEX>(j, j)[0] - 2 * gram_matrix_.at<COMPLEX>(j, id[i])[0];
+				float temp = gram_matrix_.at<COMPLEX>(id[i], id[i])[0] +
+							 gram_matrix_.at<COMPLEX>(j, j)[0] -
+							 2 * gram_matrix_.at<COMPLEX>(j, id[i])[0];
 				distance.at<COMPLEX>(j, 0) = COMPLEX(std::max(temp, 0.0f), 0);
 			}
 			distance.col(0).copyTo(distance_matrix_.col(id[i]));

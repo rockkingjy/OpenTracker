@@ -412,7 +412,7 @@ inline void showmatNch(cv::Mat mat, int type)
 	printf("End of feature mat\n");
 }
 
-//TEST=============================================================================================
+//TEST==========================================================================
 // Simple test of the structure of mat in opencv;
 void opencvTest();
 inline void opencvTest()

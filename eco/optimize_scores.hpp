@@ -13,8 +13,7 @@ class OptimizeScores
 {
   public:
 	virtual ~OptimizeScores() {}
-
-	OptimizeScores() {} // default constructor
+	OptimizeScores() {} 
 	OptimizeScores(std::vector<cv::Mat> &scores_fs, int ite)
 		: scores_fs_(scores_fs), iterations_(ite) {}
 

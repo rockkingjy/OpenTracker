@@ -45,7 +45,7 @@ int main(int argc, char **argv)
     */
 
     // Read from Video and choose a bbox===============================
-    ::google::InitGoogleLogging(argv[0]);
+/*    ::google::InitGoogleLogging(argv[0]);
     cv::Rect2f bboxGroundtruth;
     cv::Mat frame, frameDraw;
     cv::VideoCapture capture;
@@ -62,16 +62,16 @@ int main(int argc, char **argv)
     cv::namedWindow(window_name);
     ReadVideo readvideo;
     readvideo.IniRead(bboxGroundtruth, frameDraw, window_name);
-
+*/
     // Read from the datasets==========================================
-    /*   ::google::InitGoogleLogging(argv[0]);
+    ::google::InitGoogleLogging(argv[0]);
     cv::Rect2f bboxGroundtruth;
     cv::Mat frame, frameDraw;
     ReadDatasets readdatasets;
     readdatasets.IniRead(bboxGroundtruth, frame);
     frame.copyTo(frameDraw);
     readdatasets.DrawGroundTruth(bboxGroundtruth, frameDraw);
-*/
+
     // Init the trackers=================================================
     // Create Opencv tracker:
     string trackerTypes[6] = {"BOOSTING", "MIL", "KCF", "TLD", "MEDIANFLOW", "GOTURN"};
@@ -225,11 +225,12 @@ int main(int argc, char **argv)
         waitKey(1);
 
         // Read the next frame
-        //readdatasets.ReadNextFrame(bboxGroundtruth, frame);
-
+        readdatasets.ReadNextFrame(bboxGroundtruth, frame);
+/*
         capture >> frame;
         if (frame.empty())
             return false;
+*/
     }
     cvDestroyWindow("OpenTracker");
     return 0;

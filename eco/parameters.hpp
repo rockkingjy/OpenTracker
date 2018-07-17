@@ -10,7 +10,7 @@
 #include <vector>
 #include <string>
 
-#define DEBUG 1
+#define DEBUG 0
 
 #define INF 0x7f800000 //0x7fffffff 
 
@@ -18,8 +18,8 @@ using std::vector;
 using std::string;
 
 namespace eco{
-	
-typedef   std::vector<std::vector<cv::Mat> > ECO_FEATS;// ECO feature[Num_features][Dimension_of_the_feature];
+// ECO feature[Num_features][Dimension_of_the_feature];
+typedef   std::vector<std::vector<cv::Mat> > ECO_FEATS;
 typedef   cv::Vec<float, 2>                  COMPLEX;  // represent a complex number;
 
 //*** cnn   feature   configuration *****
@@ -81,7 +81,7 @@ struct EcoParameters
 	HogFeatures 		hog_features; 
 
 	// Features
-	bool 	useDeepFeature 		 = false;
+	bool 	useDeepFeature 		 = true;
 	bool	useHogFeature		 = true;		
 	bool	useCnFeature		 = false;		// Not used yet, add later.......
 
@@ -110,7 +110,7 @@ struct EcoParameters
  	bool 	use_projection_matrix = true;    	// Use projection matrix, i.e. use the factorized convolution formulation
  	bool 	update_projection_matrix = true; 	// Whether the projection matrix should be optimized or not
  	string 	proj_init_method = "pca";        	// Method for initializing the projection matrix
- 	float 	projection_reg = 5e-8;	 	 		// Regularization paremeter of the projection matrix
+ 	float 	projection_reg = 5e-8;	 	 		// Regularization paremeter of the projection matrix (lambda)
 
 	// Generative sample space model parameters
  	bool 	use_sample_merge = true;           // Use the generative sample space model to merge samples

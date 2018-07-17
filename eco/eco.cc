@@ -27,7 +27,8 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	debug("currentscale:%f", currentScaleFactor_);
 
 	// target size at the initial scale
-	base_target_size_ = cv::Size2f(rect.size().width / currentScaleFactor_, rect.size().height / currentScaleFactor_);
+	base_target_size_ = cv::Size2f(rect.size().width / currentScaleFactor_,
+								   rect.size().height / currentScaleFactor_);
 	debug("base_target_size_:%f x %f", base_target_size_.height, base_target_size_.width);
 	// window size, taking padding into account
 	float img_sample_size__tmp = sqrt(base_target_size_.area() * std::pow(params_.search_area_scale, 2));
@@ -69,8 +70,10 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 			tempx.at<float>(0, j) = j - (filter_size_[i].height / 2);
 		}
 		kx_.push_back(tempx);
-		debug("For filter i: %lu, N: %d, ky:%d x %d, kx:%d x %d", i, filter_size_[i].height,
-			  ky_[i].size().height, ky_[i].size().width, kx_[i].size().height, kx_[i].size().width);
+		debug("For filter i: %lu, N: %d, ky:%d x %d, kx:%d x %d", i,
+			  filter_size_[i].height,
+			  ky_[i].size().height, ky_[i].size().width,
+			  kx_[i].size().height, kx_[i].size().width);
 	}
 
 	// Construct the Gaussian label function using Poisson formula
@@ -83,7 +86,9 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	for (size_t i = 0; i < filter_size_.size(); ++i)
 	{
 		cv::Mat interp1_fs1, interp2_fs1;
-		Interpolator::get_interp_fourier(filter_size_[i], interp1_fs1, interp2_fs1, params_.interpolation_bicubic_a);
+		Interpolator::get_interp_fourier(filter_size_[i], interp1_fs1,
+										 interp2_fs1,
+										 params_.interpolation_bicubic_a);
 		interp1_fs_.push_back(interp1_fs1);
 		interp2_fs_.push_back(interp2_fs1);
 		//imgInfo(interp1_fs1);
@@ -94,7 +99,9 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	// Construct spatial regularization filter, refer SRDCF
 	for (size_t i = 0; i < filter_size_.size(); i++)
 	{
-		cv::Mat temp_d = get_regularization_filter(img_support_size_, base_target_size_, params_);
+		cv::Mat temp_d = get_regularization_filter(img_support_size_,
+												   base_target_size_,
+												   params_);
 		cv::Mat temp_f;
 		temp_d.convertTo(temp_f, CV_32FC1);
 		reg_filter_.push_back(temp_f);
@@ -122,13 +129,19 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	if (params_.number_of_scales > 0)
 	{
 		params_.min_scale_factor = //0.01;
-			std::pow(params_.scale_step, std::ceil(std::log(std::fmax(5 / (float)img_support_size_.width,
-																	  5 / (float)img_support_size_.height)) /
-												   std::log(params_.scale_step)));
+			std::pow(params_.scale_step,
+					 std::ceil(
+						 std::log(
+							 std::fmax(5 / (float)img_support_size_.width,
+									   5 / (float)img_support_size_.height)) /
+						 std::log(params_.scale_step)));
 		params_.max_scale_factor = //10;
-			std::pow(params_.scale_step, std::floor(std::log(std::fmin(im.cols / (float)base_target_size_.width,
-																	   im.rows / (float)base_target_size_.height)) /
-													std::log(params_.scale_step)));
+			std::pow(params_.scale_step,
+					 std::floor(
+						 std::log(
+							 std::fmin(im.cols / (float)base_target_size_.width,
+									   im.rows / (float)base_target_size_.height)) /
+						 std::log(params_.scale_step)));
 	}
 	debug("scale: min:%d, max:%d", scalemin, scalemax);
 	debug("scalefactor min: %f max: %f", params_.min_scale_factor, params_.max_scale_factor);
@@ -142,7 +155,8 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 
 	// 2. Extract features from the first frame.
 	xl = feature_extractor_.extractor(im, pos_, vector<float>(1, currentScaleFactor_), params_);
-	debug("xl size: %lu, %lu, %d x %d", xl.size(), xl[0].size(), xl[0][0].rows, xl[0][0].cols);
+	debug("xl size: %lu, %lu, %d x %d", xl.size(), xl[0].size(),
+		  xl[0][0].rows, xl[0][0].cols);
 
 	// 3. Do windowing of features.
 	xl = do_windows(xl, cos_window_);
@@ -156,19 +170,22 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	xlf = compact_fourier_coeff(xlf); // take half of the cols
 	for (size_t i = 0; i < xlf.size(); i++)
 	{
-		debug("xlf feature %lu 's size: %lu, %d x %d", i, xlf[i].size(), xlf[i][0].rows, xlf[i][0].cols);
+		debug("xlf feature %lu 's size: %lu, %d x %d", i, xlf[i].size(),
+			  xlf[i][0].rows, xlf[i][0].cols);
 	}
 	// 6. Initialize projection matrix P.
 	projection_matrix_ = init_projection_matrix(xl, compressed_dim_, feature_dim_); // 32FC2 31x10
 	for (size_t i = 0; i < projection_matrix_.size(); i++)
 	{
-		debug("projection_matrix %lu 's size: %d x %d", i, projection_matrix_[i].rows, projection_matrix_[i].cols);
+		debug("projection_matrix %lu 's size: %d x %d", i,
+			  projection_matrix_[i].rows, projection_matrix_[i].cols);
 	}
 	// 7. project sample, feature reduction.
 	xlf_porj = FeatureProjection(xlf, projection_matrix_);
 	for (size_t i = 0; i < xlf.size(); i++)
 	{
-		debug("xlf_porj feature %lu 's size: %lu, %d x %d", i, xlf_porj[i].size(), xlf_porj[i][0].rows, xlf_porj[i][0].cols);
+		debug("xlf_porj feature %lu 's size: %lu, %d x %d", i,
+			  xlf_porj[i].size(), xlf_porj[i][0].rows, xlf_porj[i][0].cols);
 	}
 	// 8. Initialize and update sample space.
 	// The distance matrix, kernel matrix and prior weight are also updated
@@ -184,17 +201,18 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	ECO_FEATS hf, hf_inc;
 	for (size_t i = 0; i < xlf.size(); i++)
 	{
-		hf.push_back(vector<cv::Mat>(xlf_porj[i].size(), cv::Mat::zeros(xlf_porj[i][0].size(), CV_32FC2)));
-		hf_inc.push_back(vector<cv::Mat>(xlf_porj[i].size(), cv::Mat::zeros(xlf_porj[i][0].size(), CV_32FC2)));
+		hf.push_back(vector<cv::Mat>(xlf_porj[i].size(),
+									 cv::Mat::zeros(xlf_porj[i][0].size(), CV_32FC2)));
+		hf_inc.push_back(vector<cv::Mat>(xlf_porj[i].size(),
+										 cv::Mat::zeros(xlf_porj[i][0].size(), CV_32FC2)));
 	}
 	// 11. Train the tracker.
-	eco_trainer_.train_init(hf, hf_inc, projection_matrix_, xlf, yf_, reg_filter_,
-							sample_energy_, reg_energy_, proj_energy, params_);
+	eco_trainer_.train_init(hf, hf_inc, projection_matrix_, xlf, yf_, reg_filter_, sample_energy_, reg_energy_, proj_energy, params_);
 
 	eco_trainer_.train_joint();
 
 	// 12. Update project matrix P.
-	projection_matrix_ = eco_trainer_.get_proj(); 
+	projection_matrix_ = eco_trainer_.get_proj();
 	for (size_t i = 0; i < projection_matrix_.size(); ++i)
 	{
 		double maxValue = 0, minValue = 0;
@@ -203,7 +221,9 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	}
 	// 13. Re-project the sample and update the sample space.
 	xlf_porj = FeatureProjection(xlf, projection_matrix_);
-	debug("xlf_porj size: %lu, %lu, %d x %d", xlf_porj.size(), xlf_porj[0].size(), xlf_porj[0][0].rows, xlf_porj[0][0].cols);
+	debug("xlf_porj size: %lu, %lu, %d x %d",
+		  xlf_porj.size(), xlf_porj[0].size(),
+		  xlf_porj[0][0].rows, xlf_porj[0][0].cols);
 
 	sample_update_.replace_sample(xlf_porj, 0); // put xlf_proj to the smaples_f_[0].
 
@@ -215,15 +235,16 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	hf_full_ = full_fourier_coeff(eco_trainer_.get_hf());
 	for (size_t i = 0; i < hf_full_.size(); i++)
 	{
-		debug("hf_full_: %lu, %lu, %d x %d", i, hf_full_[i].size(), hf_full_[i][0].rows, hf_full_[i][0].cols);
+		debug("hf_full_: %lu, %lu, %d x %d", i, hf_full_[i].size(),
+			  hf_full_[i][0].rows, hf_full_[i][0].cols);
 	}
 	frames_since_last_train_ = 0;
-	printf("\n=======================End of Init===============================\n");
+	printf("\n==================End of Init===============================\n");
 }
 
 void ECO::reset(cv::Mat &im, const cv::Rect2f &rect)
 {
-	printf("\n=======================Reset Tracker=============================\n");
+	printf("\n==================Reset Tracker=============================\n");
 	// 1. Initialize all the parameters.
 	// Image infomations
 	imgInfo(im);
@@ -248,7 +269,8 @@ void ECO::reset(cv::Mat &im, const cv::Rect2f &rect)
 	ECO_FEATS xl, xlw, xlf, xlf_porj;
 	// 2. Extract features from the first frame.
 	xl = feature_extractor_.extractor(im, pos_, vector<float>(1, currentScaleFactor_), params_);
-	debug("xl size: %lu, %lu, %d x %d", xl.size(), xl[0].size(), xl[0][0].rows, xl[0][0].cols);
+	debug("xl size: %lu, %lu, %d x %d", xl.size(), xl[0].size(),
+		  xl[0][0].rows, xl[0][0].cols);
 
 	// 3. Do windowing of features.
 	xl = do_windows(xl, cos_window_);
@@ -262,19 +284,22 @@ void ECO::reset(cv::Mat &im, const cv::Rect2f &rect)
 	xlf = compact_fourier_coeff(xlf); // take half of the cols
 	for (size_t i = 0; i < xlf.size(); i++)
 	{
-		debug("xlf feature %lu 's size: %lu, %d x %d", i, xlf[i].size(), xlf[i][0].rows, xlf[i][0].cols);
+		debug("xlf feature %lu 's size: %lu, %d x %d", i, xlf[i].size(),
+			  xlf[i][0].rows, xlf[i][0].cols);
 	}
 	// 6. Initialize projection matrix P.
 	projection_matrix_ = init_projection_matrix(xl, compressed_dim_, feature_dim_); // 32FC2 31x10
 	for (size_t i = 0; i < projection_matrix_.size(); i++)
 	{
-		debug("projection_matrix %lu 's size: %d x %d", i, projection_matrix_[i].rows, projection_matrix_[i].cols);
+		debug("projection_matrix %lu 's size: %d x %d", i,
+			  projection_matrix_[i].rows, projection_matrix_[i].cols);
 	}
 	// 7. project sample, feature reduction.
 	xlf_porj = FeatureProjection(xlf, projection_matrix_);
 	for (size_t i = 0; i < xlf.size(); i++)
 	{
-		debug("xlf_porj feature %lu 's size: %lu, %d x %d", i, xlf_porj[i].size(), xlf_porj[i][0].rows, xlf_porj[i][0].cols);
+		debug("xlf_porj feature %lu 's size: %lu, %d x %d", i,
+			  xlf_porj[i].size(), xlf_porj[i][0].rows, xlf_porj[i][0].cols);
 	}
 	// 8. Initialize and update sample space.
 	// The distance matrix, kernel matrix and prior weight are also updated
@@ -294,13 +319,12 @@ void ECO::reset(cv::Mat &im, const cv::Rect2f &rect)
 		hf_inc.push_back(vector<cv::Mat>(xlf_porj[i].size(), cv::Mat::zeros(xlf_porj[i][0].size(), CV_32FC2)));
 	}
 	// 11. Train the tracker.
-	eco_trainer_.train_init(hf, hf_inc, projection_matrix_, xlf, yf_, reg_filter_,
-							sample_energy_, reg_energy_, proj_energy, params_);
+	eco_trainer_.train_init(hf, hf_inc, projection_matrix_, xlf, yf_, reg_filter_, sample_energy_, reg_energy_, proj_energy, params_);
 
 	eco_trainer_.train_joint();
 
 	// 12. Update project matrix P.
-	projection_matrix_ = eco_trainer_.get_proj(); 
+	projection_matrix_ = eco_trainer_.get_proj();
 	for (size_t i = 0; i < projection_matrix_.size(); ++i)
 	{
 		double maxValue = 0, minValue = 0;
@@ -309,7 +333,9 @@ void ECO::reset(cv::Mat &im, const cv::Rect2f &rect)
 	}
 	// 13. Re-project the sample and update the sample space.
 	xlf_porj = FeatureProjection(xlf, projection_matrix_);
-	debug("xlf_porj size: %lu, %lu, %d x %d", xlf_porj.size(), xlf_porj[0].size(), xlf_porj[0][0].rows, xlf_porj[0][0].cols);
+	debug("xlf_porj size: %lu, %lu, %d x %d",
+		  xlf_porj.size(), xlf_porj[0].size(),
+		  xlf_porj[0][0].rows, xlf_porj[0][0].cols);
 
 	sample_update_.replace_sample(xlf_porj, 0); // put xlf_proj to the smaples_f_[0].
 
@@ -321,10 +347,11 @@ void ECO::reset(cv::Mat &im, const cv::Rect2f &rect)
 	hf_full_ = full_fourier_coeff(eco_trainer_.get_hf());
 	for (size_t i = 0; i < hf_full_.size(); i++)
 	{
-		debug("hf_full_: %lu, %lu, %d x %d", i, hf_full_[i].size(), hf_full_[i][0].rows, hf_full_[i][0].cols);
+		debug("hf_full_: %lu, %lu, %d x %d", i, hf_full_[i].size(),
+			  hf_full_[i][0].rows, hf_full_[i][0].cols);
 	}
 	frames_since_last_train_ = 0;
-	printf("\n========================End of Reset============================\n");
+	printf("\n=====================End of Reset============================\n");
 }
 
 bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
@@ -368,14 +395,18 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 
 	for (size_t i = 0; i < xtf_proj.size(); i++) // for each feature
 	{
-		int pad = (filter_size_[output_index_].height - xtf_proj[i][0].rows) / 2;
-		cv::Rect temp_roi = cv::Rect(pad, pad, xtf_proj[i][0].cols, xtf_proj[i][0].rows);
+		int pad = (filter_size_[output_index_].height -
+				   xtf_proj[i][0].rows) /
+				  2;
+		cv::Rect temp_roi = cv::Rect(pad, pad,
+									 xtf_proj[i][0].cols, xtf_proj[i][0].rows);
 
 		for (size_t j = 0; j < xtf_proj[i].size(); j++) // for each dimension of the feature
 		{
 			// debug("%lu, %lu", j, j / hf_full_[i].size());
 			scores_fs_sum[j / hf_full_[i].size()](temp_roi) +=
-				complexMultiplication(xtf_proj[i][j], hf_full_[i][j % hf_full_[i].size()]);
+				complexMultiplication(xtf_proj[i][j],
+									  hf_full_[i][j % hf_full_[i].size()]);
 		}
 	}
 
@@ -435,7 +466,9 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 		cm_tmp = magnitude(scores_sum[scale_change_factor]) * 1000;
 		cm_tmp.convertTo(cm_tmp, CV_8U);
 
-		cv::resize(cm_tmp, cm_img, cv::Size(cm_tmp.cols * resize_scores_width, cm_tmp.rows * resize_scores_height),
+		cv::resize(cm_tmp, cm_img,
+				   cv::Size(cm_tmp.cols * resize_scores_width,
+							cm_tmp.rows * resize_scores_height),
 				   0, 0, cv::INTER_LINEAR);
 		cv::applyColorMap(cm_img, cm_img, cv::COLORMAP_JET);
 
@@ -483,7 +516,8 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 		//debug("%d %d %d %d",x_vis, y_vis, w_vis, h_vis);
 		cv::Mat cm_img_vis = cm_img(cv::Rect(x_vis, y_vis, w_vis, h_vis));
 
-		cv::addWeighted(cm_img_vis, alpha_vis, roi_vis, 1.0 - alpha_vis, 0.0, roi_vis);
+		cv::addWeighted(cm_img_vis, alpha_vis, roi_vis, 1.0 - alpha_vis,
+						0.0, roi_vis);
 		// Add a circle to the expected next position
 		cv::circle(resframe, pos_, 5, cv::Scalar(0, 255, 0));
 		cv::circle(resframe, sample_pos, 5, cv::Scalar(0, 255, 225));
@@ -512,7 +546,8 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 		int end_ind = (scale_change_factor + 1) * projection_matrix_[i].cols;
 		for (size_t j = start_ind; j < (size_t)end_ind; ++j)
 		{
-			tmp.push_back(xtf_proj[i][j].colRange(0, xtf_proj[i][j].rows / 2 + 1));
+			tmp.push_back(xtf_proj[i][j].colRange(0,
+												  xtf_proj[i][j].rows / 2 + 1));
 		}
 		xlf_proj.push_back(tmp);
 	}
@@ -520,7 +555,9 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 
 	// 2: Shift the sample so that the target is centered,
 	//  A shift in spatial domain means multiply by exp(i pi L k), according to shift property of Fourier transformation.
-	cv::Point2f shift_samp = 2.0f * CV_PI * cv::Point2f(pos_ - cv::Point2f(sample_pos)) * (1.0f / (currentScaleFactor_ * img_support_size_.width));
+	cv::Point2f shift_samp =
+		2.0f * CV_PI * cv::Point2f(pos_ - cv::Point2f(sample_pos)) *
+		(1.0f / (currentScaleFactor_ * img_support_size_.width));
 	xlf_proj = shift_sample(xlf_proj, shift_samp, kx_, ky_);
 	//debug("shift_sample: %f %f", shift_samp.x, shift_samp.y);
 
@@ -529,7 +566,7 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	//debug("get_merged_sample_id: %d, get_new_sample_id: %d", sample_update_.get_merged_sample_id(), sample_update_.get_new_sample_id());
 	sample_update_.update_sample_space_model(xlf_proj);
 	//debug("get_merged_sample_id: %d, get_new_sample_id: %d", sample_update_.get_merged_sample_id(), sample_update_.get_new_sample_id());
-/*
+	/*
 	// merge new sample or replace
 	if (sample_update_.get_merged_sample_id() > 0)
 	{
@@ -545,8 +582,7 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	if (train_tracker)
 	{
 		//debug("%lu %lu", sample_energy_.size(), FeautreComputePower2(xlf_proj).size());
-		sample_energy_ = FeatureScale(sample_energy_, 1 - params_.learning_rate) +
-						 FeatureScale(FeautreComputePower2(xlf_proj), params_.learning_rate);
+		sample_energy_ = FeatureScale(sample_energy_, 1 - params_.learning_rate) + FeatureScale(FeautreComputePower2(xlf_proj), params_.learning_rate);
 		eco_trainer_.train_filter(sample_update_.get_samples(),
 								  sample_update_.get_prior_weights(),
 								  sample_energy_);
@@ -557,7 +593,7 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 		++frames_since_last_train_;
 	}
 	// 5: Update projection matrix P.
-	projection_matrix_ = eco_trainer_.get_proj();
+	// projection_matrix_ = eco_trainer_.get_proj();
 
 	// 6: Update filter f.
 	hf_full_ = full_fourier_coeff(eco_trainer_.get_hf());
@@ -623,14 +659,18 @@ void ECO::init_features()
 		int end_ind1 = start_ind1 + cnn_output_sz1 - 1;						  // 15
 		//debug("ind: %d %d %d %d", start_ind0, start_ind1, end_ind0, end_ind1);
 
-		params_.cnn_features.fparams.start_ind = {start_ind0, start_ind0, start_ind1, start_ind1};
+		params_.cnn_features.fparams.start_ind =
+			{start_ind0, start_ind0, start_ind1, start_ind1};
 
-		params_.cnn_features.fparams.end_ind = {end_ind0, end_ind0, end_ind1, end_ind1};
+		params_.cnn_features.fparams.end_ind =
+			{end_ind0, end_ind0, end_ind1, end_ind1};
 
-		params_.cnn_features.data_sz_block0 = cv::Size(cnn_output_sz0 / params_.cnn_features.fparams.downsample_factor[0],
-													   cnn_output_sz0 / params_.cnn_features.fparams.downsample_factor[0]);
-		params_.cnn_features.data_sz_block1 = cv::Size(cnn_output_sz1 / params_.cnn_features.fparams.downsample_factor[1],
-													   cnn_output_sz1 / params_.cnn_features.fparams.downsample_factor[1]);
+		params_.cnn_features.data_sz_block0 =
+			cv::Size(cnn_output_sz0 / params_.cnn_features.fparams.downsample_factor[0],
+					 cnn_output_sz0 / params_.cnn_features.fparams.downsample_factor[0]);
+		params_.cnn_features.data_sz_block1 =
+			cv::Size(cnn_output_sz1 / params_.cnn_features.fparams.downsample_factor[1],
+					 cnn_output_sz1 / params_.cnn_features.fparams.downsample_factor[1]);
 
 		params_.cnn_features.mean = params_.cnn_features.fparams.deep_mean_mean_mat;
 
@@ -644,7 +684,8 @@ void ECO::init_features()
 	}
 	else
 	{
-		params_.cnn_features.fparams.net = boost::shared_ptr<caffe::Net<float>>();
+		params_.cnn_features.fparams.net =
+			boost::shared_ptr<caffe::Net<float>>();
 	}
 #else
 	params_.useDeepFeature = false;
@@ -658,8 +699,11 @@ void ECO::init_features()
 	{
 		params_.hog_features.img_input_sz = img_support_size_;
 		params_.hog_features.img_sample_sz = img_support_size_;
-		params_.hog_features.data_sz_block0 = cv::Size(params_.hog_features.img_sample_sz.width / params_.hog_features.fparams.cell_size,
-													   params_.hog_features.img_sample_sz.height / params_.hog_features.fparams.cell_size);
+		params_.hog_features.data_sz_block0 = cv::Size(
+			params_.hog_features.img_sample_sz.width /
+				params_.hog_features.fparams.cell_size,
+			params_.hog_features.img_sample_sz.height /
+				params_.hog_features.fparams.cell_size);
 
 		debug("HOG parameters---------------:");
 		debug("img_input_sz: %d, img_sample_size_: %d", params_.hog_features.img_input_sz.width, params_.hog_features.img_sample_sz.width);
@@ -692,7 +736,9 @@ void ECO::init_features()
 	}
 	for (size_t i = 0; i < feature_size_.size(); i++)
 	{
-		debug("features %lu: %d %d %d x %d", i, feature_dim_[i], compressed_dim_[i], feature_size_[i].height, feature_size_[i].width);
+		debug("features %lu: %d %d %d x %d", i, feature_dim_[i],
+			  compressed_dim_[i],
+			  feature_size_[i].height, feature_size_[i].width);
 	}
 }
 #ifdef USE_CAFFE
@@ -732,8 +778,10 @@ void ECO::read_deep_mean(const string &mean_file)
 void ECO::yf_gaussian() // real part of (9) in paper C-COT
 {
 	// sig_y is sigma in (9)
-	double sig_y = sqrt(int(base_target_size_.width) * int(base_target_size_.height)) *
-				   (params_.output_sigma_factor) * (float(output_size_) / img_support_size_.width);
+	double sig_y = sqrt(int(base_target_size_.width) *
+						int(base_target_size_.height)) *
+				   (params_.output_sigma_factor) *
+				   (float(output_size_) / img_support_size_.width);
 	debug("sig_y:%lf", sig_y);
 	for (unsigned int i = 0; i < ky_.size(); i++) // for each filter
 	{
@@ -768,7 +816,8 @@ void ECO::cos_window()
 		for (int i = 0; i < hann2t.rows; i++)
 			hann2t.at<float>(i, 0) = 0.5 * (1 - std::cos(2 * 3.14159265358979323846 * i / (hann2t.rows - 1)));
 		cv::Mat hann2d = hann2t * hann1t;
-		cos_window_.push_back(hann2d(cv::Range(1, hann2d.rows - 1), cv::Range(1, hann2d.cols - 1)));
+		cos_window_.push_back(hann2d(cv::Range(1, hann2d.rows - 1),
+									 cv::Range(1, hann2d.cols - 1)));
 		/*
 		showmat1ch(cos_window_[i],2);
 		assert(0);
@@ -782,12 +831,15 @@ ECO_FEATS ECO::interpolate_dft(const ECO_FEATS &xlf, vector<cv::Mat> &interp1_fs
 
 	for (size_t i = 0; i < xlf.size(); i++)
 	{
-		cv::Mat interp1_fs_mat = subwindow(interp1_fs[i], cv::Rect(cv::Point(0, 0), cv::Size(interp1_fs[i].rows, interp1_fs[i].rows)), IPL_BORDER_REPLICATE);
-		cv::Mat interp2_fs_mat = subwindow(interp2_fs[i], cv::Rect(cv::Point(0, 0), cv::Size(interp2_fs[i].cols, interp2_fs[i].cols)), IPL_BORDER_REPLICATE);
+		cv::Mat interp1_fs_mat =
+			subwindow(interp1_fs[i], cv::Rect(cv::Point(0, 0), cv::Size(interp1_fs[i].rows, interp1_fs[i].rows)), IPL_BORDER_REPLICATE);
+		cv::Mat interp2_fs_mat =
+			subwindow(interp2_fs[i], cv::Rect(cv::Point(0, 0), cv::Size(interp2_fs[i].cols, interp2_fs[i].cols)), IPL_BORDER_REPLICATE);
 		vector<cv::Mat> temp;
 		for (size_t j = 0; j < xlf[i].size(); j++)
 		{
-			temp.push_back(complexMultiplication(complexMultiplication(interp1_fs_mat, xlf[i][j]), interp2_fs_mat));
+			temp.push_back(complexMultiplication(
+				complexMultiplication(interp1_fs_mat, xlf[i][j]), interp2_fs_mat));
 		}
 		result.push_back(temp);
 	}
@@ -864,13 +916,16 @@ ECO_FEATS ECO::shift_sample(ECO_FEATS &xf, cv::Point2f shift, std::vector<cv::Ma
 		showmat2chall(shift_exp_x, 2);
 		assert(0);
 		*/
-		cv::Mat shift_exp_y_mat = subwindow(shift_exp_y, cv::Rect(cv::Point(0, 0), xf[i][0].size()), IPL_BORDER_REPLICATE);
-		cv::Mat shift_exp_x_mat = subwindow(shift_exp_x, cv::Rect(cv::Point(0, 0), xf[i][0].size()), IPL_BORDER_REPLICATE);
+		cv::Mat shift_exp_y_mat =
+			subwindow(shift_exp_y, cv::Rect(cv::Point(0, 0), xf[i][0].size()), IPL_BORDER_REPLICATE);
+		cv::Mat shift_exp_x_mat =
+			subwindow(shift_exp_x, cv::Rect(cv::Point(0, 0), xf[i][0].size()), IPL_BORDER_REPLICATE);
 
 		vector<cv::Mat> tmp;
 		for (size_t j = 0; j < xf[i].size(); j++) // for each dimension of the feature, do complex element-wise multiplication
 		{
-			tmp.push_back(complexMultiplication(complexMultiplication(shift_exp_y_mat, xf[i][j]), shift_exp_x_mat));
+			tmp.push_back(complexMultiplication(
+				complexMultiplication(shift_exp_y_mat, xf[i][j]), shift_exp_x_mat));
 		}
 		res.push_back(tmp);
 	}
