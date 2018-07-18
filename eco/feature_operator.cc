@@ -174,7 +174,7 @@ ECO_FEATS FeatureProjectionMultScale(const ECO_FEATS &x, const std::vector<cv::M
 	}
 	return result;
 }
-// inputs: a+bi, c+di; output: ac+bd;
+// inputs: a+bi, c+di; output: ac+bd; // gpu_implemented
 float FeatureComputeInnerProduct(const ECO_FEATS &feat1, const ECO_FEATS &feat2)
 {
 	if (feat1.size() != feat2.size())
@@ -192,7 +192,7 @@ float FeatureComputeInnerProduct(const ECO_FEATS &feat1, const ECO_FEATS &feat2)
 	return dist;
 }
 // compute the energy of the feature
-// input: a+bi; output: a^2+b^2;
+// input: a+bi; output: a^2+b^2; // gpu_implemented
 float FeatureComputeEnergy(const ECO_FEATS &feat)
 {
 	float res = 0;
@@ -234,15 +234,17 @@ ECO_FEATS FeautreComputePower2(const ECO_FEATS &feats)
 
 	return result;
 }
-// compute socres  Sum(x * f)
-std::vector<cv::Mat> FeatureComputeScores(const ECO_FEATS &x, const ECO_FEATS &f)
+// compute socres  Sum(x * f) // gpu_implemented
+std::vector<cv::Mat> FeatureComputeScores(const ECO_FEATS &x, 
+										  const ECO_FEATS &f)
 {
 	std::vector<cv::Mat> res;
 
 	ECO_FEATS res_temp = FeatureDotMultiply(x, f);
 	for (size_t i = 0; i < res_temp.size(); i++)
 	{
-		cv::Mat temp(cv::Mat::zeros(res_temp[i][0].size(), res_temp[i][0].type()));
+		cv::Mat temp(cv::Mat::zeros(res_temp[i][0].size(), 
+									res_temp[i][0].type()));
 		for (size_t j = 0; j < res_temp[i].size(); j++)
 		{
 			temp = temp + res_temp[i][j];
@@ -265,13 +267,14 @@ std::vector<cv::Mat> FeatureVectorization(const ECO_FEATS &x)
 		for (size_t j = 0; j < x[i].size(); j++)
 		{
 			cv::Mat temp2 = x[i][j].t();
-			temp.push_back(cv::Mat(1, x[i][j].size().area(), CV_32FC2, temp2.data));
+			temp.push_back(cv::Mat(1, x[i][j].size().area(), 
+								   CV_32FC2, temp2.data));
 		}
 		res.push_back(temp);
 	}
 	return res;
 }
-
+ // gpu_implemented
 ECO_FEATS FeatureVectorMultiply(const ECO_FEATS &x,
 								const std::vector<cv::Mat> y,
 								const bool _conj)
@@ -295,7 +298,7 @@ ECO_FEATS FeatureVectorMultiply(const ECO_FEATS &x,
 	return res;
 }
 
-// features operation
+// features operation // gpu_implemented
 ECO_FEATS FeatureDotMultiply(const ECO_FEATS &a, const ECO_FEATS &b)
 {
 	ECO_FEATS res;
@@ -331,6 +334,7 @@ ECO_FEATS FeatureDotDivide(const ECO_FEATS a, const ECO_FEATS b)
 	}
 	return res;
 }
+ // gpu_implemented
 ECO_FEATS FeatureScale(ECO_FEATS data, float scale)
 {
 	ECO_FEATS res;

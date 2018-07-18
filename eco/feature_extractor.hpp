@@ -15,7 +15,7 @@
 #endif
 
 #include "parameters.hpp"
-#include "fftTool.hpp"
+#include "ffttools.hpp"
 #include "recttools.hpp"
 #include "fhog.hpp"
 #include "debug.hpp"

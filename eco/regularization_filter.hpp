@@ -7,7 +7,7 @@
 #include <cmath>
 
 #include "parameters.hpp"
-#include "fftTool.hpp"
+#include "ffttools.hpp"
 #include "debug.hpp"
 
 namespace eco

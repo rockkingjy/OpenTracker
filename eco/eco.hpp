@@ -19,7 +19,7 @@
 #include "sample_update.hpp"
 #include "optimize_scores.hpp"
 #include "training.hpp"
-#include "fftTool.hpp"
+#include "ffttools.hpp"
 #include "debug.hpp"
 
 namespace eco

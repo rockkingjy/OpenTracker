@@ -9,7 +9,7 @@
 
 #include <opencv2/opencv.hpp>
 
-#include "fftTool.hpp"
+#include "ffttools.hpp"
 #include "recttools.hpp"
 #include "parameters.hpp"
 #include "feature_operator.hpp"
@@ -54,7 +54,7 @@ class EcoTrain
 					EcoParameters &params);
 
 	// Filter training and Projection updating(for the 1st Frame)==============
-	void train_joint(); // gpu_implemented
+	void train_joint(); 
 
 	vector<cv::Mat> compute_rhs2(const vector<cv::Mat> &proj_mat,
 								 const vector<cv::Mat> &init_samplef_H,
@@ -66,12 +66,12 @@ class EcoTrain
 					 const ECO_FEATS &init_samplef,
 					 const vector<cv::Mat> &init_samplesf_H,
 					 const ECO_FEATS &init_hf,
-					 float proj_reg,			   // right side of equation A(x)
+					 float proj_reg, // right side of equation A(x)
 					 const joint_out &rhs_samplef, // the left side of the equation
 					 const joint_out &diag_M,	  // preconditionor
-					 joint_fp &hf);				   // the union of filter [f+delta(f) delta(p)]
-	// the left side of equation in paper  A(x) to compute residual
-	joint_out lhs_operation_joint(joint_fp &hf, // gpu_implemented
+					 joint_fp &hf);	// the union of filter [f+delta(f) delta(p)]
+
+	joint_out lhs_operation_joint(joint_fp &hf, 
 								  const ECO_FEATS &samplesf,
 								  const vector<cv::Mat> &reg_filter,
 								  const ECO_FEATS &init_samplef,
@@ -79,7 +79,7 @@ class EcoTrain
 								  const ECO_FEATS &init_hf,
 								  float proj_reg);
 	// Only filter training(for tracker update)===============================
-	void train_filter(const vector<ECO_FEATS> &samplesf, // gpu_implemented
+	void train_filter(const vector<ECO_FEATS> &samplesf, 
 					  const vector<float> &sample_weights,
 					  const ECO_FEATS &sample_energy);
 

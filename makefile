@@ -18,7 +18,7 @@ OBJ = kcf/fhog.o kcf/kcftracker.o \
 	goturn/network/regressor_base.o goturn/network/regressor.o \
 	goturn/helper/bounding_box.o goturn/helper/helper.o goturn/helper/image_proc.o \
 	goturn/helper/high_res_timer.o goturn/tracker/tracker.o trackerscompare.o \
-	eco/fftTool.o eco/fhog.o eco/interpolator.o eco/optimize_scores.o \
+	eco/ffttools.o eco/fhog.o eco/interpolator.o eco/optimize_scores.o \
 	eco/regularization_filter.o eco/feature_extractor.o eco/feature_operator.o  \
 	eco/training.o eco/sample_update.o eco/eco.o \
 	inputs/readdatasets.o inputs/readvideo.o

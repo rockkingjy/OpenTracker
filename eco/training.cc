@@ -27,6 +27,9 @@ void EcoTrain::train_init(ECO_FEATS hf,
 	params_ = params;
 }
 
+//************************************************************************
+//     	Filter training and Projection updating(for the 1st Frame)
+//************************************************************************
 void EcoTrain::train_joint()
 {
 	// Initial Gauss - Newton optimization of the filter and
@@ -240,7 +243,7 @@ EcoTrain::joint_fp EcoTrain::pcg_eco(const ECO_FEATS &init_samplef_proj,
 
 	return x;
 }
-
+// This is the left-hand-side operation in Conjugate Gradient
 EcoTrain::joint_out EcoTrain::lhs_operation_joint(joint_fp &hf,
 												  const ECO_FEATS &samplesf,
 												  const vector<cv::Mat> &reg_filter,
@@ -255,10 +258,10 @@ EcoTrain::joint_out EcoTrain::lhs_operation_joint(joint_fp &hf,
 	ECO_FEATS fAndDel = hf.up_part;		  // f + delta(f)
 	vector<cv::Mat> deltaP = hf.low_part; // delta(P)
 
-	// Get sizes
+	// Get sizes of each feature
 	int num_features = fAndDel.size();
 	vector<cv::Size> filter_sz;
-	for (size_t i = 0; i < (size_t)num_features; i++)
+	for (size_t i = 0; i < (size_t)num_features; i++) 
 	{
 		filter_sz.push_back(fAndDel[i][0].size());
 	}
@@ -266,7 +269,7 @@ EcoTrain::joint_out EcoTrain::lhs_operation_joint(joint_fp &hf,
 	// find the maximum of size and its index
 	vector<cv::Size>::iterator pos =
 		max_element(filter_sz.begin(), filter_sz.end(), SizeCompare);
-	size_t k1 = pos - filter_sz.begin();
+	size_t k1 = pos - filter_sz.begin(); // index
 	cv::Size output_sz = cv::Size(2 * pos->width - 1, pos->height);
 
 	// Compute the operation corresponding to the data term in the optimization
@@ -293,7 +296,7 @@ EcoTrain::joint_out EcoTrain::lhs_operation_joint(joint_fp &hf,
 			int pad = (output_sz.height - scores[i].rows) / 2;
 			cv::Mat roi =
 				sh(cv::Rect(pad, pad, scores[i].cols, scores[i].rows));
-			cv::Mat res = complexMultiplication(mat_conj(roi), samplesf[i][j]);
+			cv::Mat res = complexMultiplication(mat_conj(roi), samplesf[i][j]);//gpu
 			tmp.push_back(mat_conj(res));
 		}
 		hf_out1.push_back(tmp);
@@ -378,13 +381,14 @@ EcoTrain::joint_out EcoTrain::lhs_operation_joint(joint_fp &hf,
 		// B^H * BP
 		int c_len = XH[i].cols;
 		cv::Mat part1 = XH[i] * FeatureVectorization(fBP)[i].t() -
-						XH[i].colRange(fi, c_len) * FeatureVectorization(fBP)[i].colRange(fi, c_len).t();
+						XH[i].colRange(fi, c_len) * 
+						FeatureVectorization(fBP)[i].colRange(fi, c_len).t();
 		part1 = 2 * real2complex(real(part1)) + proj_reg * deltaP[i];
 
 		// Compute proj matrix part : B^H * A_m * f
 		cv::Mat part2 = XH[i] * FeatureVectorization(shBP)[i].t() -
 						XH[i].colRange(fi, c_len) *
-							FeatureVectorization(shBP)[i].colRange(fi, c_len).t();
+						FeatureVectorization(shBP)[i].colRange(fi, c_len).t();
 		part2 = 2 * real2complex(real(part2));
 
 		hf_out2.push_back(part1 + part2); // B^H * A * f + B^H * B * dp
@@ -396,7 +400,7 @@ EcoTrain::joint_out EcoTrain::lhs_operation_joint(joint_fp &hf,
 }
 
 //************************************************************************
-//                     this part is for filter training
+//      			Only filter training(for tracker update)
 //************************************************************************
 
 void EcoTrain::train_filter(const vector<ECO_FEATS> &samplesf,
@@ -635,7 +639,10 @@ ECO_FEATS EcoTrain::lhs_operation(ECO_FEATS &hf,
 	res = hf_out;
 	return res;
 }
-//==============================================================================
+
+//************************************************************************
+//      			Joint structure basic operation
+//************************************************************************
 EcoTrain::joint_out EcoTrain::joint_minus(const joint_out &a,
 										  const joint_out &b)
 {

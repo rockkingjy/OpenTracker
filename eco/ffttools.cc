@@ -1,5 +1,5 @@
 
-#include "fftTool.hpp"
+#include "ffttools.hpp"
 
 namespace eco
 {
@@ -59,7 +59,7 @@ cv::Mat magnitude(const cv::Mat img)
 		assert(0);
 	return res;
 }
-// complex element-wise multiplication
+// complex element-wise multiplication // gpu_implemented
 cv::Mat complexMultiplication(const cv::Mat a, const cv::Mat b)
 {
 	cv::Mat temp_a;
