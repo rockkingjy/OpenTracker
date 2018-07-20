@@ -377,7 +377,7 @@ bool KCFTracker::update_dsst(const cv::Mat image, cv::Rect2d &roi)
 cv::Point2f KCFTracker::detect(cv::Mat z, cv::Mat x, float &peak_value) // KCF Algorithm 1 , _alpha updated in train();
 {
     cv::Mat k = gaussianCorrelation(x, z);
-    cv::Mat res = (real(fftd(complexMultiplication(_alphaf, fftd(k)), true))); // KCF (22)
+    cv::Mat res = (real(dft_d(complexDotMultiplication(_alphaf, dft_d(k)), true))); // KCF (22)
 
     //minMaxLoc only accepts doubles for the peak, and integer points for the coordinates
     cv::Point2i pi;
@@ -409,21 +409,21 @@ void KCFTracker::train(cv::Mat x, float train_interp_factor)
 {
 
     cv::Mat k = gaussianCorrelation(x, x);
-    cv::Mat alphaf = complexDivision(_prob, (fftd(k) + lambda)); // KCF (17)
+    cv::Mat alphaf = complexDotDivision(_prob, (dft_d(k) + lambda)); // KCF (17)
 
     _tmpl = (1 - train_interp_factor) * _tmpl + (train_interp_factor)*x;
     _alphaf = (1 - train_interp_factor) * _alphaf + (train_interp_factor)*alphaf;
 
     /*//MOSSE-style update
-    cv::Mat kf = fftd(gaussianCorrelation(x, x));
-    cv::Mat num = complexMultiplication(kf, _prob);
-    cv::Mat den = complexMultiplication(kf, kf + lambda);
+    cv::Mat kf = dft_d(gaussianCorrelation(x, x));
+    cv::Mat num = complexDotMultiplication(kf, _prob);
+    cv::Mat den = complexDotMultiplication(kf, kf + lambda);
     
     _tmpl = (1 - train_interp_factor) * _tmpl + (train_interp_factor) * x;
     _num = (1 - train_interp_factor) * _num + (train_interp_factor) * num;
     _den = (1 - train_interp_factor) * _den + (train_interp_factor) * den;
 
-    _alphaf = complexDivision(_num, _den);*/
+    _alphaf = complexDotDivision(_num, _den);*/
 }
 
 // Evaluates a Gaussian kernel with bandwidth SIGMA for all relative shifts between input images X and Y,
@@ -443,8 +443,8 @@ cv::Mat KCFTracker::gaussianCorrelation(cv::Mat x1, cv::Mat x2) // KCF (30)
             x1aux = x1.row(i); // Procedure do deal with cv::Mat multichannel bug
             x1aux = x1aux.reshape(1, _size_patch[0]);
             x2aux = x2.row(i).reshape(1, _size_patch[0]);
-            cv::mulSpectrums(fftd(x1aux), fftd(x2aux), caux, 0, true);
-            caux = fftd(caux, true);
+            cv::mulSpectrums(dft_d(x1aux), dft_d(x2aux), caux, 0, true);
+            caux = dft_d(caux, true);
             rearrange(caux);
             caux.convertTo(caux, CV_32F);
             c = c + real(caux);
@@ -453,8 +453,8 @@ cv::Mat KCFTracker::gaussianCorrelation(cv::Mat x1, cv::Mat x2) // KCF (30)
     // Gray features
     else
     {
-        cv::mulSpectrums(fftd(x1), fftd(x2), c, 0, true); //output: c
-        c = fftd(c, true);                                //ifft
+        cv::mulSpectrums(dft_d(x1), dft_d(x2), c, 0, true); //output: c
+        c = dft_d(c, true);                                //ifft
         rearrange(c);                                     //KCF page 11, Figure 6;
         c = real(c);
     }
@@ -503,7 +503,7 @@ cv::Mat KCFTracker::createGaussianPeak(int sizey, int sizex)
             int jh = j - sxh;
             res(i, j) = std::exp(mult * (float)(ih * ih + jh * jh));
         }
-    return fftd(res);
+    return dft_d(res);
 }
 
 // Obtain sub-window from image, with replication-padding and extract features
@@ -671,7 +671,7 @@ cv::Mat KCFTracker::getFeatures(const cv::Mat &image, bool inithann, float scale
         _size_patch[1] = z.cols;
         _size_patch[2] = 1;
     }
-	//fpseco = ((double)cv::getTickCount() - timereco) / 1000000;
+	//fpseco = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
 	//printf("kcf hog extra time: %f \n", fpseco);
     if (inithann)
     {
@@ -806,11 +806,11 @@ cv::Point2i KCFTracker::detect_dsst(cv::Mat image)
 
     // Compute AZ in the paper
     cv::Mat add_temp;
-    cv::reduce(complexMultiplication(_num_dsst, samples), add_temp, 0, CV_REDUCE_SUM);
+    cv::reduce(complexDotMultiplication(_num_dsst, samples), add_temp, 0, CV_REDUCE_SUM);
 
     // compute the final y, DSST (6);
     cv::Mat scale_response;
-    cv::idft(complexDivisionReal(add_temp, (_den_dsst + scale_lambda)), scale_response, cv::DFT_REAL_OUTPUT);
+    cv::idft(complexDotDivisionReal(add_temp, (_den_dsst + scale_lambda)), scale_response, cv::DFT_REAL_OUTPUT);
 
     // Get the max point as the final scaling rate
     cv::Point2i pi; //max location
@@ -849,7 +849,7 @@ cv::Mat KCFTracker::get_sample_dsst(const cv::Mat &image)
 
         if (im_patch.rows == 0 || im_patch.cols == 0)
         {
-            samples = fftd(samples, 0, 1);
+            samples = dft_d(samples, 0, 1);
             return samples;
             // map[i]->map = (float *)malloc (sizeof(float));
         }
@@ -890,7 +890,7 @@ cv::Mat KCFTracker::get_sample_dsst(const cv::Mat &image)
             FeaturesMap.copyTo(samples.col(i));
         }
     }
-	//fpseco = ((double)cv::getTickCount() - timereco) / 1000000;
+	//fpseco = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
 	//printf("kcf hog extra time: %f \n", fpseco);
 
     // Free the temp variables
@@ -899,7 +899,7 @@ cv::Mat KCFTracker::get_sample_dsst(const cv::Mat &image)
         freeFeatureMapObject(&map[i]);
     }
     // Do fft to the FHOG features row by row
-    samples = fftd(samples, 0, 1);
+    samples = dft_d(samples, 0, 1);
 
     return samples;
 }
@@ -918,7 +918,7 @@ cv::Mat KCFTracker::createGaussianPeak_dsst()
         res.at<float>(0, i) = std::exp(-0.5 * std::pow(i + 1 - ceilS, 2) / scale_sigma2);
     }
 
-    return fftd(res);
+    return dft_d(res);
 }
 
 // Compute the hanning window for scaling

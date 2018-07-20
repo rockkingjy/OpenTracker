@@ -106,11 +106,11 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 		temp_d.convertTo(temp_f, CV_32FC1);
 		reg_filter_.push_back(temp_f);
 		debug("reg_filter_ %lu:", i);
-		showmat1chall(temp_f, 2);
+		showmat1channels(temp_f, 2);
 
 		// Compute the energy of the filter (used for preconditioner)drone_flip
 		cv::Mat_<double> t = temp_d.mul(temp_d); //element-wise multiply
-		float energy = mat_sumd(t);				 //sum up all the values of each points of the mat
+		float energy = mat_sum_d(t);			 //sum up all the values of each points of the mat
 		reg_energy_.push_back(energy);
 		debug("reg_energy_ %lu: %f", i, energy);
 	}
@@ -356,11 +356,11 @@ void ECO::reset(cv::Mat &im, const cv::Rect2f &rect)
 
 bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 {
-	//*****************************************************************************
+	//**************************************************************************
 	//*****                     Localization
-	//*****************************************************************************
+	//**************************************************************************
 	double timereco = (double)cv::getTickCount();
-	float fpseco = 0;
+	float localizationtime = 0, updatetime = 0;
 
 	cv::Point sample_pos = cv::Point(pos_);
 	vector<float> samples_scales;
@@ -369,23 +369,38 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 		samples_scales.push_back(currentScaleFactor_ * scale_factors_[i]);
 	}
 
-	// 1: Extract features at multiple resolutions
+	// 1: Extract features at multiple resolutions #3 x slower#
 	ECO_FEATS xt = feature_extractor_.extractor(frame, sample_pos, samples_scales, params_);
 	//debug("xt size: %lu, %lu, %d x %d", xt.size(), xt[0].size(), xt[0][0].rows, xt[0][0].cols);
+	localizationtime = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
+	debug("localization time1: %f", localizationtime);
+	timereco = (double)cv::getTickCount();
 
-	// 2:  project sample *****
+	// 2:  project sample
 	ECO_FEATS xt_proj = FeatureProjectionMultScale(xt, projection_matrix_);
 	//debug("xt_proj size: %lu, %lu, %d x %d", xt_proj.size(), xt_proj[0].size(), xt_proj[0][0].rows, xt_proj[0][0].cols);
+	localizationtime = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
+	debug("localization time2: %f", localizationtime);
+	timereco = (double)cv::getTickCount();
 
-	// 3: Do windowing of features ***
+	// 3: Do windowing of features
 	xt_proj = do_windows(xt_proj, cos_window_);
+	localizationtime = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
+	debug("localization time3: %f", localizationtime);
+	timereco = (double)cv::getTickCount();
 
-	// 4: Compute the fourier series ***
+	// 4: Compute the fourier series
 	ECO_FEATS xtf_proj = do_dft(xt_proj);
+	localizationtime = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
+	debug("localization time4: %f", localizationtime);
+	timereco = (double)cv::getTickCount();
 
-	// 5: Interpolate features to the continuous domain
+	// 5: Interpolate features to the continuous domain #2 x slower#
 	xtf_proj = interpolate_dft(xtf_proj, interp1_fs_, interp2_fs_);
 	//debug("xtf_proj size: %lu, %lu, %d x %d", xtf_proj.size(), xtf_proj[0].size(), xtf_proj[0][0].rows, xtf_proj[0][0].cols);
+	localizationtime = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
+	debug("localization time5: %f", localizationtime);
+	timereco = (double)cv::getTickCount();
 
 	// 6: Compute the scores in Fourier domain for different scales of target
 	vector<cv::Mat> scores_fs_sum;
@@ -405,10 +420,13 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 		{
 			// debug("%lu, %lu", j, j / hf_full_[i].size());
 			scores_fs_sum[j / hf_full_[i].size()](temp_roi) +=
-				complexMultiplication(xtf_proj[i][j],
-									  hf_full_[i][j % hf_full_[i].size()]);
+				complexDotMultiplication(xtf_proj[i][j],
+										 hf_full_[i][j % hf_full_[i].size()]);
 		}
 	}
+	localizationtime = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
+	debug("localization time6: %f", localizationtime);
+	timereco = (double)cv::getTickCount();
 
 	// 7: Calculate score by inverse DFT:
 
@@ -439,11 +457,92 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 		currentScaleFactor_ = params_.max_scale_factor;
 	}
 
-	fpseco = ((double)cv::getTickCount() - timereco) / 1000000;
-	//debug("localization time: %f", fpseco);
+	localizationtime = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
+	debug("localization time: %f", localizationtime);
+
+	//**************************************************************************
+	//*****                     Model update
+	//**************************************************************************
+	timereco = (double)cv::getTickCount();
+	// 1: Get the sample calculated in localization
+	ECO_FEATS xlf_proj;
+	for (size_t i = 0; i < xtf_proj.size(); ++i)
+	{
+		std::vector<cv::Mat> tmp;
+		int start_ind = scale_change_factor * projection_matrix_[i].cols;
+		int end_ind = (scale_change_factor + 1) * projection_matrix_[i].cols;
+		for (size_t j = start_ind; j < (size_t)end_ind; ++j)
+		{
+			tmp.push_back(xtf_proj[i][j].colRange(0,
+												  xtf_proj[i][j].rows / 2 + 1));
+		}
+		xlf_proj.push_back(tmp);
+	}
+	//debug("xlf_proj size: %lu, %lu, %d x %d", xlf_proj.size(), xlf_proj[0].size(), xlf_proj[0][0].rows, xlf_proj[0][0].cols);
+
+	// 2: Shift the sample so that the target is centered,
+	//  A shift in spatial domain means multiply by exp(i pi L k), according to shift property of Fourier transformation.
+	cv::Point2f shift_samp =
+		2.0f * CV_PI * cv::Point2f(pos_ - cv::Point2f(sample_pos)) *
+		(1.0f / (currentScaleFactor_ * img_support_size_.width));
+	xlf_proj = shift_sample(xlf_proj, shift_samp, kx_, ky_);
+	//debug("shift_sample: %f %f", shift_samp.x, shift_samp.y);
+
+	// 3: Update the samples space to include the new sample, the distance matrix,
+	// kernel matrix and prior weight are also updated
+	//debug("get_merged_sample_id: %d, get_new_sample_id: %d", sample_update_.get_merged_sample_id(), sample_update_.get_new_sample_id());
+	sample_update_.update_sample_space_model(xlf_proj);
+	//debug("get_merged_sample_id: %d, get_new_sample_id: %d", sample_update_.get_merged_sample_id(), sample_update_.get_new_sample_id());
+	/*
+	// merge new sample or replace
+	if (sample_update_.get_merged_sample_id() > 0)
+	{
+		sample_update_.replace_sample(xlf_proj, sample_update_.get_merged_sample_id());
+	}
+	if (sample_update_.get_new_sample_id() > 0)
+	{
+		sample_update_.replace_sample(xlf_proj, sample_update_.get_new_sample_id());
+	}
+*/
+	// 4: Train the tracker every Nsth frame, Ns in ECO paper
+	bool train_tracker = frames_since_last_train_ >= (size_t)params_.train_gap;
+	if (train_tracker)
+	{
+		double t1 = (double)cv::getTickCount();
+		//debug("%lu %lu", sample_energy_.size(), FeautreComputePower2(xlf_proj).size());
+		sample_energy_ = FeatureScale(sample_energy_, 1 - params_.learning_rate) + FeatureScale(FeautreComputePower2(xlf_proj), params_.learning_rate);
+		eco_trainer_.train_filter(sample_update_.get_samples(),
+								  sample_update_.get_prior_weights(),
+								  sample_energy_); // #6 x slower#
+		frames_since_last_train_ = 0;
+
+		float t2 = ((double)cv::getTickCount() - t1) / cv::getTickFrequency();
+		debug("update train time: %f==============", t2);
+	}
+	else
+	{
+		++frames_since_last_train_;
+	}
+	// 5: Update projection matrix P.
+	// projection_matrix_ = eco_trainer_.get_proj();
+
+	// 6: Update filter f.
+	hf_full_ = full_fourier_coeff(eco_trainer_.get_hf());
+
+	updatetime = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
+	debug("update time: %f", updatetime);
+	//debug("FPS: %f", 1.0f / (localizationtime + updatetime));
 	//*****************************************************************************
+	//*****                    			Return
+	//******************************************************************************
+	roi.width = base_target_size_.width * currentScaleFactor_;
+	roi.height = base_target_size_.height * currentScaleFactor_;
+	roi.x = pos_.x - roi.width / 2;
+	roi.y = pos_.y - roi.height / 2;
+	//debug("roi:%f, %f, %f, %f", roi.x, roi.y, roi.width, roi.height);
+	//**************************************************************************
 	//*****                       Visualization
-	//*****************************************************************************
+	//**************************************************************************
 	if (DEBUG == 1)
 	{
 		cv::Mat resframe = frame.clone();
@@ -457,8 +556,8 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 		{
 			int area = scores_fs_sum[i].size().area();
 			// debug("area: %d", area);
-			cv::Mat tmp = fftf(fftshift(scores_fs_sum[i], 1, 1, 1), 1); // inverse dft
-			tmp = fftshift(tmp, 1, 1, 1);
+			cv::Mat tmp = dft_f(fftshift_f(scores_fs_sum[i], 1, 1, 1), 1); // inverse dft
+			tmp = fftshift_f(tmp, 1, 1, 1);
 			scores_sum.push_back(real(tmp * area)); // spacial domain only contains real part
 		}
 
@@ -533,82 +632,6 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 		}
 		//cv::waitKey(0);
 	}
-	//*****************************************************************************
-	//*****                     Training
-	//*****************************************************************************
-	timereco = (double)cv::getTickCount();
-	// 1: Get the sample calculated in localization
-	ECO_FEATS xlf_proj;
-	for (size_t i = 0; i < xtf_proj.size(); ++i)
-	{
-		std::vector<cv::Mat> tmp;
-		int start_ind = scale_change_factor * projection_matrix_[i].cols;
-		int end_ind = (scale_change_factor + 1) * projection_matrix_[i].cols;
-		for (size_t j = start_ind; j < (size_t)end_ind; ++j)
-		{
-			tmp.push_back(xtf_proj[i][j].colRange(0,
-												  xtf_proj[i][j].rows / 2 + 1));
-		}
-		xlf_proj.push_back(tmp);
-	}
-	//debug("xlf_proj size: %lu, %lu, %d x %d", xlf_proj.size(), xlf_proj[0].size(), xlf_proj[0][0].rows, xlf_proj[0][0].cols);
-
-	// 2: Shift the sample so that the target is centered,
-	//  A shift in spatial domain means multiply by exp(i pi L k), according to shift property of Fourier transformation.
-	cv::Point2f shift_samp =
-		2.0f * CV_PI * cv::Point2f(pos_ - cv::Point2f(sample_pos)) *
-		(1.0f / (currentScaleFactor_ * img_support_size_.width));
-	xlf_proj = shift_sample(xlf_proj, shift_samp, kx_, ky_);
-	//debug("shift_sample: %f %f", shift_samp.x, shift_samp.y);
-
-	// 3: Update the samples space to include the new sample, the distance matrix,
-	// kernel matrix and prior weight are also updated
-	//debug("get_merged_sample_id: %d, get_new_sample_id: %d", sample_update_.get_merged_sample_id(), sample_update_.get_new_sample_id());
-	sample_update_.update_sample_space_model(xlf_proj);
-	//debug("get_merged_sample_id: %d, get_new_sample_id: %d", sample_update_.get_merged_sample_id(), sample_update_.get_new_sample_id());
-	/*
-	// merge new sample or replace
-	if (sample_update_.get_merged_sample_id() > 0)
-	{
-		sample_update_.replace_sample(xlf_proj, sample_update_.get_merged_sample_id());
-	}
-	if (sample_update_.get_new_sample_id() > 0)
-	{
-		sample_update_.replace_sample(xlf_proj, sample_update_.get_new_sample_id());
-	}
-*/
-	// 4: Train the tracker every Nsth frame, Ns in ECO paper
-	bool train_tracker = frames_since_last_train_ >= (size_t)params_.train_gap;
-	if (train_tracker)
-	{
-		//debug("%lu %lu", sample_energy_.size(), FeautreComputePower2(xlf_proj).size());
-		sample_energy_ = FeatureScale(sample_energy_, 1 - params_.learning_rate) + FeatureScale(FeautreComputePower2(xlf_proj), params_.learning_rate);
-		eco_trainer_.train_filter(sample_update_.get_samples(),
-								  sample_update_.get_prior_weights(),
-								  sample_energy_);
-		frames_since_last_train_ = 0;
-	}
-	else
-	{
-		++frames_since_last_train_;
-	}
-	// 5: Update projection matrix P.
-	// projection_matrix_ = eco_trainer_.get_proj();
-
-	// 6: Update filter f.
-	hf_full_ = full_fourier_coeff(eco_trainer_.get_hf());
-
-	fpseco = ((double)cv::getTickCount() - timereco) / 1000000;
-	debug("training time: %f", fpseco);
-	//*****************************************************************************
-	//*****                    			Return
-	//******************************************************************************
-	roi.width = base_target_size_.width * currentScaleFactor_;
-	roi.height = base_target_size_.height * currentScaleFactor_;
-	roi.x = pos_.x - roi.width / 2;
-	roi.y = pos_.y - roi.height / 2;
-	//debug("roi:%f, %f, %f, %f", roi.x, roi.y, roi.width, roi.height);
-
 	return true;
 }
 
@@ -838,8 +861,8 @@ ECO_FEATS ECO::interpolate_dft(const ECO_FEATS &xlf, vector<cv::Mat> &interp1_fs
 		vector<cv::Mat> temp;
 		for (size_t j = 0; j < xlf[i].size(); j++)
 		{
-			temp.push_back(complexMultiplication(
-				complexMultiplication(interp1_fs_mat, xlf[i][j]), interp2_fs_mat));
+			temp.push_back(complexDotMultiplication(
+				complexDotMultiplication(interp1_fs_mat, xlf[i][j]), interp2_fs_mat));
 		}
 		result.push_back(temp);
 	}
@@ -887,7 +910,7 @@ vector<cv::Mat> ECO::project_mat_energy(vector<cv::Mat> proj, vector<cv::Mat> yf
 		cv::Mat temp(proj[i].size(), CV_32FC1), temp_compelx;
 		float sum_dim = std::accumulate(feature_dim_.begin(), feature_dim_.end(), 0.0f);
 		cv::Mat x = yf[i].mul(yf[i]);
-		temp = 2 * mat_sum(x) / sum_dim * cv::Mat::ones(proj[i].size(), CV_32FC1);
+		temp = 2 * mat_sum_f(x) / sum_dim * cv::Mat::ones(proj[i].size(), CV_32FC1);
 		result.push_back(temp);
 	}
 	return result;
@@ -924,8 +947,8 @@ ECO_FEATS ECO::shift_sample(ECO_FEATS &xf, cv::Point2f shift, std::vector<cv::Ma
 		vector<cv::Mat> tmp;
 		for (size_t j = 0; j < xf[i].size(); j++) // for each dimension of the feature, do complex element-wise multiplication
 		{
-			tmp.push_back(complexMultiplication(
-				complexMultiplication(shift_exp_y_mat, xf[i][j]), shift_exp_x_mat));
+			tmp.push_back(complexDotMultiplication(
+				complexDotMultiplication(shift_exp_y_mat, xf[i][j]), shift_exp_x_mat));
 		}
 		res.push_back(tmp);
 	}

@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <numeric>
+#include <iostream>
 
 //#include <opencv2/opencv.hpp>
 
@@ -14,6 +15,18 @@
 #define ddebug(a, args...) //printf("%s(%s:%d) " a "\n", __func__, __FILE__, __LINE__, ##args)
 
 using namespace std;
+
+void timerExample();
+inline void timerExample()
+{
+	double timer = (double)cv::getTickCount();
+	float timedft = 0;
+
+	// your test code here
+
+	timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();
+	debug("dft time: %f", timedft);
+}
 
 // Show the type of an image
 // Using like this:
@@ -72,8 +85,8 @@ inline void printMaxmin(cv::Mat mat)
 	printf("mat: min: %lf max: %lf loc: %d %d \n", minValue, maxValue, p.x, p.y);
 }
 
-void showmat1chall(cv::Mat mat, int type);
-inline void showmat1chall(cv::Mat mat, int type)
+void showmat1channels(cv::Mat mat, int type);
+inline void showmat1channels(cv::Mat mat, int type)
 {
 	for (int i = 0; i < mat.rows; i++)
 	{
@@ -101,11 +114,11 @@ inline void showmat1chall(cv::Mat mat, int type)
 	//printf("End of mat\n");
 }
 
-void showmat2chall(cv::Mat mat, int type);
+void showmat2channels(cv::Mat mat, int type);
 
-inline void showmat2chall(cv::Mat mat, int type)
+inline void showmat2channels(cv::Mat mat, int type)
 {
-	debug("channels: %d, just print the 1st channel:", mat.channels());
+	debug("channels: %d", mat.channels());
 	for (int k = 0; k < mat.channels(); k++)
 	{
 		for (int i = 0; i < mat.rows; i++)
@@ -137,9 +150,9 @@ inline void showmat2chall(cv::Mat mat, int type)
 	printf("End of 2 channel mat\n");
 }
 
-void showmat3chall(cv::Mat mat, int type);
+void showmat3channels(cv::Mat mat, int type);
 
-inline void showmat3chall(cv::Mat mat, int type)
+inline void showmat3channels(cv::Mat mat, int type)
 {
 	for (int k = 0; k < mat.channels(); k++)
 	{
@@ -494,4 +507,29 @@ inline void accumulateTest()
 	debug("True sum:%f", sum);
 	printf("accumulateTest end=======================================\n");
 }
+/* Compare the differences of function copyTo() and clone():
+[0, 0, 0, 0, 0]
+[0, 0, 0, 0, 0]
+[0, 0, 0, 0, 0]
+[1, 1, 1, 1, 1]
+*/
+void copyTo_clone_Difference();
+inline void copyTo_clone_Difference()
+{
+	// copyTo will not change the address of the destination matrix.
+	cv::Mat mat1 = cv::Mat::ones(1, 5, CV_32F);
+	cv::Mat mat2 = mat1;
+	cv::Mat mat3 = cv::Mat::zeros(1, 5, CV_32F);
+	mat3.copyTo(mat1);
+	std::cout << mat1 << std::endl; // it has a old address with new value
+	std::cout << mat2 << std::endl; // it has a old address with new value
+	// clone will always allocate a new address for the destination matrix.
+	mat1 = cv::Mat::ones(1, 5, CV_32F);
+	mat2 = mat1;
+	mat3 = cv::Mat::zeros(1, 5, CV_32F);
+	mat1 = mat3.clone();
+	std::cout << mat1 << std::endl; // it has a new address with new value
+	std::cout << mat2 << std::endl; // it has a old address with old value
+}
+
 #endif

@@ -84,7 +84,7 @@ ECO_FEATS FeatureExtractor::extractor(cv::Mat image,
 	{
 	}
 
-	//fpseco = ((double)cv::getTickCount() - timereco) / 1000000;
+	//fpseco = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
 	//debug("feature extra time: %f", fpseco);
 	return sum_features;
 }
@@ -205,7 +205,7 @@ vector<cv::Mat> FeatureExtractor::get_hog_features(vector<cv::Mat> ims)
 		imgInfo(featurePaddingMat);
 		assert(0);
 
-		fpseco = ((double)cv::getTickCount() - timereco) / 1000000;
+		fpseco = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
 		debug("hog extra time: %f", fpseco);
 		timereco = (double)cv::getTickCount();
 		debug("%d %d", featurePaddingMat.cols, featurePaddingMat.rows);
@@ -232,7 +232,7 @@ vector<cv::Mat> FeatureExtractor::get_hog_features(vector<cv::Mat> ims)
 		hog_feats.push_back(featuresMap);
 	}
 
-	//	fpseco = ((double)cv::getTickCount() - timereco) / 1000000;
+	//	fpseco = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
 	//	debug("hog extra time: %f", fpseco);
 
 	return hog_feats;

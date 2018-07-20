@@ -43,26 +43,27 @@ the use of this software, even if advised of the possibility of such damage.
 
 namespace kcf
 {
-cv::Mat fftd(cv::Mat img, bool backwards = false, bool byRow = false);//byRow=true: 1d trasform, else 2d;
+cv::Mat dft_d(cv::Mat img, bool backwards = false, bool byRow = false); //byRow=true: 1d trasform, else 2d;
 cv::Mat real(cv::Mat img);
 cv::Mat imag(cv::Mat img);
 cv::Mat magnitude(cv::Mat img);
-cv::Mat complexMultiplication(cv::Mat a, cv::Mat b);
-cv::Mat complexDivision(cv::Mat a, cv::Mat b);
+cv::Mat complexDotMultiplication(cv::Mat a, cv::Mat b);
+cv::Mat complexDotDivision(cv::Mat a, cv::Mat b);
 void rearrange(cv::Mat &img);
 void normalizedLogTransform(cv::Mat &img);
 
-cv::Mat fftd(cv::Mat img, bool backwards, bool byRow)
+cv::Mat dft_d(cv::Mat img, bool backwards, bool byRow)
 {
     if (img.channels() == 1)
     {
-        cv::Mat planes[] = {cv::Mat_<float>(img), cv::Mat_<float>::zeros(img.size())};
+        cv::Mat planes[] = {cv::Mat_<float>(img),
+                            cv::Mat_<float>::zeros(img.size())};
         cv::merge(planes, 2, img);
     }
     if (byRow)
         cv::dft(img, img, (cv::DFT_ROWS | cv::DFT_COMPLEX_OUTPUT));
     else
-        cv::dft(img, img, backwards ? (cv::DFT_INVERSE | cv::DFT_SCALE) : 0);//do scale when ifft;
+        cv::dft(img, img, backwards ? (cv::DFT_INVERSE | cv::DFT_SCALE) : 0); //do scale when ifft;
 
     return img;
 }
@@ -95,7 +96,7 @@ cv::Mat magnitude(cv::Mat img)
     return res;
 }
 
-cv::Mat complexMultiplication(cv::Mat a, cv::Mat b)
+cv::Mat complexDotMultiplication(cv::Mat a, cv::Mat b)
 {
     std::vector<cv::Mat> pa;
     std::vector<cv::Mat> pb;
@@ -112,7 +113,7 @@ cv::Mat complexMultiplication(cv::Mat a, cv::Mat b)
     return res;
 }
 
-cv::Mat complexDivisionReal(cv::Mat a, cv::Mat b)
+cv::Mat complexDotDivisionReal(cv::Mat a, cv::Mat b)
 {
     std::vector<cv::Mat> pa;
     cv::split(a, pa);
@@ -129,7 +130,7 @@ cv::Mat complexDivisionReal(cv::Mat a, cv::Mat b)
     return res;
 }
 
-cv::Mat complexDivision(cv::Mat a, cv::Mat b)
+cv::Mat complexDotDivision(cv::Mat a, cv::Mat b)
 {
     std::vector<cv::Mat> pa;
     std::vector<cv::Mat> pb;
@@ -171,7 +172,7 @@ void rearrange(cv::Mat &img) //KCF page 11 Figure 6;
 template < typename type>
 cv::Mat fouriertransFull(const cv::Mat & in)
 {
-    return fftd(in);
+    return dft_d(in);
 
     cv::Mat planes[] = {cv::Mat_<type > (in), cv::Mat_<type>::zeros(in.size())};
     cv::Mat t;
@@ -197,4 +198,4 @@ void normalizedLogTransform(cv::Mat &img)
     cv::log(img, img);
     // cv::normalize(img, img, 0, 1, CV_MINMAX);
 }
-}
+} // namespace kcf

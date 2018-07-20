@@ -117,6 +117,13 @@ and in `eco/runecotracker.cc`, make sure to choose the dataset `Demo`:
 ``` 
     string databaseType = databaseTypes[0];
 ```
+and in `eco/parameters.hpp`, change like this to make it high-speed:
+```
+	bool 	useDeepFeature 	 = false;
+    size_t  number_of_scales = 1;
+    bool	use_scale_filter = false;
+```
+
 ### Quick start -- Ubuntu
 ```
 git clone https://github.com/rockkingjy/OpenTracker

@@ -12,10 +12,10 @@ ECO_FEATS do_dft(const ECO_FEATS &xlw)
 		{
 			int size = xlw[i][j].rows;
 			if (size % 2 == 1)
-				temp.push_back(fftshift(fftf(xlw[i][j])));
+				temp.push_back(fftshift_f(dft_f(xlw[i][j])));
 			else
 			{
-				cv::Mat xf = fftshift(fftf(xlw[i][j]));
+				cv::Mat xf = fftshift_f(dft_f(xlw[i][j]));
 				cv::Mat xf_pad = subwindow(xf, cv::Rect(cv::Point(0, 0), cv::Size(size + 1, size + 1)));
 				for (size_t k = 0; k < (size_t)xf_pad.rows; k++)
 				{
@@ -186,7 +186,7 @@ float FeatureComputeInnerProduct(const ECO_FEATS &feat1, const ECO_FEATS &feat2)
 		for (size_t j = 0; j < feat1[i].size(); j++)
 		{
 			cv::Mat feat2_conj = mat_conj(feat2[i][j]);
-			dist += mat_sum(real(complexMultiplication(feat1[i][j], feat2_conj)));
+			dist += mat_sum_f(real(complexDotMultiplication(feat1[i][j], feat2_conj)));
 		}
 	}
 	return dist;
@@ -289,9 +289,9 @@ ECO_FEATS FeatureVectorMultiply(const ECO_FEATS &x,
 		for (size_t j = 0; j < x[i].size(); j++)
 		{
 			if (_conj)
-				temp.push_back(complexMultiplication(mat_conj(x[i][j]), y[i]));
+				temp.push_back(complexDotMultiplication(mat_conj(x[i][j]), y[i]));
 			else
-				temp.push_back(complexMultiplication(x[i][j], y[i]));
+				temp.push_back(complexDotMultiplication(x[i][j], y[i]));
 		}
 		res.push_back(temp);
 	}
@@ -310,7 +310,7 @@ ECO_FEATS FeatureDotMultiply(const ECO_FEATS &a, const ECO_FEATS &b)
 		std::vector<cv::Mat> temp;
 		for (size_t j = 0; j < a[i].size(); j++)
 		{
-			temp.push_back(complexMultiplication(a[i][j], b[i][j]));
+			temp.push_back(complexDotMultiplication(a[i][j], b[i][j]));
 		}
 		res.push_back(temp);
 	}
@@ -328,7 +328,7 @@ ECO_FEATS FeatureDotDivide(const ECO_FEATS a, const ECO_FEATS b)
 		std::vector<cv::Mat> temp;
 		for (size_t j = 0; j < a[i].size(); j++)
 		{
-			temp.push_back(complexDivision(a[i][j], b[i][j]));
+			temp.push_back(complexDotDivision(a[i][j], b[i][j]));
 		}
 		res.push_back(temp);
 	}

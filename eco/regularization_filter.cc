@@ -10,12 +10,15 @@ cv::Mat get_regularization_filter(cv::Size sz,
 
 	if (params.use_reg_window)
 	{
-		cv::Size2d reg_scale = cv::Size2d(target_sz.width * 0.5, target_sz.height * 0.5);
+		cv::Size2d reg_scale = cv::Size2d(target_sz.width * 0.5,
+										  target_sz.height * 0.5);
 
-		// *** construct the regukarization window ***
+		// construct the regukarization window
 		cv::Mat reg_window(sz, CV_64FC1);
-		for (double x = -0.5 * (sz.height - 1), counter1 = 0; counter1 < sz.height; x += 1, ++counter1)
-			for (double y = -0.5 * (sz.width - 1), counter2 = 0; counter2 < sz.width; y += 1, ++counter2)
+		for (double x = -0.5 * (sz.height - 1), counter1 = 0;
+			 counter1 < sz.height; x += 1, ++counter1)
+			for (double y = -0.5 * (sz.width - 1), counter2 = 0;
+				 counter2 < sz.width; y += 1, ++counter2)
 			{ // use abs() directly will cause error because it returns int!!!
 				reg_window.at<double>(counter1, counter2) =
 					(params.reg_window_edge - params.reg_window_min) *
@@ -30,7 +33,7 @@ cv::Mat get_regularization_filter(cv::Size sz,
 		//assert(0);
 
 		// compute the DFT and enforce sparsity
-		cv::Mat reg_window_dft = fftd(reg_window) / sz.area();
+		cv::Mat reg_window_dft = dft_d(reg_window) / sz.area();
 		cv::Mat reg_win_abs(sz, CV_64FC1);
 		reg_win_abs = magnitude(reg_window_dft);
 
@@ -45,10 +48,11 @@ cv::Mat get_regularization_filter(cv::Size sz,
 			}
 
 		// do the inverse transform, correct window minimum
-		cv::Mat reg_window_sparse = real(fftd(reg_window_dft, true));
+		cv::Mat reg_window_sparse = real(dft_d(reg_window_dft, true));
 		cv::minMaxLoc(magnitude(reg_window_sparse), &minv, &maxv);
-		reg_window_dft.at<double>(0, 0) -= sz.area() * minv + params.reg_window_min;
-		reg_window_dft = fftshiftd(reg_window_dft);
+		reg_window_dft.at<double>(0, 0) -=
+			sz.area() * minv + params.reg_window_min;
+		reg_window_dft = fftshift_d(reg_window_dft);
 
 		//showmat2ch(reg_window_dft,3);
 		//debug("Channels: %d",reg_window_dft.channels());
@@ -88,7 +92,7 @@ cv::Mat get_regularization_filter(cv::Size sz,
 			} //end for
 		}	 //end for
 		result = result.t();
-	}
+	} // if params.use_reg_window
 	else
 	{
 		result.push_back(params.reg_window_min);
