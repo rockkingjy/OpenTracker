@@ -83,7 +83,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	cos_window();
 
 	// Compute Fourier series of interpolation function, refer C-COT
-	for (size_t i = 0; i < filter_size_.size(); ++i)
+	for (size_t i = 0; i < filter_size_.size(); ++i) // for each feature
 	{
 		cv::Mat interp1_fs1, interp2_fs1;
 		Interpolator::get_interp_fourier(filter_size_[i], interp1_fs1,
@@ -97,7 +97,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	}
 
 	// Construct spatial regularization filter, refer SRDCF
-	for (size_t i = 0; i < filter_size_.size(); i++)
+	for (size_t i = 0; i < filter_size_.size(); i++) // for each feature
 	{
 		cv::Mat temp_d = get_regularization_filter(img_support_size_,
 												   base_target_size_,
@@ -110,7 +110,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 
 		// Compute the energy of the filter (used for preconditioner)drone_flip
 		cv::Mat_<double> t = temp_d.mul(temp_d); //element-wise multiply
-		float energy = mat_sum_d(t);			 //sum up all the values of each points of the mat
+		float energy = mat_sum_d(t); //sum up all the values of each points of the mat
 		reg_energy_.push_back(energy);
 		debug("reg_energy_ %lu: %f", i, energy);
 	}
@@ -158,10 +158,10 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	debug("xl size: %lu, %lu, %d x %d", xl.size(), xl[0].size(),
 		  xl[0][0].rows, xl[0][0].cols);
 
-	// 3. Do windowing of features.
+	// 3. Multiply the features by the cosine window.
 	xl = do_windows(xl, cos_window_);
 
-	// 4. Compute the fourier series.
+	// 4. Do DFT on the features.
 	xlf = do_dft(xl);
 
 	// 5. Interpolate features to the continuous domain.
@@ -180,7 +180,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 		debug("projection_matrix %lu 's size: %d x %d", i,
 			  projection_matrix_[i].rows, projection_matrix_[i].cols);
 	}
-	// 7. project sample, feature reduction.
+	// 7. Do the feature reduction for each feature.
 	xlf_porj = FeatureProjection(xlf, projection_matrix_);
 	for (size_t i = 0; i < xlf.size(); i++)
 	{
@@ -188,25 +188,23 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 			  xlf_porj[i].size(), xlf_porj[i][0].rows, xlf_porj[i][0].cols);
 	}
 	// 8. Initialize and update sample space.
-	// The distance matrix, kernel matrix and prior weight are also updated
 	sample_update_.init(filter_size_, compressed_dim_, params_.nSamples);
 	sample_update_.update_sample_space_model(xlf_porj);
 
 	// 9. Calculate sample energy and projection map energy.
 	sample_energy_ = FeautreComputePower2(xlf_porj);
-
 	vector<cv::Mat> proj_energy = project_mat_energy(projection_matrix_, yf_);
 
 	// 10. Initialize filter and it's derivative.
 	ECO_FEATS hf, hf_inc;
-	for (size_t i = 0; i < xlf.size(); i++)
+	for (size_t i = 0; i < xlf.size(); i++) // for each feature
 	{
 		hf.push_back(vector<cv::Mat>(xlf_porj[i].size(),
 									 cv::Mat::zeros(xlf_porj[i][0].size(), CV_32FC2)));
 		hf_inc.push_back(vector<cv::Mat>(xlf_porj[i].size(),
 										 cv::Mat::zeros(xlf_porj[i][0].size(), CV_32FC2)));
 	}
-	// 11. Train the tracker.
+	// 11. Train the tracker(train the filter and update the projection matrix).
 	eco_trainer_.train_init(hf,
 							hf_inc,
 							projection_matrix_,
@@ -217,10 +215,9 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 							reg_energy_,
 							proj_energy,
 							params_);
-
 	eco_trainer_.train_joint();
 
-	// 12. Update project matrix P.
+	// 12. Update projection matrix P.
 	projection_matrix_ = eco_trainer_.get_proj();
 	for (size_t i = 0; i < projection_matrix_.size(); ++i)
 	{
@@ -233,7 +230,6 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	debug("xlf_porj size: %lu, %lu, %d x %d",
 		  xlf_porj.size(), xlf_porj[0].size(),
 		  xlf_porj[0][0].rows, xlf_porj[0][0].cols);
-
 	sample_update_.replace_sample(xlf_porj, 0); // put xlf_proj to the smaples_f_[0].
 
 	// 14. Update distance matrix of sample space. Find the norm of the reprojected sample
@@ -317,7 +313,6 @@ void ECO::reset(cv::Mat &im, const cv::Rect2f &rect)
 
 	// 9. Calculate sample energy and projection map energy.
 	sample_energy_ = FeautreComputePower2(xlf_porj);
-
 	vector<cv::Mat> proj_energy = project_mat_energy(projection_matrix_, yf_);
 
 	// 10. Initialize filter and it's derivative.
@@ -354,7 +349,6 @@ void ECO::reset(cv::Mat &im, const cv::Rect2f &rect)
 	debug("xlf_porj size: %lu, %lu, %d x %d",
 		  xlf_porj.size(), xlf_porj[0].size(),
 		  xlf_porj[0][0].rows, xlf_porj[0][0].cols);
-
 	sample_update_.replace_sample(xlf_porj, 0); // put xlf_proj to the smaples_f_[0].
 
 	// 14. Update distance matrix of sample space. Find the norm of the reprojected sample
@@ -924,13 +918,15 @@ vector<cv::Mat> ECO::project_mat_energy(vector<cv::Mat> proj,
 										vector<cv::Mat> yf)
 {
 	vector<cv::Mat> result;
-
-	for (size_t i = 0; i < yf.size(); i++)
+	for (size_t i = 0; i < yf.size(); i++) 
 	{
-		cv::Mat temp(proj[i].size(), CV_32FC1), temp_compelx;
-		float sum_dim = std::accumulate(feature_dim_.begin(), feature_dim_.end(), 0.0f);
+		cv::Mat temp(proj[i].size(), CV_32FC1);
+		float sum_dim = std::accumulate(feature_dim_.begin(), 
+										feature_dim_.end(), 
+										0.0f);
 		cv::Mat x = yf[i].mul(yf[i]);
-		temp = 2 * mat_sum_f(x) / sum_dim * cv::Mat::ones(proj[i].size(), CV_32FC1);
+		temp = 2 * mat_sum_f(x) / sum_dim * 
+			   cv::Mat::ones(proj[i].size(), CV_32FC1);
 		result.push_back(temp);
 	}
 	return result;

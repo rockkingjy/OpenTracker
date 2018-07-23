@@ -1029,7 +1029,7 @@ Update the filter by starting the optimization process in every $N_s$th frame in
 	\item Initialize and update sample space.
 	\item Calculate sample energy and projection map energy.
 	\item Initialize filter $\hat{\bm{f}}_{0}$ and it's derivative $\Delta \hat{\bm{f}}_{0}$.
-	\item Train the tracker.
+	\item Train the tracker(train the filter and update the projection matrix).
 	\item Update the projection matrix $P$.
 	\item Re-project the sample and update the sample space.
 	\item Update distance matrix of sample space.
@@ -1078,6 +1078,30 @@ Update the filter by starting the optimization process in every $N_s$th frame in
 	\item Update the projection matrix $P$.
 	\item Update filter  $\hat{\bm{f}}_{i}$.
 \end{enumerate}
+%=======================================
+\section{Code analysis}
+\subsection{parameters}
+The key idea of tracker is to extract the features out from the target, so we have to define the feature first:
+\begin{lstlisting}[language=C++]
+	typedef std::vector<std::vector<cv::Mat>> ECO_FEATS;
+	typedef cv::Vec<float, 2> COMPLEX;  
+\end{lstlisting} \par
+For each target given, we can extract several different features (ex. Deep feature, HOG feature, CN feature ect.), and for each feature, it may have several dimensions(ex. HOG normally is 31, CN is 11), so \textbf{ECO\_FEATS} the feature's type, with the structure of: [\#Features][\#Dimensions][Feature map], here \# means 'the number of'. \par
+ECO is calculated in the domain of Complex number, so needs to define the type \textbf{COMPLEX} in c++. \par
+%-----------------------------------------------
+\subsection{sample\_update}
+This file is for sample updating, and output two important values:
+\begin{lstlisting}[language=C++]
+	std::vector<ECO_FEATS> samples_f_;
+	std::vector<float> prior_weights_;
+\end{lstlisting} \par
+\textbf{samples\_f\_} gives all the samples used for training, and \textbf{prior\_weights\_} gives the corresponding weights for the samples. \par
+%-----------------------------------------------
+\subsection{eco}
+\textbf{yf\_} is the presumed target y in the Fourier domain. 
+%-----------------------------------------------
+\subsection{training}
+
 %=======================================
 \section{Some tips of transfer from matlab to $c++$}
 \begin{itemize}

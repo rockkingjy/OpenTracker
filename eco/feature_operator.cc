@@ -186,7 +186,8 @@ float FeatureComputeInnerProduct(const ECO_FEATS &feat1, const ECO_FEATS &feat2)
 		for (size_t j = 0; j < feat1[i].size(); j++)
 		{
 			cv::Mat feat2_conj = mat_conj(feat2[i][j]);
-			dist += mat_sum_f(real(complexDotMultiplication(feat1[i][j], feat2_conj)));
+			dist += mat_sum_f(real(complexDotMultiplication(feat1[i][j], 
+															feat2_conj)));
 		}
 	}
 	return dist;
@@ -202,11 +203,10 @@ float FeatureComputeEnergy(const ECO_FEATS &feat)
 	res = FeatureComputeInnerProduct(feat, feat);
 	return res;
 }
-// compute the feats^H * feats
+// compute the conv(feats) .* feats
 ECO_FEATS FeautreComputePower2(const ECO_FEATS &feats)
 {
 	ECO_FEATS result;
-
 	if (feats.empty())
 	{
 		return feats;
@@ -215,7 +215,7 @@ ECO_FEATS FeautreComputePower2(const ECO_FEATS &feats)
 	for (size_t i = 0; i < feats.size(); i++) // for each feature
 	{
 		std::vector<cv::Mat> feat_vec;
-		for (size_t j = 0; j < (size_t)feats[i].size(); j++)
+		for (size_t j = 0; j < (size_t)feats[i].size(); j++) // for each dimension
 		{
 			cv::Mat temp(feats[i][0].size(), CV_32FC2);
 			feats[i][j].copyTo(temp);
@@ -223,7 +223,9 @@ ECO_FEATS FeautreComputePower2(const ECO_FEATS &feats)
 			{
 				for (size_t c = 0; c < (size_t)feats[i][j].cols; c++)
 				{
-					temp.at<COMPLEX>(r, c)[0] = std::pow(temp.at<COMPLEX>(r, c)[0], 2) + std::pow(temp.at<COMPLEX>(r, c)[1], 2);
+					temp.at<COMPLEX>(r, c)[0] = 
+							std::pow(temp.at<COMPLEX>(r, c)[0], 2) + 
+							std::pow(temp.at<COMPLEX>(r, c)[1], 2);
 					temp.at<COMPLEX>(r, c)[1] = 0;
 				}
 			}
@@ -231,7 +233,6 @@ ECO_FEATS FeautreComputePower2(const ECO_FEATS &feats)
 		}
 		result.push_back(feat_vec);
 	}
-
 	return result;
 }
 // compute socres  Sum(x * f) // gpu_implemented

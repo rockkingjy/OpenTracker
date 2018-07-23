@@ -110,7 +110,7 @@ struct EcoParameters
  	bool 	use_projection_matrix = true;    	// Use projection matrix, i.e. use the factorized convolution formulation
  	bool 	update_projection_matrix = true; 	// Whether the projection matrix should be optimized or not
  	string 	proj_init_method = "pca";        	// Method for initializing the projection matrix
- 	float 	projection_reg = 1e-7;//5e-8;	 	 		// Regularization paremeter of the projection matrix (lambda)
+ 	float 	projection_reg = 1e-7;//5e-8;	 	// Regularization paremeter of the projection matrix (lambda)
 
 	// Generative sample space model parameters
  	bool 	use_sample_merge = true;           // Use the generative sample space model to merge samples

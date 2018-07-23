@@ -44,17 +44,21 @@ class ECO
 
 	void cos_window(); 	// construct cosine window of features;
 
-	ECO_FEATS interpolate_dft(const ECO_FEATS &xlf, vector<cv::Mat> &interp1_fs,
+	ECO_FEATS interpolate_dft(const ECO_FEATS &xlf, 
+							  vector<cv::Mat> &interp1_fs,
 							  vector<cv::Mat> &interp2_fs);
 
 	ECO_FEATS compact_fourier_coeff(const ECO_FEATS &xf);
 
 	ECO_FEATS full_fourier_coeff(const ECO_FEATS &xf);
 
-	vector<cv::Mat> project_mat_energy(vector<cv::Mat> proj, vector<cv::Mat> yf);
+	vector<cv::Mat> project_mat_energy(vector<cv::Mat> proj, 
+									   vector<cv::Mat> yf);
 	
-	ECO_FEATS shift_sample(ECO_FEATS &xf, cv::Point2f shift,
-						   std::vector<cv::Mat> kx, std::vector<cv::Mat> ky);
+	ECO_FEATS shift_sample(ECO_FEATS &xf, 
+						   cv::Point2f shift,
+						   std::vector<cv::Mat> kx, 
+						   std::vector<cv::Mat> ky);
 
   private:
 	EcoParameters 		params_;
@@ -74,7 +78,7 @@ class ECO
 	float 				currentScaleFactor_; 			// current img scale 
 
 	// Compute the Fourier series indices 
-	// kx, ky is the k in (9) of C-COT paper, yf is the left part of (9);
+	// kx_, ky_ is the k in (9) of C-COT paper, yf_ is the left part of (9);
 	vector<cv::Mat> 	ky_, kx_, yf_, cos_window_; 
 	vector<cv::Mat> 	interp1_fs_, interp2_fs_; 		// interpl fourier series
 

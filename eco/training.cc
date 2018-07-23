@@ -32,7 +32,7 @@ void EcoTrain::train_init(const ECO_FEATS hf,
 //************************************************************************
 void EcoTrain::train_joint()
 {
-	// Initial Gauss - Newton optimization of the filter and
+	// Initial Gauss-Newton optimization of the filter and
 	// projection matrix.
 
 	// Index for the start of the last column of frequencies
@@ -45,10 +45,10 @@ void EcoTrain::train_joint()
 	// Construct stuff for the proj matrix part
 	ECO_FEATS init_samplesf = xlf_;
 	vector<cv::Mat> init_samplesf_H;
-	for (size_t i = 0; i < xlf_.size(); i++)
+	for (size_t i = 0; i < xlf_.size(); i++) // for each feature
 	{
 		cv::Mat temp;
-		for (size_t j = 0; j < xlf_[i].size(); j++)
+		for (size_t j = 0; j < xlf_[i].size(); j++) // for each dimension
 		{
 			cv::Mat temp2 = xlf_[i][j].t();
 			temp.push_back(cv::Mat(1,
@@ -64,15 +64,15 @@ void EcoTrain::train_joint()
 		  precond_data_param = params_.precond_data_param;
 
 	ECO_FEATS diag_M1;
-	for (size_t i = 0; i < sample_energy_.size(); i++)
+	for (size_t i = 0; i < sample_energy_.size(); i++) // for each feature
 	{
 		cv::Mat mean(cv::Mat::zeros(sample_energy_[i][0].size(), CV_32FC2));
-		for (size_t j = 0; j < sample_energy_[i].size(); j++)
+		for (size_t j = 0; j < sample_energy_[i].size(); j++) // for each dimension
 			mean += sample_energy_[i][j];
 		mean = mean / sample_energy_[i].size();
 
 		vector<cv::Mat> temp_vec;
-		for (size_t j = 0; j < sample_energy_[i].size(); j++)
+		for (size_t j = 0; j < sample_energy_[i].size(); j++)  // for each dimension
 		{
 			cv::Mat m;
 			m = (1 - precond_data_param) * mean +
@@ -108,6 +108,7 @@ void EcoTrain::train_joint()
 			FeatureVectorMultiply(init_samplef_proj, yf_, 1);
 
 		// Construct the right hand side vector for the projection matrix part
+		// B^H * y - lambda * P
 		ECO_FEATS fyf = FeatureVectorMultiply(hf_, yf_, 1);
 		vector<cv::Mat> rhs_samplef2;
 		vector<cv::Mat> fyf_vec = FeatureVectorization(fyf);
@@ -120,7 +121,7 @@ void EcoTrain::train_joint()
 				init_samplesf_H[i].colRange(lf_ind[i], init_samplesf_H[i].cols),
 				fyf_vect.rowRange(lf_ind[i], fyf_vect.rows));
 			cv::Mat temp;
-			temp = real2complex(2 * real(l1 - l2)) +
+			temp = real2complex(2 * real(l1 - l2)) -
 				   params_.projection_reg * projection_matrix_[i];
 			rhs_samplef2.push_back(temp);
 		}
