@@ -47,27 +47,27 @@ TEST(ffttoolsTest, dft_f)
     for (int i = 0; i < mat_float.cols; i++)
       mat_float.at<float>(j, i) = i + j * mat_float.cols;
 
-	double timer = (double)cv::getTickCount();
-	float timedft = 0;
+  double timer = (double)cv::getTickCount();
+  float timedft = 0;
 
   //showmat1channels(mat_float, 2);
   cv::Mat res = eco::dft_f(mat_float);
-  //showmat2channels(res, 2); 
+  //showmat2channels(res, 2);
 
   timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();
-	debug("dft_f time: %f", timedft);
+  debug("dft_f time: %f", timedft);
 
   res = eco::dft_f(mat_float, 1);
-  //showmat2channels(res, 2); 
+  //showmat2channels(res, 2);
 
   timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();
-	debug("dft_f time: %f", timedft);
+  debug("dft_f time: %f", timedft);
 
   res = eco::dft_f(mat_float, 1);
-  //showmat2channels(res, 2); 
+  //showmat2channels(res, 2);
 
   timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();
-	debug("dft_f time: %f", timedft);
+  debug("dft_f time: %f", timedft);
 }
 
 TEST(ffttoolsTest, dft_d)
@@ -76,18 +76,18 @@ TEST(ffttoolsTest, dft_d)
   for (int j = 0; j < mat_double.rows; j++)
     for (int i = 0; i < mat_double.cols; i++)
       mat_double.at<double>(j, i) = i + j * mat_double.cols;
-  
-	double timer = (double)cv::getTickCount();
-	float timedft = 0;
+
+  double timer = (double)cv::getTickCount();
+  float timedft = 0;
 
   //showmat1channels(mat_double, 3);
   cv::Mat res = eco::dft_d(mat_double);
-  //showmat2channels(res, 3); 
+  //showmat2channels(res, 3);
   res = eco::dft_d(mat_double, 1);
-  //showmat2channels(res, 3); 
-	
+  //showmat2channels(res, 3);
+
   timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();
-	debug("dft_d time: %f", timedft);
+  debug("dft_d time: %f", timedft);
 
   cv::Mat_<double> mat_double2(10, 10, CV_64FC1);
   for (int j = 0; j < mat_double2.rows; j++)
@@ -96,7 +96,7 @@ TEST(ffttoolsTest, dft_d)
   res = eco::dft_d(mat_double2, 1);
 
   timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();
-	debug("dft_d time: %f", timedft);
+  debug("dft_d time: %f", timedft);
 }
 
 TEST(ffttoolsTest, fftshift_f)
@@ -110,13 +110,13 @@ TEST(ffttoolsTest, fftshift_f)
   showmat1channels(mat_float, 2);
   cv::Mat res;
   res = eco::fftshift_f(mat_float);
-  showmat1channels(res, 2); 
+  showmat1channels(res, 2);
 
   res = eco::dft_f(mat_float, 1);
-  showmat2channels(res, 2); 
+  showmat2channels(res, 2);
 
   res = eco::fftshift_f(res);
-  showmat2channels(res, 2); 
+  showmat2channels(res, 2);
 }
 
 TEST(ffttoolsTest, fftshift_d)
@@ -130,40 +130,13 @@ TEST(ffttoolsTest, fftshift_d)
   showmat1channels(mat_double, 3);
   cv::Mat res;
   res = eco::fftshift_d(mat_double);
-  showmat1channels(res, 3); 
+  showmat1channels(res, 3);
 
   res = eco::dft_d(mat_double, 1);
-  showmat2channels(res, 3); 
+  showmat2channels(res, 3);
 
   res = eco::fftshift_d(res);
-  showmat2channels(res, 3); 
-}
-
-TEST(ffttoolsTest, complexDotMultiplication)
-{
-  cv::Mat mat_float(10, 10, CV_32FC2);
-  for (int j = 0; j < mat_float.rows; j++)
-    for (int i = 0; i < mat_float.cols; i++)
-    {
-      mat_float.at<cv::Vec2f>(j, i)[0] = i + j * mat_float.cols;
-      mat_float.at<cv::Vec2f>(j, i)[1] = i + j * mat_float.cols;
-    }
-  debug("channels: %d", mat_float.channels());
-  showmat2channels(mat_float, 2);
-
-  cv::Mat mat_float1(10, 10, CV_32FC2);
-  for (int j = 0; j < mat_float1.rows; j++)
-    for (int i = 0; i < mat_float1.cols; i++)
-    {
-      mat_float1.at<cv::Vec2f>(j, i)[0] = i + j * mat_float1.cols;
-      mat_float1.at<cv::Vec2f>(j, i)[1] = -i;
-    }
-  debug("channels: %d", mat_float1.channels());
-  showmat2channels(mat_float1, 2);
-
-  cv::Mat res;
-  res = eco::complexDotMultiplication(mat_float, mat_float1);
-  showmat2channels(res, 2);
+  showmat2channels(res, 3);
 }
 
 TEST(ffttoolsTest, complexDotDivision)
@@ -291,6 +264,42 @@ TEST(ffttoolsTest, complexConvolution)
 TEST(debug, copyTo_clone_Difference)
 {
   copyTo_clone_Difference();
+}
+
+TEST(ffttoolsTest, complexDotMultiplication)
+{
+  cv::Mat mat_float(10, 10, CV_32FC2);
+  for (int j = 0; j < mat_float.rows; j++)
+    for (int i = 0; i < mat_float.cols; i++)
+    {
+      mat_float.at<cv::Vec2f>(j, i)[0] = i + j * mat_float.cols;
+      mat_float.at<cv::Vec2f>(j, i)[1] = i + j * mat_float.cols;
+    }
+  debug("channels: %d", mat_float.channels());
+  showmat2channels(mat_float, 2);
+
+  cv::Mat mat_float1(10, 10, CV_32FC2);
+  for (int j = 0; j < mat_float1.rows; j++)
+    for (int i = 0; i < mat_float1.cols; i++)
+    {
+      mat_float1.at<cv::Vec2f>(j, i)[0] = i + j * mat_float1.cols;
+      mat_float1.at<cv::Vec2f>(j, i)[1] = -i;
+    }
+  debug("channels: %d", mat_float1.channels());
+  showmat2channels(mat_float1, 2);
+
+  cv::Mat res;
+  int iter = 100;
+  double timer = (double)cv::getTickCount();
+  float timedft = 0;
+  while (iter > 0)
+  {
+    res = eco::complexDotMultiplication(mat_float, mat_float1);
+    iter--;
+  }
+  timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();
+  debug("complexDotMultiplication time: %f", timedft);
+  showmat2channels(res, 2);
 }
 
 } //namespace

@@ -334,20 +334,4 @@ ECO_FEATS FeatureDotDivide(const ECO_FEATS a, const ECO_FEATS b)
 	}
 	return res;
 }
- // gpu_implemented
-ECO_FEATS FeatureScale(ECO_FEATS data, float scale)
-{
-	ECO_FEATS res;
-
-	for (size_t i = 0; i < data.size(); i++)
-	{
-		std::vector<cv::Mat> tmp;
-		for (size_t j = 0; j < data[i].size(); j++)
-		{
-			tmp.push_back(data[i][j] * scale);
-		}
-		res.push_back(tmp);
-	}
-	return res;
-}
 } // namespace eco

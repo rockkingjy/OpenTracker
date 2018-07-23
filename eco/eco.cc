@@ -207,7 +207,16 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 										 cv::Mat::zeros(xlf_porj[i][0].size(), CV_32FC2)));
 	}
 	// 11. Train the tracker.
-	eco_trainer_.train_init(hf, hf_inc, projection_matrix_, xlf, yf_, reg_filter_, sample_energy_, reg_energy_, proj_energy, params_);
+	eco_trainer_.train_init(hf,
+							hf_inc,
+							projection_matrix_,
+							xlf,
+							yf_,
+							reg_filter_,
+							sample_energy_,
+							reg_energy_,
+							proj_energy,
+							params_);
 
 	eco_trainer_.train_joint();
 
@@ -319,7 +328,16 @@ void ECO::reset(cv::Mat &im, const cv::Rect2f &rect)
 		hf_inc.push_back(vector<cv::Mat>(xlf_porj[i].size(), cv::Mat::zeros(xlf_porj[i][0].size(), CV_32FC2)));
 	}
 	// 11. Train the tracker.
-	eco_trainer_.train_init(hf, hf_inc, projection_matrix_, xlf, yf_, reg_filter_, sample_energy_, reg_energy_, proj_energy, params_);
+	eco_trainer_.train_init(hf,
+							hf_inc,
+							projection_matrix_,
+							xlf,
+							yf_,
+							reg_filter_,
+							sample_energy_,
+							reg_energy_,
+							proj_energy,
+							params_);
 
 	eco_trainer_.train_joint();
 
@@ -510,7 +528,8 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	{
 		double t1 = (double)cv::getTickCount();
 		//debug("%lu %lu", sample_energy_.size(), FeautreComputePower2(xlf_proj).size());
-		sample_energy_ = FeatureScale(sample_energy_, 1 - params_.learning_rate) + FeatureScale(FeautreComputePower2(xlf_proj), params_.learning_rate);
+		sample_energy_ = sample_energy_ * (1 - params_.learning_rate) +
+						 FeautreComputePower2(xlf_proj) * params_.learning_rate;
 		eco_trainer_.train_filter(sample_update_.get_samples(),
 								  sample_update_.get_prior_weights(),
 								  sample_energy_); // #6 x slower#
@@ -901,7 +920,8 @@ ECO_FEATS ECO::full_fourier_coeff(const ECO_FEATS &xf)
 	return res;
 }
 
-vector<cv::Mat> ECO::project_mat_energy(vector<cv::Mat> proj, vector<cv::Mat> yf)
+vector<cv::Mat> ECO::project_mat_energy(vector<cv::Mat> proj,
+										vector<cv::Mat> yf)
 {
 	vector<cv::Mat> result;
 
@@ -917,7 +937,10 @@ vector<cv::Mat> ECO::project_mat_energy(vector<cv::Mat> proj, vector<cv::Mat> yf
 }
 
 // Shift a sample in the Fourier domain. The shift should be normalized to the range [-pi, pi]
-ECO_FEATS ECO::shift_sample(ECO_FEATS &xf, cv::Point2f shift, std::vector<cv::Mat> kx, std::vector<cv::Mat> ky)
+ECO_FEATS ECO::shift_sample(ECO_FEATS &xf,
+							cv::Point2f shift,
+							std::vector<cv::Mat> kx,
+							std::vector<cv::Mat> ky)
 {
 	ECO_FEATS res;
 

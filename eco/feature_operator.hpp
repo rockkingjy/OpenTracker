@@ -66,7 +66,6 @@ extern ECO_FEATS FeatureVectorMultiply(const ECO_FEATS &x, const std::vector<cv:
 
 extern ECO_FEATS FeatureDotMultiply(const ECO_FEATS &a, const ECO_FEATS &b);
 extern ECO_FEATS FeatureDotDivide(const ECO_FEATS data1, const ECO_FEATS data2);
-extern ECO_FEATS FeatureScale(ECO_FEATS data, float scale);
 }
 
 #endif

@@ -1,5 +1,5 @@
 function eco_test
-N = 9;
+N = 10;
 % fft test
 A(1:N,1:N) = single(0);
 for j= 1:N
@@ -27,8 +27,14 @@ z1 = complex(A, A)
 z2 = complex(A, B)
 
 % complexDotMultiplication test
-z1 .* z2
-
+tic
+iter = 100
+while iter > 0
+    z1 .* z2;
+    iter--;
+end
+toc
+%{
 % complexDotDivision test
 z1 ./ z2
 
@@ -50,3 +56,4 @@ convn(z1, z2)
 convn(z1, z2, 'valid')
 
 end
+%}

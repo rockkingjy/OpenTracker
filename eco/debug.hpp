@@ -25,7 +25,7 @@ inline void timerExample()
 	// your test code here
 
 	timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();
-	debug("dft time: %f", timedft);
+	debug("time: %f", timedft);
 }
 
 // Show the type of an image

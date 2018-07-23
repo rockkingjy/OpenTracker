@@ -36,48 +36,41 @@ class EcoTrain
 		ECO_FEATS up_part;			   // this is f + delta(f)
 		std::vector<cv::Mat> low_part; // this is delta(P)
 
-		rl_out operator+(rl_out data2);
-		rl_out operator-(rl_out data2);
+		rl_out operator+(rl_out data);
+		rl_out operator-(rl_out data);
 		rl_out operator*(float scale);
 
 	} joint_out, joint_fp;
 
-	void train_init(ECO_FEATS hf,
-					ECO_FEATS hf_inc,
-					vector<cv::Mat> proj_matrix,
-					ECO_FEATS xlf,
-					vector<cv::Mat> yf,
-					vector<cv::Mat> reg_filter,
-					ECO_FEATS sample_energy,
-					vector<float> reg_energy,
-					vector<cv::Mat> proj_energy,
-					EcoParameters &params);
+	void train_init(const ECO_FEATS hf,
+					const ECO_FEATS hf_inc,
+					const vector<cv::Mat> proj_matrix,
+					const ECO_FEATS xlf,
+					const vector<cv::Mat> yf,
+					const vector<cv::Mat> reg_filter,
+					const ECO_FEATS sample_energy,
+					const vector<float> reg_energy,
+					const vector<cv::Mat> proj_energy,
+					const EcoParameters &params);
 
 	// Filter training and Projection updating(for the 1st Frame)==============
 	void train_joint(); 
-
-	vector<cv::Mat> compute_rhs2(const vector<cv::Mat> &proj_mat,
-								 const vector<cv::Mat> &init_samplef_H,
-								 const ECO_FEATS &fyf,
-								 const vector<int> &lf_ind);
 
 	joint_fp pcg_eco(const ECO_FEATS &init_samplef_proj,
 					 const vector<cv::Mat> &reg_filter,
 					 const ECO_FEATS &init_samplef,
 					 const vector<cv::Mat> &init_samplesf_H,
 					 const ECO_FEATS &init_hf,
-					 float proj_reg, // right side of equation A(x)
-					 const joint_out &rhs_samplef, // the left side of the equation
-					 const joint_out &diag_M,	  // preconditionor
-					 joint_fp &hf);	// the union of filter [f+delta(f) delta(p)]
+					 const joint_out &rhs_samplef,
+					 const joint_out &diag_M, // preconditionor
+					 const joint_fp &hf);	
 
-	joint_out lhs_operation_joint(joint_fp &hf, 
+	joint_out lhs_operation_joint(const joint_fp &hf, 
 								  const ECO_FEATS &samplesf,
 								  const vector<cv::Mat> &reg_filter,
 								  const ECO_FEATS &init_samplef,
-								  vector<cv::Mat> XH,
-								  const ECO_FEATS &init_hf,
-								  float proj_reg);
+								  const vector<cv::Mat> XH,
+								  const ECO_FEATS &init_hf);
 	// Only filter training(for tracker update)===============================
 	void train_filter(const vector<ECO_FEATS> &samplesf, 
 					  const vector<float> &sample_weights,
@@ -85,18 +78,17 @@ class EcoTrain
 
 	ECO_FEATS pcg_eco_filter(const vector<ECO_FEATS> &samplesf,
 							 const vector<cv::Mat> &reg_filter,
-							 const vector<float> &sample_weights, // right side of equation A(x)
-							 const ECO_FEATS &rhs_samplef,		  // the left side of the equation
-							 const ECO_FEATS &diag_M,			  // preconditionor
-							 ECO_FEATS &hf);					  // the union of filter [f+delta(f) delta(p)]
+							 const vector<float> &sample_weights,
+							 const ECO_FEATS &rhs_samplef, 
+							 const ECO_FEATS &diag_M, 
+							 const ECO_FEATS &hf);
 
-	ECO_FEATS lhs_operation(ECO_FEATS &hf,
+	ECO_FEATS lhs_operation(const ECO_FEATS &hf,
 							const vector<ECO_FEATS> &samplesf,
 							const vector<cv::Mat> &reg_filter,
 							const vector<float> &sample_weights);
 	// joint structure basic operation================================
-	joint_out joint_minus(const joint_out &a, const joint_out &b);
-	joint_out diag_precond(const joint_out &a, const joint_out &b);
+	joint_out jointDotDivision(const joint_out &a, const joint_out &b);
 	float inner_product_joint(const joint_out &a, const joint_out &b);
 	float inner_product(const ECO_FEATS &a, const ECO_FEATS &b);
 	vector<cv::Mat> get_proj() const { return projection_matrix_; }
