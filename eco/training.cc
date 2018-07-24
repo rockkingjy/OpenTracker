@@ -137,14 +137,14 @@ void EcoTrain::train_joint()
 
 		joint_fp jointFP(hf_, deltaP);
 		// Do conjugate gradient
-		joint_out outFP = pcg_eco(init_samplef_proj,
-								  reg_filter_,
-								  init_samplesf,
-								  init_samplesf_H,
-								  init_hf,
-								  rhs_samplef,
-								  diag_M,
-								  jointFP);
+		joint_out outFP = pcg_eco_joint(init_samplef_proj,
+										reg_filter_,
+										init_samplesf,
+										init_samplesf_H,
+										init_hf,
+										rhs_samplef,
+										diag_M,
+										jointFP);
 
 		// Make the filter symmetric(avoid roundoff errors)
 		FilterSymmetrize(outFP.up_part);
@@ -154,22 +154,22 @@ void EcoTrain::train_joint()
 		projection_matrix_ = projection_matrix_ + outFP.low_part; // update P
 	}
 }
-
-EcoTrain::joint_fp EcoTrain::pcg_eco(const ECO_FEATS &init_samplef_proj,
-									 const vector<cv::Mat> &reg_filter,
-									 const ECO_FEATS &init_samplef,
-									 const vector<cv::Mat> &init_samplesf_H,
-									 const ECO_FEATS &init_hf,
-									 const joint_out &rhs_samplef,
-									 const joint_out &diag_M,
-									 const joint_fp &hf)
+// This is a modified version of Matlab's pcg function
+EcoTrain::joint_fp EcoTrain::pcg_eco_joint(const ECO_FEATS &init_samplef_proj,
+										   const vector<cv::Mat> &reg_filter,
+										   const ECO_FEATS &init_samplef,
+										   const vector<cv::Mat> &init_samplesf_H,
+										   const ECO_FEATS &init_hf,
+										   const joint_out &rhs_samplef,
+										   const joint_out &diag_M,
+										   const joint_fp &hf)
 {
-	joint_fp fpOut;
-	int maxit = params_.init_CG_iter / params_.init_GN_iter; //15;
-	bool existM1 = true;									 // exist preconditoner
+	int maxit = params_.init_CG_iter / params_.init_GN_iter;
+	bool existM1 = true; // exist preconditoner
 	if (diag_M.low_part.empty())
 		existM1 = false; // no preconditioner
-	joint_fp x = hf;	 // initialization of CG
+
+	joint_fp x = hf; // initialization of CG
 
 	// Load the CG state
 	joint_out p, r_perv;
@@ -177,11 +177,12 @@ EcoTrain::joint_fp EcoTrain::pcg_eco(const ECO_FEATS &init_samplef_proj,
 
 	// calculate A(x)
 	joint_out Ax = lhs_operation_joint(x,
-									   init_samplef_proj, reg_filter,
+									   init_samplef_proj,
+									   reg_filter,
 									   init_samplef,
 									   init_samplesf_H,
 									   init_hf);
-	joint_out r = rhs_samplef;
+	joint_out r = rhs_samplef; // rhs_samplef is const
 	r = r - Ax;
 
 	for (size_t ii = 0; ii < (size_t)maxit; ii++)
@@ -192,10 +193,7 @@ EcoTrain::joint_fp EcoTrain::pcg_eco(const ECO_FEATS &init_samplef_proj,
 		else
 			y = r;
 
-		if (1) // exist M2
-			z = y;
-		else
-			z = y;
+		z = y;
 
 		rho1 = rho;
 		rho = inner_product_joint(r, z);
@@ -204,7 +202,7 @@ EcoTrain::joint_fp EcoTrain::pcg_eco(const ECO_FEATS &init_samplef_proj,
 			p = z;
 		else
 		{
-			beta = rho / rho1;
+			beta = rho / rho1; // Use Fletcher-Reeves
 			beta = cv::max(0.0f, beta);
 			p = z + p * beta;
 		}
@@ -243,7 +241,7 @@ EcoTrain::joint_out EcoTrain::lhs_operation_joint(const joint_fp &hf,
 												  const ECO_FEATS &samplesf,
 												  const vector<cv::Mat> &reg_filter,
 												  const ECO_FEATS &init_samplef,
-												  vector<cv::Mat> XH,
+												  const vector<cv::Mat> XH,
 												  const ECO_FEATS &init_hf)
 {
 	joint_out AX;
@@ -252,7 +250,7 @@ EcoTrain::joint_out EcoTrain::lhs_operation_joint(const joint_fp &hf,
 	ECO_FEATS fAndDel = hf.up_part;		  // f + delta(f)
 	vector<cv::Mat> deltaP = hf.low_part; // delta(P)
 
-	// Get sizes of each feature
+	// 1: Get sizes of each feature
 	int num_features = fAndDel.size();
 	vector<cv::Size> filter_sz;
 	for (size_t i = 0; i < (size_t)num_features; i++)
@@ -269,67 +267,67 @@ EcoTrain::joint_out EcoTrain::lhs_operation_joint(const joint_fp &hf,
 	// Compute the operation corresponding to the data term in the optimization
 	// (blockwise matrix multiplications)
 
-	// 1 :sum over all features and feature blocks: A * f
+	// 2 :sum over all features and feature blocks: A * f
 	vector<cv::Mat> scores = FeatureComputeScores(samplesf, fAndDel);
 	cv::Mat sh(cv::Mat::zeros(scores[k1].size(), scores[k1].type()));
 	for (size_t i = 0; i < scores.size(); i++)
 	{
 		int pad = (output_sz.height - scores[i].rows) / 2;
 		cv::Rect roi = cv::Rect(pad, pad, scores[i].cols, scores[i].rows);
-		cv::Mat temp = scores[i] + sh(roi);
-		temp.copyTo(sh(roi));
+		//cv::Mat temp = scores[i] + sh(roi);
+		//temp.copyTo(sh(roi));
+		sh(roi) = scores[i] + sh(roi);
 	}
 
-	// 2: multiply with the transpose : A^H * A * f
+	// 3: multiply with the transpose : A^H * A * f
 	ECO_FEATS hf_out1;
 	for (size_t i = 0; i < (size_t)num_features; i++) // for each feature
 	{
 		vector<cv::Mat> tmp;
-		for (size_t j = 0; j < samplesf[i].size(); j++) // for each dimension
+		for (size_t j = 0; j < fAndDel[i].size(); j++) // for each dimension
 		{
 			int pad = (output_sz.height - scores[i].rows) / 2;
 			cv::Mat roi =
 				sh(cv::Rect(pad, pad, scores[i].cols, scores[i].rows));
-			cv::Mat res = complexDotMultiplication(mat_conj(roi), samplesf[i][j]); //gpu
+			cv::Mat res = complexDotMultiplication(mat_conj(roi),
+												   samplesf[i][j]);
 			tmp.push_back(mat_conj(res));
 		}
 		hf_out1.push_back(tmp);
 	}
 
-	// compute the operation corresponding to the regularization term(convolve
+	// 4:compute the operation corresponding to the regularization term(convolve
 	// each feature dimension with the DFT of w, and the tramsposed operation)
 	// add the regularization part hf_conv = cell(1, 1, num_features);
 
 	for (size_t i = 0; i < (size_t)num_features; i++) // for each feature
 	{
 		int reg_pad = cv::min(reg_filter[i].cols - 1, fAndDel[i][0].cols - 1);
-		//vector<cv::Mat> hf_conv;
 		for (size_t j = 0; j < fAndDel[i].size(); j++) // for each dimension
 		{
-			int c = fAndDel[i][j].cols;
-			cv::Mat temp =
-				fAndDel[i][j].colRange(c - reg_pad - 1, c - 1).clone();
-			rot90(temp, 3);
-
 			// add part needed for convolution
-			cv::hconcat(fAndDel[i][j], mat_conj(temp), temp);
+			int c = fAndDel[i][j].cols;
+			cv::Mat hf_conv =
+				fAndDel[i][j].colRange(c - reg_pad - 1, c - 1).clone();
+			rot90(hf_conv, 3);
+			cv::hconcat(fAndDel[i][j], mat_conj(hf_conv), hf_conv);
 
 			// do first convolution: W * f
-			cv::Mat res1 = complexConvolution(temp, reg_filter[i]);
-			temp = res1;
+			hf_conv = complexConvolution(hf_conv, reg_filter[i]);
 
 			// do final convolution and put together result
-			temp = complexConvolution(temp.colRange(0, temp.cols - reg_pad),
-									  reg_filter[i], 1);
+			hf_conv =
+				complexConvolution(hf_conv.colRange(0, hf_conv.cols - reg_pad),
+								   reg_filter[i], 1);
 
 			// A^H * A * f + W^H * W * f
-			hf_out1[i][j] += temp; // -0.2779
+			hf_out1[i][j] += hf_conv; // -0.2779
 		}
 	}
 
-	// Stuff related to the projection matrix
+	// Stuff related to the projection matrix------------------------------
 
-	// 3: B * deltaP = X * inti(f)(before GC . previous  NG) * delta(P)
+	// B * deltaP = X * inti(f)(before GC . previous  NG) * delta(P)
 	vector<cv::Mat> BP_cell =
 		FeatureComputeScores(FeatureProjection(init_samplef, deltaP), init_hf);
 
@@ -338,13 +336,13 @@ EcoTrain::joint_out EcoTrain::lhs_operation_joint(const joint_fp &hf,
 	{
 		int pad = (output_sz.height - BP_cell[i].rows) / 2;
 		cv::Rect roi = cv::Rect(pad, pad, BP_cell[i].cols, BP_cell[i].rows);
-		cv::Mat temp = BP_cell[i] + BP(roi);
-		temp.copyTo(BP(roi));
+		//cv::Mat temp = BP_cell[i] + BP(roi);
+		//temp.copyTo(BP(roi));
+		BP(roi) = BP_cell[i] + BP(roi);
 	}
 
-	// 4: A^H * B * dP
+	// A^H * B * dP
 	ECO_FEATS fBP, shBP;
-
 	for (size_t i = 0; i < (size_t)num_features; i++)
 	{
 		vector<cv::Mat> vfBP, vshBP;
@@ -356,11 +354,15 @@ EcoTrain::joint_out EcoTrain::lhs_operation_joint(const joint_fp &hf,
 			cv::Mat temp =
 				complexDotMultiplication(BP(roi),
 										 mat_conj(samplesf[i][j].clone()));
-			// A^H * A * f + W^H * W * f + A^H * B * dP
+			// A^H * A * f + W^H * W * f + A^H * B * dp
 			hf_out1[i][j] += temp;
 
-			vfBP.push_back(complexDotMultiplication(mat_conj(init_hf[i][j].clone()), BP(roi)));  // B^H * BP
-			vshBP.push_back(complexDotMultiplication(mat_conj(init_hf[i][j].clone()), sh(roi))); // B^H * BP
+			vfBP.push_back(
+				complexDotMultiplication(mat_conj(init_hf[i][j].clone()),
+										 BP(roi))); // B^H * BP
+			vshBP.push_back(
+				complexDotMultiplication(mat_conj(init_hf[i][j].clone()),
+										 sh(roi))); // B^H * A * f
 		}
 		fBP.push_back(vfBP);
 		shBP.push_back(vshBP);
@@ -380,7 +382,7 @@ EcoTrain::joint_out EcoTrain::lhs_operation_joint(const joint_fp &hf,
 		part1 = 2 * real2complex(real(part1)) +
 				params_.projection_reg * deltaP[i];
 
-		// Compute proj matrix part : B^H * A_m * f
+		// Compute proj matrix part : B^H * A * f
 		cv::Mat part2 = XH[i] * FeatureVectorization(shBP)[i].t() -
 						XH[i].colRange(fi, c_len) *
 							FeatureVectorization(shBP)[i].colRange(fi, c_len).t();
@@ -458,7 +460,7 @@ void EcoTrain::train_filter(const vector<ECO_FEATS> &samplesf,
 	t2 = ((double)cv::getTickCount() - t1) / cv::getTickFrequency();
 	debug("update train time3: %f", t2);
 }
-
+// This is a modified version of Matlab's pcg function
 ECO_FEATS EcoTrain::pcg_eco_filter(const vector<ECO_FEATS> &samplesf,
 								   const vector<cv::Mat> &reg_filter,
 								   const vector<float> &sample_weights,
@@ -468,11 +470,8 @@ ECO_FEATS EcoTrain::pcg_eco_filter(const vector<ECO_FEATS> &samplesf,
 {
 	double t1 = (double)cv::getTickCount();
 
-	ECO_FEATS res;
-
 	int maxit = params_.CG_iter; // max iteration of conjugate gradient
-
-	bool existM1 = true; // exist preconditoner
+	bool existM1 = true;		 // exist preconditoner
 	if (diag_M.empty())
 		existM1 = false; // no preconditioner
 
@@ -489,13 +488,18 @@ ECO_FEATS EcoTrain::pcg_eco_filter(const vector<ECO_FEATS> &samplesf,
 
 	if (!state_.p.empty())
 	{
+		float init_forget_factor = std::pow(1.0f - params_.learning_rate,
+											params_.CG_forgetting_rate);
 		p = state_.p;
-		rho = state_.rho / 0.5076;
+		rho = state_.rho / init_forget_factor;
 		r_prev = state_.r_prev;
 	}
 
 	// calculate A(x)
-	ECO_FEATS Ax = lhs_operation(x, samplesf, reg_filter, sample_weights);
+	ECO_FEATS Ax = lhs_operation_filter(x,
+										samplesf,
+										reg_filter,
+										sample_weights);
 	ECO_FEATS r = rhs_samplef - Ax;
 
 	float t2 = ((double)cv::getTickCount() - t1) / cv::getTickFrequency();
@@ -510,35 +514,40 @@ ECO_FEATS EcoTrain::pcg_eco_filter(const vector<ECO_FEATS> &samplesf,
 		else
 			y = r;
 
-		if (0) // exist M2
-			z = y;
-		else
-			z = y;
+		z = y;
 
 		rho1 = rho;
-		rho = inner_product(r, z);
-		if ((rho == 0) || (std::abs(rho) >= INT_MAX) || (rho == NAN) || std::isnan(rho))
+		rho = inner_product_filter(r, z);
+		if ((rho == 0) || (std::abs(rho) >= INT_MAX) ||
+			(rho == NAN) || std::isnan(rho))
 		{
 			break;
 		}
+
 		if (ii == 0 && p.empty())
 			p = z;
 		else
 		{
-			float rho2 = inner_product(r_prev, z);
-			beta = (rho - rho2) / rho1;
+			float rho2 = inner_product_filter(r_prev, z);
+			beta = (rho - rho2) / rho1; // Use Polak-Ribiere
 
-			if ((beta == 0) || (std::abs(beta) >= INT_MAX) || (beta == NAN) || std::isnan(beta))
+			if ((beta == 0) || (std::abs(beta) >= INT_MAX) ||
+				(beta == NAN) || std::isnan(beta))
 				break;
 
 			beta = cv::max(0.0f, beta);
 			p = z + p * beta;
 		}
 
-		ECO_FEATS q = lhs_operation(p, samplesf, reg_filter, sample_weights);
-		float pq = inner_product(p, q);
+		ECO_FEATS q = lhs_operation_filter(p,
+										   samplesf,
+										   reg_filter,
+										   sample_weights);
 
-		if (pq <= 0 || (std::abs(pq) > INT_MAX) || (pq == NAN) || std::isnan(pq))
+		float pq = inner_product_filter(p, q);
+
+		if (pq <= 0 || (std::abs(pq) > INT_MAX) ||
+			(pq == NAN) || std::isnan(pq))
 		{
 			assert("GC condition is not matched");
 			break;
@@ -551,8 +560,8 @@ ECO_FEATS EcoTrain::pcg_eco_filter(const vector<ECO_FEATS> &samplesf,
 			assert("GC condition alpha is not matched");
 			break;
 		}
+		// Save old r if not using FR formula for beta
 		r_prev = r;
-
 		// form new iterate
 		x = x + p * alpha;
 
@@ -570,10 +579,10 @@ ECO_FEATS EcoTrain::pcg_eco_filter(const vector<ECO_FEATS> &samplesf,
 	return x;
 }
 // This is the left-hand-side operation in Conjugate Gradient
-ECO_FEATS EcoTrain::lhs_operation(const ECO_FEATS &hf,
-								  const vector<ECO_FEATS> &samplesf,
-								  const vector<cv::Mat> &reg_filter,
-								  const vector<float> &sample_weights)
+ECO_FEATS EcoTrain::lhs_operation_filter(const ECO_FEATS &hf,
+										 const vector<ECO_FEATS> &samplesf,
+										 const vector<cv::Mat> &reg_filter,
+										 const vector<float> &sample_weights)
 {
 	double t1 = (double)cv::getTickCount();
 
@@ -585,9 +594,8 @@ ECO_FEATS EcoTrain::lhs_operation(const ECO_FEATS &hf,
 	}
 
 	//1: find the maximum of size and its index
-	vector<cv::Size>::iterator pos = max_element(filter_sz.begin(),
-												 filter_sz.end(),
-												 SizeCompare);
+	vector<cv::Size>::iterator pos =
+		max_element(filter_sz.begin(), filter_sz.end(), SizeCompare);
 	size_t k1 = pos - filter_sz.begin(); // index
 	cv::Size output_sz = cv::Size(2 * pos->width - 1, pos->height);
 
@@ -601,14 +609,19 @@ ECO_FEATS EcoTrain::lhs_operation(const ECO_FEATS &hf,
 	// c. sh: sum up all the features
 
 	// 30 x 1 x 10 x 25 x 13
-	debug("samplesf: %lu x %lu x %lu x %d x %d", samplesf.size(),
-		  samplesf[0].size(),
-		  samplesf[0][0].size(),
-		  samplesf[0][0][0].rows,
-		  samplesf[0][0][0].cols);
+	debug("samplesf: %lu samples", samplesf.size());
+	for (size_t i = 0; i < samplesf[0].size(); i++)
+	{
+		debug("samplesf: %lu, %lu, %d x %d", i, samplesf[0][i].size(),
+			  samplesf[0][i][0].rows, samplesf[0][i][0].cols);
+	}
 	// 1 x 10 x 25 x 13
-	debug("hf: %lu x %lu x %d x %d", hf.size(), hf[0].size(),
-		  hf[0][0].rows, hf[0][0].cols);
+	for (size_t i = 0; i < hf.size(); i++)
+	{
+		debug("hf: %lu, %lu, %d x %d", i, hf[i].size(),
+			  hf[i][0].rows, hf[i][0].cols);
+	}
+
 	vector<cv::Mat> sh;							 // sum of all the features for each sample
 	for (size_t s = 0; s < samplesf.size(); s++) // for each sample
 	{
@@ -662,20 +675,23 @@ ECO_FEATS EcoTrain::lhs_operation(const ECO_FEATS &hf,
 	for (size_t i = 0; i < (size_t)num_features; i++) // for each feature
 	{
 		int reg_pad = cv::min(reg_filter[i].cols - 1, hf[i][0].cols - 1);
-		for (size_t j = 0; j < hf[i].size(); j++) // for each dimension 
+		for (size_t j = 0; j < hf[i].size(); j++) // for each dimension
 		{
 			// add part needed for convolution
 			int c = hf[i][j].cols;
 			cv::Mat hf_conv = hf[i][j].colRange(c - reg_pad - 1, c - 1).clone();
 			rot90(hf_conv, 3);
 			cv::hconcat(hf[i][j], mat_conj(hf_conv), hf_conv);
-			// do first convolution
+
+			// do first convolution: W * f
 			hf_conv = complexConvolution(hf_conv, reg_filter[i]);
+
 			// do final convolution and put toghether result
 			hf_conv =
 				complexConvolution(hf_conv.colRange(0, hf_conv.cols - reg_pad),
 								   reg_filter[i], 1);
 
+			// A^H * A * f + W^H * W * f
 			hf_out[i][j] += hf_conv;
 		}
 	}
@@ -734,7 +750,7 @@ float EcoTrain::inner_product_joint(const joint_out &a, const joint_out &b)
 	return ip;
 }
 
-float EcoTrain::inner_product(const ECO_FEATS &a, const ECO_FEATS &b)
+float EcoTrain::inner_product_filter(const ECO_FEATS &a, const ECO_FEATS &b)
 {
 	float ip = 0;
 	for (size_t i = 0; i < a.size(); i++) // for each feature
@@ -753,7 +769,7 @@ float EcoTrain::inner_product(const ECO_FEATS &a, const ECO_FEATS &b)
 	return ip;
 }
 //==============================================================================
-EcoTrain::rl_out EcoTrain::rl_out::operator+(rl_out data)
+EcoTrain::rl_out EcoTrain::rl_out::operator+(const rl_out data)
 {
 	rl_out res;
 	res.up_part = up_part + data.up_part;
@@ -761,7 +777,7 @@ EcoTrain::rl_out EcoTrain::rl_out::operator+(rl_out data)
 	return res;
 }
 
-EcoTrain::rl_out EcoTrain::rl_out::operator-(rl_out data)
+EcoTrain::rl_out EcoTrain::rl_out::operator-(const rl_out data)
 {
 	rl_out res;
 	res.up_part = up_part - data.up_part;
@@ -769,7 +785,7 @@ EcoTrain::rl_out EcoTrain::rl_out::operator-(rl_out data)
 	return res;
 }
 
-EcoTrain::rl_out EcoTrain::rl_out::operator*(float scale)
+EcoTrain::rl_out EcoTrain::rl_out::operator*(const float scale)
 {
 	rl_out res;
 	res.up_part = up_part * scale;

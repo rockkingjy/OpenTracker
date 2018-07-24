@@ -120,8 +120,8 @@ struct EcoParameters
 	// Conjugate Gradient parameters
 	int     CG_iter      = 5;                  // The number of Conjugate Gradient iterations in each update after the first frame
 	int     init_CG_iter = 10 * 15;            // The total number of Conjugate Gradient iterations used in the first frame
-	int     init_GN_iter = 10;                 // The number of Gauss - Newton iterations used in the first frame(only if the projection matrix is updated)
-	bool    CG_use_FR = false;                 // Use the Fletcher - Reeves(true) or Polak - Ribiere(false) formula in the Conjugate Gradient
+	int     init_GN_iter = 10;                 // The number of Gauss-Newton iterations used in the first frame(only if the projection matrix is updated)
+	bool    CG_use_FR = false;                 // Use the Fletcher-Reeves(true) or Polak-Ribiere(false) formula in the Conjugate Gradient
 	bool    pCG_standard_alpha = true;         // Use the standard formula for computing the step length in Conjugate Gradient
 	int     CG_forgetting_rate = 50;//75;	 	   // Forgetting rate of the last conjugate direction
 	float   precond_data_param = 0.75;//0.3;	 	   // Weight of the data term in the preconditioner
