@@ -235,24 +235,24 @@ ECO_FEATS FeautreComputePower2(const ECO_FEATS &feats)
 	}
 	return result;
 }
-// compute socres  Sum(x * f) // gpu_implemented
+// sum up for each feature // gpu_implemented
+// DotMultiply for each dimension of each feature and
+// sum up all the dimensions for each feature
 std::vector<cv::Mat> FeatureComputeScores(const ECO_FEATS &x, 
 										  const ECO_FEATS &f)
 {
 	std::vector<cv::Mat> res;
-
 	ECO_FEATS res_temp = FeatureDotMultiply(x, f);
-	for (size_t i = 0; i < res_temp.size(); i++)
+	for (size_t i = 0; i < res_temp.size(); i++) // for each feature
 	{
 		cv::Mat temp(cv::Mat::zeros(res_temp[i][0].size(), 
 									res_temp[i][0].type()));
-		for (size_t j = 0; j < res_temp[i].size(); j++)
+		for (size_t j = 0; j < res_temp[i].size(); j++) // for each dimension
 		{
 			temp = temp + res_temp[i][j];
 		}
 		res.push_back(temp);
 	}
-
 	return res;
 }
 // vectorize features

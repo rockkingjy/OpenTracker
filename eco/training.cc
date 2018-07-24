@@ -72,7 +72,7 @@ void EcoTrain::train_joint()
 		mean = mean / sample_energy_[i].size();
 
 		vector<cv::Mat> temp_vec;
-		for (size_t j = 0; j < sample_energy_[i].size(); j++)  // for each dimension
+		for (size_t j = 0; j < sample_energy_[i].size(); j++) // for each dimension
 		{
 			cv::Mat m;
 			m = (1 - precond_data_param) * mean +
@@ -577,7 +577,6 @@ ECO_FEATS EcoTrain::lhs_operation(const ECO_FEATS &hf,
 {
 	double t1 = (double)cv::getTickCount();
 
-	ECO_FEATS res;
 	int num_features = hf.size();
 	vector<cv::Size> filter_sz;
 	for (size_t i = 0; i < (size_t)num_features; i++)
@@ -589,44 +588,61 @@ ECO_FEATS EcoTrain::lhs_operation(const ECO_FEATS &hf,
 	vector<cv::Size>::iterator pos = max_element(filter_sz.begin(),
 												 filter_sz.end(),
 												 SizeCompare);
-	size_t k1 = pos - filter_sz.begin();
+	size_t k1 = pos - filter_sz.begin(); // index
 	cv::Size output_sz = cv::Size(2 * pos->width - 1, pos->height);
 
 	float t2 = ((double)cv::getTickCount() - t1) / cv::getTickFrequency();
 	debug("update train time3_1_1: %f", t2);
 	t1 = (double)cv::getTickCount();
 
-	//2: sum over all features and feature blocks: A * f  #SLOW#
-	vector<cv::Mat> sh;
-	for (size_t s = 0; s < samplesf.size(); s++)
+	//2: sum over all features for each sample: A * f  #SLOW#-------------------
+	// a. FeatureDotMultiply: dot multiply for each mat
+	// b. FeatureComputeScores: sum up all the dimensions for each feature
+	// c. sh: sum up all the features
+
+	// 30 x 1 x 10 x 25 x 13
+	debug("samplesf: %lu x %lu x %lu x %d x %d", samplesf.size(),
+		  samplesf[0].size(),
+		  samplesf[0][0].size(),
+		  samplesf[0][0][0].rows,
+		  samplesf[0][0][0].cols);
+	// 1 x 10 x 25 x 13
+	debug("hf: %lu x %lu x %d x %d", hf.size(), hf[0].size(),
+		  hf[0][0].rows, hf[0][0].cols);
+	vector<cv::Mat> sh;							 // sum of all the features for each sample
+	for (size_t s = 0; s < samplesf.size(); s++) // for each sample
 	{
 		vector<cv::Mat> scores = FeatureComputeScores(samplesf[s], hf);
-		cv::Mat sh_tmp(cv::Mat::zeros(scores[k1].size(), scores[k1].type()));
-		for (size_t i = 0; i < scores.size(); i++)
+		cv::Mat sh_one(cv::Mat::zeros(scores[k1].size(), scores[k1].type()));
+		for (size_t i = 0; i < scores.size(); i++) // for each feature
 		{
 			int pad = (output_sz.height - scores[i].rows) / 2;
 			cv::Rect roi = cv::Rect(pad, pad, scores[i].cols, scores[i].rows);
-			cv::Mat temp = scores[i] + sh_tmp(roi);
-			temp.copyTo(sh_tmp(roi));
+			//cv::Mat temp = scores[i] + sh_one(roi);
+			//temp.copyTo(sh_one(roi));
+			sh_one(roi) = scores[i] + sh_one(roi);
 		}
-		sh_tmp = sh_tmp * sample_weights[s];
-		sh.push_back(sh_tmp);
+		sh_one = sh_one * sample_weights[s];
+		sh.push_back(sh_one);
 	}
+	// 30 x 25 x 13
+	debug("sh: %lu x %d x %d", sh.size(), sh[0].rows, sh[0].cols);
 
 	t2 = ((double)cv::getTickCount() - t1) / cv::getTickFrequency();
 	debug("update train time3_1_2: %f", t2);
 	t1 = (double)cv::getTickCount();
 
-	//3: multiply with the transpose : A^H * A * f  #SLOW#
+	//3: multiply with the transpose : A^H * A * f  #SLOW#---------------------
 	ECO_FEATS hf_out;
-	for (size_t i = 0; i < (size_t)num_features; i++)
+	debug("num_features:%d", num_features);
+	for (size_t i = 0; i < (size_t)num_features; i++) // for each feature
 	{
 		vector<cv::Mat> tmp;
-		for (size_t j = 0; j < hf[i].size(); j++)
+		for (size_t j = 0; j < hf[i].size(); j++) // for each dimension
 		{
 			int pad = (output_sz.height - hf[i][j].rows) / 2;
 			cv::Mat res(cv::Mat::zeros(hf[i][j].size(), hf[i][j].type()));
-			for (size_t s = 0; s < sh.size(); s++)
+			for (size_t s = 0; s < sh.size(); s++) // for each sample
 			{
 				cv::Mat roi =
 					sh[s](cv::Rect(pad, pad, hf[i][j].cols, hf[i][j].rows));
@@ -642,40 +658,42 @@ ECO_FEATS EcoTrain::lhs_operation(const ECO_FEATS &hf,
 	debug("update train time3_1_3: %f", t2);
 	t1 = (double)cv::getTickCount();
 
-	//4: compute the operation corresponding to the regularization term
-	for (size_t i = 0; i < (size_t)num_features; i++)
+	//4: compute the operation corresponding to the regularization term--------
+	for (size_t i = 0; i < (size_t)num_features; i++) // for each feature
 	{
 		int reg_pad = cv::min(reg_filter[i].cols - 1, hf[i][0].cols - 1);
-		vector<cv::Mat> hf_conv;
-		for (size_t j = 0; j < hf[i].size(); j++)
+		for (size_t j = 0; j < hf[i].size(); j++) // for each dimension 
 		{
+			// add part needed for convolution
 			int c = hf[i][j].cols;
-			cv::Mat temp = hf[i][j].colRange(c - reg_pad - 1, c - 1).clone();
-			rot90(temp, 3);
+			cv::Mat hf_conv = hf[i][j].colRange(c - reg_pad - 1, c - 1).clone();
+			rot90(hf_conv, 3);
+			cv::hconcat(hf[i][j], mat_conj(hf_conv), hf_conv);
+			// do first convolution
+			hf_conv = complexConvolution(hf_conv, reg_filter[i]);
+			// do final convolution and put toghether result
+			hf_conv =
+				complexConvolution(hf_conv.colRange(0, hf_conv.cols - reg_pad),
+								   reg_filter[i], 1);
 
-			cv::hconcat(hf[i][j], mat_conj(temp), temp);
-
-			cv::Mat res1 = complexConvolution(temp, reg_filter[i]);
-			temp = res1;
-
-			temp = complexConvolution(temp.colRange(0, temp.cols - reg_pad), reg_filter[i], 1);
-
-			hf_out[i][j] += temp;
+			hf_out[i][j] += hf_conv;
 		}
 	}
-	res = hf_out;
+	// 1 x 10 x 25 x 13
+	debug("hf_out: %lu x %lu x %d x %d", hf_out.size(), hf_out[0].size(),
+		  hf_out[0][0].rows, hf_out[0][0].cols);
 
 	t2 = ((double)cv::getTickCount() - t1) / cv::getTickFrequency();
 	debug("update train time3_1_4: %f", t2);
 	t1 = (double)cv::getTickCount();
-	return res;
+	return hf_out;
 }
 
 //************************************************************************
 //      			Joint structure basic operation
 //************************************************************************
 EcoTrain::joint_out EcoTrain::jointDotDivision(const joint_out &a,
-										   const joint_out &b)
+											   const joint_out &b)
 {
 	joint_out res;
 	ECO_FEATS up_rs;

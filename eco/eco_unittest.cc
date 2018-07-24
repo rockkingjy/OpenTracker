@@ -36,6 +36,7 @@
 #include "debug.hpp"
 
 // Frames:119 AvgPrecision:1 AvgIou:0.677676 SuccessRate:0.932773 AvgFps:10.3517
+// Frames:119 AvgPrecision:1 AvgIou:0.727139 SuccessRate:1 AvgFps:25.1474
 
 namespace
 {

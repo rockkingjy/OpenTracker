@@ -356,7 +356,7 @@ void ECO::reset(cv::Mat &im, const cv::Rect2f &rect)
 	sample_update_.set_gram_matrix(0, 0, 2 * new_sample_norm);
 
 	// 15. Update filter f.
-	hf_full_ = full_fourier_coeff(eco_trainer_.get_hf());
+	hf_full_ = full_fourier_coeff(eco_trainer_.get_hf()); //
 	for (size_t i = 0; i < hf_full_.size(); i++)
 	{
 		debug("hf_full_: %lu, %lu, %d x %d", i, hf_full_[i].size(),
@@ -881,27 +881,27 @@ ECO_FEATS ECO::interpolate_dft(const ECO_FEATS &xlf, vector<cv::Mat> &interp1_fs
 	}
 	return result;
 }
-
+// Take half of the fourier coefficient.
 ECO_FEATS ECO::compact_fourier_coeff(const ECO_FEATS &xf)
 {
 	ECO_FEATS result;
 	for (size_t i = 0; i < xf.size(); i++) // for each feature
 	{
 		vector<cv::Mat> temp;
-		for (size_t j = 0; j < xf[i].size(); j++) // for each dimension of the feature
+		for (size_t j = 0; j < xf[i].size(); j++) // for each dimension 
 			temp.push_back(xf[i][j].colRange(0, (xf[i][j].cols + 1) / 2));
 		result.push_back(temp);
 	}
 	return result;
 }
-
+// Get the full fourier coefficient of xf, using the property X(N-k)=conv(X(k))
 ECO_FEATS ECO::full_fourier_coeff(const ECO_FEATS &xf)
 {
 	ECO_FEATS res;
 	for (size_t i = 0; i < xf.size(); i++) // for each feature
 	{
 		vector<cv::Mat> tmp;
-		for (size_t j = 0; j < xf[i].size(); j++) // for each dimension of the feature
+		for (size_t j = 0; j < xf[i].size(); j++) // for each dimension
 		{
 			cv::Mat temp = xf[i][j].colRange(0, xf[i][j].cols - 1).clone();
 			rot90(temp, 3);
