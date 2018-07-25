@@ -622,7 +622,8 @@ ECO_FEATS EcoTrain::lhs_operation_filter(const ECO_FEATS &hf,
 			  hf[i][0].rows, hf[i][0].cols);
 	}
 
-	vector<cv::Mat> sh;							 // sum of all the features for each sample
+	vector<cv::Mat> sh;	// sum of all the features for each sample
+	
 	for (size_t s = 0; s < samplesf.size(); s++) // for each sample
 	{
 		vector<cv::Mat> scores = FeatureComputeScores(samplesf[s], hf);
