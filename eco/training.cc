@@ -604,18 +604,19 @@ ECO_FEATS EcoTrain::lhs_operation_filter(const ECO_FEATS &hf,
 	t1 = (double)cv::getTickCount();
 
 	//2: sum over all features for each sample: A * f  #SLOW#-------------------
+	//  update train time3_1_2: 0.004456
 	// a. FeatureDotMultiply: dot multiply for each mat
 	// b. FeatureComputeScores: sum up all the dimensions for each feature
 	// c. sh: sum up all the features
 
-	// 30 x 1 x 10 x 25 x 13
+	// samplesf: 30 x 1 x 10 x 25 x 13
 	debug("samplesf: %lu samples", samplesf.size());
 	for (size_t i = 0; i < samplesf[0].size(); i++)
 	{
 		debug("samplesf: %lu, %lu, %d x %d", i, samplesf[0][i].size(),
 			  samplesf[0][i][0].rows, samplesf[0][i][0].cols);
 	}
-	// 1 x 10 x 25 x 13
+	// hf: 1 x 10 x 25 x 13
 	for (size_t i = 0; i < hf.size(); i++)
 	{
 		debug("hf: %lu, %lu, %d x %d", i, hf[i].size(),
@@ -636,10 +637,10 @@ ECO_FEATS EcoTrain::lhs_operation_filter(const ECO_FEATS &hf,
 			//temp.copyTo(sh_one(roi));
 			sh_one(roi) = scores[i] + sh_one(roi);
 		}
-		sh_one = sh_one * sample_weights[s];
+		sh_one = mat_conj(sh_one * sample_weights[s]);
 		sh.push_back(sh_one);
 	}
-	// 30 x 25 x 13
+	// sh: 30 x 25 x 13
 	debug("sh: %lu x %d x %d", sh.size(), sh[0].rows, sh[0].cols);
 
 	t2 = ((double)cv::getTickCount() - t1) / cv::getTickFrequency();
@@ -647,6 +648,7 @@ ECO_FEATS EcoTrain::lhs_operation_filter(const ECO_FEATS &hf,
 	t1 = (double)cv::getTickCount();
 
 	//3: multiply with the transpose : A^H * A * f  #SLOW#---------------------
+	// update train time3_1_3: 0.004738
 	ECO_FEATS hf_out;
 	debug("num_features:%d", num_features);
 	for (size_t i = 0; i < (size_t)num_features; i++) // for each feature
@@ -660,12 +662,18 @@ ECO_FEATS EcoTrain::lhs_operation_filter(const ECO_FEATS &hf,
 			{
 				cv::Mat roi =
 					sh[s](cv::Rect(pad, pad, hf[i][j].cols, hf[i][j].rows));
-				res += complexDotMultiplication(mat_conj(roi),
+				res += complexDotMultiplication(roi,
 												samplesf[s][i][j]);
 			}
 			tmp.push_back(mat_conj(res));
 		}
 		hf_out.push_back(tmp);
+	}
+	// hf_out: 1 x 10 x 25 x 13
+	for (size_t i = 0; i < hf.size(); i++)
+	{
+		debug("hf_out: %lu, %lu, %d x %d", i, hf_out[i].size(),
+			  hf_out[i][0].rows, hf_out[i][0].cols);
 	}
 
 	t2 = ((double)cv::getTickCount() - t1) / cv::getTickFrequency();

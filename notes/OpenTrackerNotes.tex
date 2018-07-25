@@ -468,12 +468,11 @@ where $g_{max}$ is the peak values and $\mu_{s1}$ and $\theta_{s1}$ are the mean
 
 %=======================================
 \section{C-COT \cite{DanelljanECCV2016}} \label{ch:ccot}
-
 %--------------------------------------------------
 \subsection{Continuous Learning Formulation}
-$x_j$: Training Samples. \par
+$x_j$: Training Sample $j \in [1, ..., J]$. \par
 $d \in \{1, \cdots , D\}$: Feature channel of training samples (ex. if choose deep layer 1, 5 as features, then $D = 2$). \par
-$N_d$: Number of spatial sample points in feature channel d (ex. for HOG feature $N_{HOG}=31 \times 105$ chapter \ref{ch:hog}). \par
+$N_d$: Number of spatial sample points in feature channel d (ex. for HOG feature $N_{HOG}=31 \times 105$ (chapter \ref{ch:hog})). \par
 $\chi=\mathbb{R}^{N_1} \times \cdots \times \mathbb{R}^{N_D}$. \par
 $\{x^d_j[n]\}, n \in \{0, \cdots, N_d -1\}$: Feature points in channel d of training sample $x_j$.\par
 $[0, T) \subset \mathbb{R} $: Spatial support of the feature map, where $T$ is the size of the support region.\par
@@ -583,19 +582,19 @@ Then the matrix version of (\ref{eq:targetFourier}) becomes:
 
 %--------------------------------------------------
 \subsection{The normal equations of $\hat{\bm{f}}$}
-Define the matrix with m samples: 
+Define the matrix with J samples: 
 \begin{equation}
 	A = 
 	\begin{bmatrix}
-		A_1 \\ A_2 \\ \vdots \\ A_m
-	\end{bmatrix}_{(2K+1)m \times \sum^D_{d=1}(2K_d+1)}
+		A_1 \\ A_2 \\ \vdots \\ A_J
+	\end{bmatrix}_{(2K+1)J \times \sum^D_{d=1}(2K_d+1)}
 	 \text{,   }
 	\hat{\bm{y}}= 
 	\begin{bmatrix}
-		\hat{\bm{y}}_1 \\ \hat{\bm{y}}_2 \\ \vdots \\ \hat{\bm{y}}_m
-	\end{bmatrix}_{(2K+1)m \times 1}
+		\hat{\bm{y}}_1 \\ \hat{\bm{y}}_2 \\ \vdots \\ \hat{\bm{y}}_J
+	\end{bmatrix}_{(2K+1)J \times 1}
 	 \text{,   }
-	 \Gamma=\alpha_1 I  \oplus \cdots \oplus \alpha_m I
+	 \Gamma=\alpha_1 I  \oplus \cdots \oplus \alpha_J I
 \end{equation} \par
 
 The equation (\ref{eq:targetMatrix}) becomes:
@@ -615,7 +614,7 @@ Do the derivative to $\hat{\bm {f}}$ for the equation(\ref{eq:targetDerivative})
 	+ W^HW\hat{\bm{f}} = 0
 \end{align} \par
 So the minimizer of (\ref{eq:targetMatrix}) is found by solving the equations:
-\begin{equation} \label{eq:normal}
+\begin{equation} \label{eq:ccot}
 	(A^H \Gamma A + W^H W) \hat{\bm{f}} = A^H \Gamma \hat{\bm{y}}
 \end{equation}
 %--------------------------------------------------
@@ -961,7 +960,7 @@ To expand it:
 \end{split}\end{align} 
 ,the last formula removed the hats and index to make it clean. \par
 Do the derivative to $\hat{\bm {f}}_{i, \Delta}$ and $\bm{\Delta p}$ for the equation by using the properties (\ref{eq:matrixderivativ1}) and (\ref{eq:matrixderivativ4}), and equals them to zero, then rearrange the equations, we have:
-\begin{equation}
+\begin{equation} \label{eq:eco}
 	\begin{bmatrix}
 		A^H_PA_P+W^HW & A^H_PB_f \\
 		B^H_fA_P			& B^H_fB_f+\lambda I
@@ -1101,6 +1100,12 @@ This file is for sample updating, and output two important values:
 \textbf{yf\_} is the presumed target y in the Fourier domain. 
 %-----------------------------------------------
 \subsection{training}
+\subsubsection{lhs\_operation}
+This function is to calculate the left-hand side of the equation (\ref{eq:ccot}) (without update of projection matrix): \par
+\begin{equation} 
+	(A^H \Gamma A + W^H W) \hat{\bm{f}} = A^H \Gamma \hat{\bm{y}}
+\end{equation} \par
+
 
 %=======================================
 \section{Some tips of transfer from matlab to $c++$}
