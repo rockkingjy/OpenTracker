@@ -205,6 +205,29 @@ For ECO_HC, means just HOG feature, in **eco/parameters.cc**, change to:
 
 CN feature not implemented yet, comes later.
 
+### Speed-up with GPU
+If you have a GPU, it can speed-up with gpu.
+
+First don't forget to install Opencv with CUDA supported:
+```
+cmake -D OPENCV_EXTRA_MODULE_PATH=/media/elab/sdd/Amy/opencv_contrib/modules \
+    -D CMAKE_BUILD_TYPE=RELEASE \
+    -D CMAKE_INSTALL_PREFIX=/usr/local \
+    -D CMAKE_BUILD_TYPE=RELEASE \
+    -D CMAKE_INSTALL_PREFIX=/usr/local \
+    -D WITH_CUDA=ON \
+    -D ENABLE_FAST_MATH=1 \
+    -D CUDA_FAST_MATH=1 \
+    -D WITH_CUBLAS=1 \
+    ..
+make -j`nproc` 
+sudo make install
+```
+in `eco/makefile`, set:
+```
+USE_CUDA=1
+```
+
 ### Datasets settings
 Change the path of your test images in **eco/runecotracker.cc**.
 

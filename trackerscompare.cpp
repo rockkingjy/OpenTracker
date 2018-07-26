@@ -43,9 +43,9 @@ int main(int argc, char **argv)
     //rectangle(frameDraw, bboxGroundtruth, Scalar(0, 0, 0), 2, 1);
     //imshow("Tracking", frameDraw);
     */
-
+/*
     // Read from Video and choose a bbox===============================
-/*    ::google::InitGoogleLogging(argv[0]);
+    ::google::InitGoogleLogging(argv[0]);
     cv::Rect2f bboxGroundtruth;
     cv::Mat frame, frameDraw;
     cv::VideoCapture capture;

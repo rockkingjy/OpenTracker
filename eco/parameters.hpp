@@ -80,6 +80,10 @@ struct EcoParameters
 #endif
 	HogFeatures 		hog_features; 
 
+	// GPU
+	bool 	use_gpu = true; // whether Caffe use gpu or not
+	int 	gpu_id = 0;
+	
 	// Features
 	bool 	useDeepFeature 		 = false;
 	bool	useHogFeature		 = true;		
@@ -162,10 +166,6 @@ struct EcoParameters
 	string	s_num_compressed_dim = "MAX";    // Number of compressed feature dimensions in the scale filter
 	float	lambda = 1e-2;					// Scale filter regularization
 	float	do_poly_interp = true;           // Do 2nd order polynomial interpolation to obtain more accurate scale
-
-	// GPU
-	bool 	use_gpu = true;
-	int 	gpu_id = 0;
 
 };
 }

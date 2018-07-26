@@ -11,6 +11,11 @@
 #include <caffe/util/io.hpp>
 #endif
 
+#ifdef USE_CUDA
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/cuda.hpp>
+#endif 
+
 #include "parameters.hpp"
 #include "interpolator.hpp"
 #include "regularization_filter.hpp"

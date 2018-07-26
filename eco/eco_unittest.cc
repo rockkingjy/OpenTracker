@@ -40,7 +40,7 @@
 
 namespace
 {
-
+/*
 TEST(ffttoolsTest, dft_f)
 {
   cv::Mat_<float> mat_float(10, 10, CV_32FC1);
@@ -266,41 +266,85 @@ TEST(debug, copyTo_clone_Difference)
 {
   copyTo_clone_Difference();
 }
-
+*/
 TEST(ffttoolsTest, complexDotMultiplication)
 {
-  cv::Mat mat_float(10, 10, CV_32FC2);
+  int N = 10000;
+  cv::Mat mat_float(N, N, CV_32FC2);
   for (int j = 0; j < mat_float.rows; j++)
     for (int i = 0; i < mat_float.cols; i++)
     {
       mat_float.at<cv::Vec2f>(j, i)[0] = i + j * mat_float.cols;
       mat_float.at<cv::Vec2f>(j, i)[1] = i + j * mat_float.cols;
     }
-  debug("channels: %d", mat_float.channels());
-  showmat2channels(mat_float, 2);
+  //debug("channels: %d", mat_float.channels());
+  //showmat2channels(mat_float, 2);
 
-  cv::Mat mat_float1(10, 10, CV_32FC2);
+  cv::Mat mat_float1(N, N, CV_32FC2);
   for (int j = 0; j < mat_float1.rows; j++)
     for (int i = 0; i < mat_float1.cols; i++)
     {
       mat_float1.at<cv::Vec2f>(j, i)[0] = i + j * mat_float1.cols;
       mat_float1.at<cv::Vec2f>(j, i)[1] = -i;
     }
-  debug("channels: %d", mat_float1.channels());
-  showmat2channels(mat_float1, 2);
+  //debug("channels: %d", mat_float1.channels());
+  //showmat2channels(mat_float1, 2);
 
   cv::Mat res;
-  int iter = 100;
+  res = eco::complexDotMultiplicationCPU(mat_float, mat_float1);  
+  int iter = 1;
   double timer = (double)cv::getTickCount();
   float timedft = 0;
   while (iter > 0)
   {
-    res = eco::complexDotMultiplication(mat_float, mat_float1);
+    res = eco::complexDotMultiplicationCPU(mat_float, mat_float1);   
     iter--;
   }
   timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();
   debug("complexDotMultiplication time: %f", timedft);
-  showmat2channels(res, 2);
+  //showmat2channels(res, 2);
 }
+
+#ifdef USE_CUDA
+TEST(ffttoolsTest, complexDotMultiplicationGPU)
+{
+  int N = 10000;
+  cv::Mat mat_float(N, N, CV_32FC2);
+  for (int j = 0; j < mat_float.rows; j++)
+    for (int i = 0; i < mat_float.cols; i++)
+    {
+      mat_float.at<cv::Vec2f>(j, i)[0] = i + j * mat_float.cols;
+      mat_float.at<cv::Vec2f>(j, i)[1] = i + j * mat_float.cols;
+    }
+  //debug("channels: %d", mat_float.channels());
+  //showmat2channels(mat_float, 2);
+
+  cv::Mat mat_float1(N, N, CV_32FC2);
+  for (int j = 0; j < mat_float1.rows; j++)
+    for (int i = 0; i < mat_float1.cols; i++)
+    {
+      mat_float1.at<cv::Vec2f>(j, i)[0] = i + j * mat_float1.cols;
+      mat_float1.at<cv::Vec2f>(j, i)[1] = -i;
+    }
+  //debug("channels: %d", mat_float1.channels());
+  //showmat2channels(mat_float1, 2);
+  
+  cv::Mat res;
+  cv::cuda::setDevice(0);
+  debug("%d", cv::cuda::getDevice());
+  //res = eco::complexDotMultiplicationGPU(mat_float, mat_float1);
+  int iter = 1;
+  double timer = (double)cv::getTickCount();
+  float timedft = 0;
+  while (iter > 0)
+  {
+    res = eco::complexDotMultiplicationGPU(mat_float, mat_float1);
+    iter--;
+  }
+  timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();
+  debug("complexDotMultiplicationGPU time: %f", timedft);
+  //showmat2channels(res, 2);
+}
+#endif
 
 } //namespace

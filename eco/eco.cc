@@ -6,6 +6,10 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 {
 	printf("\n=========================Init================================\n");
 	// 1. Initialize all the parameters.
+#ifdef USE_CUDA
+  cv::cuda::setDevice(params_.gpu_id);
+#endif 
+
 	// Image infomations
 	imgInfo(im);
 	debug("rect: %f, %f, %f, %f", rect.x, rect.y, rect.width, rect.height);

@@ -1,7 +1,7 @@
 
-USE_CAFFE=0
-USE_CUDA=0
-USE_BOOST=0
+USE_CAFFE=1
+USE_CUDA=1
+USE_BOOST=1
 
 CAFFE_PATH=/media/elab/sdd/mycodes/caffe
 
@@ -9,13 +9,21 @@ GTEST_DIR = ../googletest
 
 CC=gcc
 CXX=g++
+NVCC=nvcc
+
+# used for cuda
+ARCH= -gencode arch=compute_30,code=sm_30 \
+      -gencode arch=compute_35,code=sm_35 \
+      -gencode arch=compute_50,code=[sm_50,compute_50] \
+      -gencode arch=compute_52,code=[sm_52,compute_52]
 
 LDFLAGS= `pkg-config --libs opencv` -lstdc++ -lm 
 
-CPPFLAGS += -isystem $(GTEST_DIR)/include
-
-CXXFLAGS= -g -Wall `pkg-config --cflags opencv` -lstdc++ -lm -std=c++0x 
+CXXFLAGS = -g -Wall `pkg-config --cflags opencv` -lstdc++ -lm -std=c++0x 
 	
+# add for gtest
+CXXFLAGS += -isystem $(GTEST_DIR)/include
+
 HEADERS = $(wildcard *.h)
 
 GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
@@ -36,6 +44,7 @@ CXXFLAGS+= -I/usr/local/cuda/include/
 endif
 
 ifeq ($(USE_BOOST), 1)
+CXXFLAGS+= -DUSE_BOOST
 LDFLAGS+= -lboost_system -lboost_filesystem -lboost_regex
 endif
 
@@ -60,19 +69,18 @@ $(TARGET_LIB): $(OBJS)
 %.o: %.cpp $(HEADERS)
 	$(CXX) -c -o $@ $< $(CXXFLAGS)
 
+%.o: %.cu $(HEADERS)
+	$(NVCC) $(ARCH) --compiler-options "$(CXXFLAGS)" -c $< -o $@
+
 # gTest
 GTEST_SRCS_ = $(GTEST_DIR)/src/*.cc $(GTEST_DIR)/src/*.h $(GTEST_HEADERS)
 
-# For simplicity and to avoid depending on Google Test's
-# implementation details, the dependencies specified below are
-# conservative and not optimized.  This is fine as Google Test
-# compiles fast and for ordinary users its source rarely changes.
 gtest-all.o : $(GTEST_SRCS_)
-	$(CXX) $(CPPFLAGS) -I$(GTEST_DIR) $(CXXFLAGS) -c \
+	$(CXX) $(CXXFLAGS) -I$(GTEST_DIR) $(CXXFLAGS) -c \
             $(GTEST_DIR)/src/gtest-all.cc
 
 gtest_main.o : $(GTEST_SRCS_)
-	$(CXX) $(CPPFLAGS) -I$(GTEST_DIR) $(CXXFLAGS) -c \
+	$(CXX) $(CXXFLAGS) -I$(GTEST_DIR) $(CXXFLAGS) -c \
             $(GTEST_DIR)/src/gtest_main.cc
 
 gtest.a : gtest-all.o
@@ -83,10 +91,17 @@ gtest_main.a : gtest-all.o gtest_main.o
 
 #=====
 eco_unittest.o : eco_unittest.cc ffttools.hpp $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c eco_unittest.cc
+	$(CXX) $(CXXFLAGS) -c eco_unittest.cc
 
 eco_unittest.bin : ffttools.o eco_unittest.o gtest_main.a
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o $@ $(LDFLAGS) -lpthread
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS) -lpthread
+
+#=====
+cvgputest.o : cvgputest.cc 
+	$(CXX) $(CXXFLAGS) -c cvgputest.cc
+
+cvgputest.bin : cvgputest.o
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
 
 .PHONY: clean
 

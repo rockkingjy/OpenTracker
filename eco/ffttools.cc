@@ -131,6 +131,21 @@ cv::Mat magnitude(const cv::Mat img)
 // complex element-wise multiplication // gpu_implemented
 cv::Mat complexDotMultiplication(const cv::Mat a, const cv::Mat b)
 {
+	cv::Mat res;
+	res = complexDotMultiplicationCPU(a, b);
+/*
+#ifdef USE_CUDA
+	res = complexDotMultiplicationGPU(a, b);
+#else
+	res = complexDotMultiplicationCPU(a, b);
+#endif
+*/
+	return res;
+}
+cv::Mat complexDotMultiplicationCPU(const cv::Mat a, const cv::Mat b)
+{
+	cv::Mat res;
+
 	cv::Mat temp_a;
 	cv::Mat temp_b;
 	a.copyTo(temp_a);
@@ -159,10 +174,66 @@ cv::Mat complexDotMultiplication(const cv::Mat a, const cv::Mat b)
 	pres.push_back(pa[0].mul(pb[0]) - pa[1].mul(pb[1]));
 	pres.push_back(pa[0].mul(pb[1]) + pa[1].mul(pb[0]));
 
-	cv::Mat res;
 	cv::merge(pres, res);
 	return res;
 }
+// Only with quite large matrix, GPU is faster!!!!!
+#ifdef USE_CUDA
+cv::Mat complexDotMultiplicationGPU(const cv::Mat a, const cv::Mat b)
+{
+	cv::Mat res;
+
+	cv::Mat temp_a;
+	cv::Mat temp_b;
+	a.copyTo(temp_a);
+	b.copyTo(temp_b);
+
+	if (a.channels() == 1) // for single channel image a
+	{
+		std::vector<cv::Mat> a_vector =
+			{a, cv::Mat::zeros(a.size(), CV_32FC1)};
+		cv::merge(a_vector, temp_a);
+	}
+	if (b.channels() == 1) // for single channel image b
+	{
+		std::vector<cv::Mat> b_vector =
+			{b, cv::Mat::zeros(b.size(), CV_32FC1)};
+		cv::merge(b_vector, temp_b);
+	}
+
+	cv::cuda::GpuMat temp_a_gpu;
+	cv::cuda::GpuMat temp_b_gpu;
+	temp_a_gpu.upload(temp_a);
+	temp_b_gpu.upload(temp_b);
+
+	std::vector<cv::cuda::GpuMat> pa;
+	std::vector<cv::cuda::GpuMat> pb;
+	cv::cuda::split(temp_a_gpu, pa);
+	cv::cuda::split(temp_b_gpu, pb);
+
+	std::vector<cv::cuda::GpuMat> pres;
+	cv::cuda::GpuMat temp_a_gpu_split;
+	cv::cuda::GpuMat temp_b_gpu_split;
+
+	//(a0+ia1)x(b0+ib1)=(a0b0-a1b1)+i(a0b1+a1b0)
+	cv::cuda::multiply(pa[0], pb[0], temp_a_gpu);
+	cv::cuda::multiply(pa[1], pb[1], temp_b_gpu);
+	cv::cuda::subtract(temp_a_gpu, temp_b_gpu, temp_a_gpu_split);
+	pres.push_back(temp_a_gpu_split);
+
+	cv::cuda::multiply(pa[0], pb[1], temp_a_gpu);
+	cv::cuda::multiply(pa[1], pb[0], temp_b_gpu);
+	cv::cuda::add(temp_a_gpu, temp_b_gpu, temp_b_gpu_split);
+	pres.push_back(temp_b_gpu_split);
+
+	cv::cuda::GpuMat res_gpu;
+	cv::cuda::merge(pres, res_gpu);
+
+	res_gpu.download(res);
+
+	return res;
+}
+#endif
 // complex element-wise division
 cv::Mat complexDotDivision(const cv::Mat a, const cv::Mat b)
 {
