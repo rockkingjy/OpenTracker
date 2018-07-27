@@ -608,7 +608,7 @@ ECO_FEATS EcoTrain::lhs_operation_filter(const ECO_FEATS &hf,
 	// a. FeatureDotMultiply: dot multiply for each mat
 	// b. FeatureComputeScores: sum up all the dimensions for each feature
 	// c. sh: sum up all the features
-
+/*
 	// samplesf: 30 x 1 x 10 x 25 x 13
 	debug("samplesf: %lu samples", samplesf.size());
 	for (size_t i = 0; i < samplesf[0].size(); i++)
@@ -622,7 +622,7 @@ ECO_FEATS EcoTrain::lhs_operation_filter(const ECO_FEATS &hf,
 		debug("hf: %lu, %lu, %d x %d", i, hf[i].size(),
 			  hf[i][0].rows, hf[i][0].cols);
 	}
-
+*/
 	vector<cv::Mat> sh;	// sum of all the features for each sample
 	
 	for (size_t s = 0; s < samplesf.size(); s++) // for each sample
@@ -641,7 +641,7 @@ ECO_FEATS EcoTrain::lhs_operation_filter(const ECO_FEATS &hf,
 		sh.push_back(sh_one);
 	}
 	// sh: 30 x 25 x 13
-	debug("sh: %lu x %d x %d", sh.size(), sh[0].rows, sh[0].cols);
+//	debug("sh: %lu x %d x %d", sh.size(), sh[0].rows, sh[0].cols);
 
 	t2 = ((double)cv::getTickCount() - t1) / cv::getTickFrequency();
 	debug("update train time3_1_2: %f", t2);
@@ -650,7 +650,7 @@ ECO_FEATS EcoTrain::lhs_operation_filter(const ECO_FEATS &hf,
 	//3: multiply with the transpose : A^H * A * f  #SLOW#---------------------
 	// update train time3_1_3: 0.004738
 	ECO_FEATS hf_out;
-	debug("num_features:%d", num_features);
+//	debug("num_features:%d", num_features);
 	for (size_t i = 0; i < (size_t)num_features; i++) // for each feature
 	{
 		vector<cv::Mat> tmp;
@@ -669,13 +669,14 @@ ECO_FEATS EcoTrain::lhs_operation_filter(const ECO_FEATS &hf,
 		}
 		hf_out.push_back(tmp);
 	}
+/*
 	// hf_out: 1 x 10 x 25 x 13
 	for (size_t i = 0; i < hf.size(); i++)
 	{
 		debug("hf_out: %lu, %lu, %d x %d", i, hf_out[i].size(),
 			  hf_out[i][0].rows, hf_out[i][0].cols);
 	}
-
+*/
 	t2 = ((double)cv::getTickCount() - t1) / cv::getTickFrequency();
 	debug("update train time3_1_3: %f", t2);
 	t1 = (double)cv::getTickCount();
@@ -705,8 +706,8 @@ ECO_FEATS EcoTrain::lhs_operation_filter(const ECO_FEATS &hf,
 		}
 	}
 	// 1 x 10 x 25 x 13
-	debug("hf_out: %lu x %lu x %d x %d", hf_out.size(), hf_out[0].size(),
-		  hf_out[0][0].rows, hf_out[0][0].cols);
+//	debug("hf_out: %lu x %lu x %d x %d", hf_out.size(), hf_out[0].size(),
+//		  hf_out[0][0].rows, hf_out[0][0].cols);
 
 	t2 = ((double)cv::getTickCount() - t1) / cv::getTickFrequency();
 	debug("update train time3_1_4: %f", t2);

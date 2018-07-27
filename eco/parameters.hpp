@@ -80,10 +80,6 @@ struct EcoParameters
 #endif
 	HogFeatures 		hog_features; 
 
-	// GPU
-	bool 	use_gpu = true; // whether Caffe use gpu or not
-	int 	gpu_id = 0;
-	
 	// Features
 	bool 	useDeepFeature 		 = false;
 	bool	useHogFeature		 = true;		
@@ -147,7 +143,7 @@ struct EcoParameters
 
 	// Scale parameters for the translation model
 	// Only used if: use_scale_filter = false
-	size_t  number_of_scales = 5;//1;			    // Number of scales to run the detector
+	size_t  number_of_scales = 7;//1;			    // Number of scales to run the detector
 	float   scale_step	= 1.01f;//1.02f;                // The scale factor
 	float 	min_scale_factor;
 	float	max_scale_factor;
@@ -166,6 +162,10 @@ struct EcoParameters
 	string	s_num_compressed_dim = "MAX";    // Number of compressed feature dimensions in the scale filter
 	float	lambda = 1e-2;					// Scale filter regularization
 	float	do_poly_interp = true;           // Do 2nd order polynomial interpolation to obtain more accurate scale
+
+	// GPU
+	bool 	use_gpu = true; // whether Caffe use gpu or not
+	int 	gpu_id = 0;
 
 };
 }

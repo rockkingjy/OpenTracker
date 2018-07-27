@@ -8,17 +8,17 @@
 #include <numeric>
 #include <opencv2/core/core.hpp>
 
-#ifdef USE_CAFFE
-#include <caffe/caffe.hpp>
-#include <caffe/util/io.hpp>
-#include <caffe/caffe.hpp>
-#endif
-
 #include "parameters.hpp"
 #include "ffttools.hpp"
 #include "recttools.hpp"
 #include "fhog.hpp"
 #include "debug.hpp"
+
+#ifdef USE_CAFFE
+#include <caffe/caffe.hpp>
+#include <caffe/util/io.hpp>
+#include <caffe/caffe.hpp>
+#endif
 
 namespace eco
 {
@@ -28,29 +28,32 @@ class FeatureExtractor
 	FeatureExtractor() {}
 	virtual ~FeatureExtractor(){};
 
-	ECO_FEATS extractor(cv::Mat image,
-						cv::Point2f pos,
-						vector<float> scales,
+	ECO_FEATS extractor(const cv::Mat image,
+						const cv::Point2f pos,
+						const vector<float> scales,
 						const EcoParameters &params);
 
-	cv::Mat sample_patch(const cv::Mat &im,
-						 const cv::Point2f &pos,
+	cv::Mat sample_patch(const cv::Mat im,
+						 const cv::Point2f pos,
 						 cv::Size2f sample_sz,
-						 cv::Size2f input_sz,
-						 const EcoParameters &gparams);
+						 cv::Size2f input_sz);
+
+	vector<cv::Mat> get_hog_features(vector<cv::Mat> ims);
+	vector<cv::Mat> hog_feature_normalization(vector<cv::Mat> &feature);
+	inline vector<cv::Mat> get_hog_feats() const { return hog_feat_maps_; }
+
 #ifdef USE_CAFFE
 	ECO_FEATS get_cnn_layers(vector<cv::Mat> im, const cv::Mat &deep_mean_mat);
+	cv::Mat sample_pool(const cv::Mat &im, int smaple_factor, int stride);
 	void cnn_feature_normalization(ECO_FEATS &feature);
 	inline ECO_FEATS get_cnn_feats() const { return cnn_feat_maps_; }
 #endif
 
-	vector<cv::Mat> get_hog_features(vector<cv::Mat> im);
-	vector<cv::Mat> hog_feature_normalization(vector<cv::Mat> &feature);
-	inline vector<cv::Mat> get_hog_feats() const { return hog_feat_maps_; }
-
-	cv::Mat sample_pool(const cv::Mat &im, int smaple_factor, int stride);
-
   private:
+	HogFeatures hog_features_;
+	int hog_feat_ind_ = -1;
+	vector<cv::Mat> hog_feat_maps_;
+
 #ifdef USE_CAFFE
 	boost::shared_ptr<caffe::Net<float>> net_;
 	CnnFeatures cnn_features_;
@@ -58,9 +61,6 @@ class FeatureExtractor
 	ECO_FEATS cnn_feat_maps_;
 #endif
 
-	HogFeatures hog_features_;
-	int hog_feat_ind_ = -1;
-	vector<cv::Mat> hog_feat_maps_;
 
 };
 } // namespace eco

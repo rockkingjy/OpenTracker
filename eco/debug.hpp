@@ -325,19 +325,19 @@ inline void showmat3ch(cv::Mat mat, int type)
 	for (int j = 0; j < mat.cols; j += 1)
 	{
 		if (type == 0)
-		{
+		{ // 2: means Red, 0 means first row
 			printf("%d ", splitmat[2].at<uchar>(0, j));
 		}
 		else if (type == 1)
-		{ // first row
+		{ 
 			printf("%d ", splitmat[2].at<int>(0, j));
 		}
 		else if (type == 2)
-		{ // first row
-			printf("%f ", splitmat[0].at<float>(0, j));
+		{ 
+			printf("%f ", splitmat[2].at<float>(0, j));
 		}
 		else if (type == 3)
-		{ // first row
+		{ 
 			printf("%lf ", splitmat[2].at<double>(0, j));
 		}
 	}
@@ -348,19 +348,19 @@ inline void showmat3ch(cv::Mat mat, int type)
 	for (int i = 0; i < mat.rows; i += 1)
 	{
 		if (type == 0)
-		{ // first row
+		{ 
 			printf("%d ", splitmat[2].at<uchar>(i, 0));
 		}
 		else if (type == 1)
-		{ // first row
+		{ 
 			printf("%d ", splitmat[2].at<int>(i, 0));
 		}
 		else if (type == 2)
-		{ // first row
+		{ 
 			printf("%f ", splitmat[2].at<float>(i, 0));
 		}
 		else if (type == 3)
-		{ // first col
+		{ 
 			printf("%lf ", splitmat[2].at<double>(i, 0));
 		}
 	}

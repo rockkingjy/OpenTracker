@@ -7,8 +7,8 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	printf("\n=========================Init================================\n");
 	// 1. Initialize all the parameters.
 #ifdef USE_CUDA
-  cv::cuda::setDevice(params_.gpu_id);
-#endif 
+	cv::cuda::setDevice(params_.gpu_id);
+#endif
 
 	// Image infomations
 	imgInfo(im);
@@ -114,7 +114,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 
 		// Compute the energy of the filter (used for preconditioner)drone_flip
 		cv::Mat_<double> t = temp_d.mul(temp_d); //element-wise multiply
-		float energy = mat_sum_d(t); //sum up all the values of each points of the mat
+		float energy = mat_sum_d(t);			 //sum up all the values of each points of the mat
 		reg_energy_.push_back(energy);
 		debug("reg_energy_ %lu: %f", i, energy);
 	}
@@ -148,7 +148,8 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 						 std::log(params_.scale_step)));
 	}
 	debug("scale: min:%d, max:%d", scalemin, scalemax);
-	debug("scalefactor min: %f max: %f", params_.min_scale_factor, params_.max_scale_factor);
+	debug("scalefactor min: %f max: %f", params_.min_scale_factor,
+		  params_.max_scale_factor);
 	debug("scale_factors_:");
 	for (size_t i = 0; i < params_.number_of_scales; i++)
 	{
@@ -158,7 +159,10 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	ECO_FEATS xl, xlw, xlf, xlf_porj;
 
 	// 2. Extract features from the first frame.
-	xl = feature_extractor_.extractor(im, pos_, vector<float>(1, currentScaleFactor_), params_);
+	xl = feature_extractor_.extractor(im,
+									  pos_,
+									  vector<float>(1, currentScaleFactor_),
+									  params_);
 	debug("xl size: %lu, %lu, %d x %d", xl.size(), xl[0].size(),
 		  xl[0][0].rows, xl[0][0].cols);
 
@@ -474,7 +478,7 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	}
 
 	localizationtime = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
-	debug("localization time: %f", localizationtime);
+	debug("localization time7: %f", localizationtime);
 
 	//**************************************************************************
 	//*****                     Model update
@@ -892,7 +896,7 @@ ECO_FEATS ECO::compact_fourier_coeff(const ECO_FEATS &xf)
 	for (size_t i = 0; i < xf.size(); i++) // for each feature
 	{
 		vector<cv::Mat> temp;
-		for (size_t j = 0; j < xf[i].size(); j++) // for each dimension 
+		for (size_t j = 0; j < xf[i].size(); j++) // for each dimension
 			temp.push_back(xf[i][j].colRange(0, (xf[i][j].cols + 1) / 2));
 		result.push_back(temp);
 	}
@@ -922,14 +926,14 @@ vector<cv::Mat> ECO::project_mat_energy(vector<cv::Mat> proj,
 										vector<cv::Mat> yf)
 {
 	vector<cv::Mat> result;
-	for (size_t i = 0; i < yf.size(); i++) 
+	for (size_t i = 0; i < yf.size(); i++)
 	{
 		cv::Mat temp(proj[i].size(), CV_32FC1);
-		float sum_dim = std::accumulate(feature_dim_.begin(), 
-										feature_dim_.end(), 
+		float sum_dim = std::accumulate(feature_dim_.begin(),
+										feature_dim_.end(),
 										0.0f);
 		cv::Mat x = yf[i].mul(yf[i]);
-		temp = 2 * mat_sum_f(x) / sum_dim * 
+		temp = 2 * mat_sum_f(x) / sum_dim *
 			   cv::Mat::ones(proj[i].size(), CV_32FC1);
 		result.push_back(temp);
 	}
