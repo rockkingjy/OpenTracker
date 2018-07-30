@@ -5,11 +5,11 @@
 *******************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
-#include "rgbConvertMex.cpp"
-#include "imPadMex.cpp"
-#include "convConst.cpp"
-#include "imResampleMex.cpp"
-#include "gradientMex.cpp"
+#include "rgbConvertMex.hpp"
+#include "imPadMex.hpp"
+#include "convConst.hpp"
+#include "imResampleMex.hpp"
+#include "gradientMex.hpp"
 
 // compile and test standalone channels source code
 int main(int argc, const char* argv[])
@@ -35,6 +35,7 @@ int main(int argc, const char* argv[])
   G  = (float*) wrCalloc(h3*w3*d*24+misalign,sf) + misalign;
 
   // perform tests of imPad, rgbConvert, convConst, resample and gradient
+  /*
   imPad(I0,I1,h,w,d,pad,pad,pad,pad,0,0.0f);
   I2 = rgbConvert(I1,h1*w1,d,0,1.0f); d=1;
   convTri(I2,I3,h1,w1,d,rad,1);
@@ -42,7 +43,7 @@ int main(int argc, const char* argv[])
   grad2( I4, Gx, Gy, h2, w2, d );
   gradMag( I4, M, O, h2, w2, d, 1);
   gradHist(M,O,H,h2,w2,4,6,0, 1);
-  hog(H,G,H,h2,w2,4,6,1,1,.2f);
+  hog(H,G,H,h2,w2,4,6,1,1,.2f);*/
 
   // print some test arrays
   printf("---------------- M: ----------------\n");
@@ -54,5 +55,5 @@ int main(int argc, const char* argv[])
   wrFree(I1-misalign); wrFree(I2); wrFree(I3-misalign); wrFree(I4-misalign);
   wrFree(Gx-misalign); wrFree(Gy-misalign); wrFree(M-misalign);
   wrFree(O-misalign); wrFree(H-misalign); wrFree(G-misalign);
-  system("pause"); return 0;
+  return 0;
 }

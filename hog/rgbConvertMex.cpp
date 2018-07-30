@@ -3,10 +3,7 @@
 * Copyright 2014 Piotr Dollar.  [pdollar-at-gmail.com]
 * Licensed under the Simplified BSD License [see external/bsd.txt]
 *******************************************************************************/
-#include "wrappers.hpp"
-#include <cmath>
-#include <typeinfo>
-#include "sse.hpp"
+#include "rgbConvertMex.hpp"
 
 // Constants for rgb2luv conversion and lookup table for y-> l conversion
 template<class oT> oT* rgb2luv_setup( oT z, oT *mr, oT *mg, oT *mb,
@@ -164,48 +161,3 @@ oT* rgbConvert( iT *I, int n, int d, int flag, oT nrm ) {
   else wrError("Unknown flag.");
   return J;
 }
-
-// J = rgbConvertMex(I,flag,single); see rgbConvert.m for usage details
-#ifdef MATLAB_MEX_FILE
-void mexFunction(int nl, mxArray *pl[], int nr, const mxArray *pr[]) {
-  const int *dims; int nDims, n, d, dims1[3]; void *I; void *J; int flag;
-  bool single; mxClassID idIn, idOut;
-
-  // Error checking
-  if( nr!=3 ) mexErrMsgTxt("Three inputs expected.");
-  if( nl>1 ) mexErrMsgTxt("One output expected.");
-  dims = (const int*) mxGetDimensions(pr[0]); n=dims[0]*dims[1];
-  nDims = mxGetNumberOfDimensions(pr[0]);
-  d = 1; for( int i=2; i<nDims; i++ ) d*=dims[i];
-
-  // extract input arguments
-  I = mxGetPr(pr[0]);
-  flag = (int) mxGetScalar(pr[1]);
-  single = (bool) (mxGetScalar(pr[2])>0);
-  idIn = mxGetClassID(pr[0]);
-
-  // call rgbConvert() based on type of input and output array
-  if(!((d==1 && flag==0) || flag==1 || (d/3)*3==d))
-    mexErrMsgTxt("I must have third dimension d==1 or (d/3)*3==d.");
-  if( idIn == mxSINGLE_CLASS && !single )
-    J = (void*) rgbConvert( (float*) I, n, d, flag, 1.0 );
-  else if( idIn == mxSINGLE_CLASS && single )
-    J = (void*) rgbConvert( (float*) I, n, d, flag, 1.0f );
-  else if( idIn == mxDOUBLE_CLASS && !single )
-    J = (void*) rgbConvert( (double*) I, n, d, flag, 1.0 );
-  else if( idIn == mxDOUBLE_CLASS && single )
-    J = (void*) rgbConvert( (double*) I, n, d, flag, 1.0f );
-  else if( idIn == mxUINT8_CLASS && !single )
-    J = (void*) rgbConvert( (unsigned char*) I, n, d, flag, 1.0/255 );
-  else if( idIn == mxUINT8_CLASS && single )
-    J = (void*) rgbConvert( (unsigned char*) I, n, d, flag, 1.0f/255 );
-  else
-    mexErrMsgTxt("Unsupported image type.");
-
-  // create and set output array
-  dims1[0]=dims[0]; dims1[1]=dims[1]; dims1[2]=(flag==0 ? (d==1?1:d/3) : d);
-  idOut = single ? mxSINGLE_CLASS : mxDOUBLE_CLASS;
-  pl[0] = mxCreateNumericMatrix(0,0,idOut,mxREAL);
-  mxSetData(pl[0],J); mxSetDimensions(pl[0],(const mwSize*) dims1,3);
-}
-#endif

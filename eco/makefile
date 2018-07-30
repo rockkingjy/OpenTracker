@@ -1,6 +1,6 @@
 
-USE_CAFFE=1
-USE_CUDA=1
+USE_CAFFE=0
+USE_CUDA=0
 USE_BOOST=1
 
 CAFFE_PATH=/media/elab/sdd/mycodes/caffe

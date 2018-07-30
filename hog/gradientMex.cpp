@@ -3,12 +3,8 @@
 * Copyright 2014 Piotr Dollar & Ron Appel.  [pdollar-at-gmail.com]
 * Licensed under the Simplified BSD License [see external/bsd.txt]
 *******************************************************************************/
-#include "wrappers.hpp"
-#include <math.h>
-#include "string.h"
-#include "sse.hpp"
 
-#define PI 3.14159265f
+#include "gradientMex.hpp"
 
 // compute x and y gradients for just one column (uses sse)
 void grad1( float *I, float *Gx, float *Gy, int h, int w, int x ) {
@@ -314,101 +310,3 @@ void fhog( float *M, float *O, float *H, int h, int w, int binSize,
   hogChannels( H+nbo*3, R1, N, hb, wb, nOrients*2, clip, 2 );
   wrFree(N); wrFree(R1); wrFree(R2);
 }
-
-/******************************************************************************/
-#ifdef MATLAB_MEX_FILE
-// Create [hxwxd] mxArray array, initialize to 0 if c=true
-mxArray* mxCreateMatrix3( int h, int w, int d, mxClassID id, bool c, void **I ){
-  const int dims[3]={h,w,d}, n=h*w*d; int b; mxArray* M;
-  if( id==mxINT32_CLASS ) b=sizeof(int);
-  else if( id==mxDOUBLE_CLASS ) b=sizeof(double);
-  else if( id==mxSINGLE_CLASS ) b=sizeof(float);
-  else mexErrMsgTxt("Unknown mxClassID.");
-  *I = c ? mxCalloc(n,b) : mxMalloc(n*b);
-  M = mxCreateNumericMatrix(0,0,id,mxREAL);
-  mxSetData(M,*I); mxSetDimensions(M,dims,3); return M;
-}
-
-// Check inputs and outputs to mex, retrieve first input I
-void checkArgs( int nl, mxArray *pl[], int nr, const mxArray *pr[], int nl0,
-  int nl1, int nr0, int nr1, int *h, int *w, int *d, mxClassID id, void **I )
-{
-  const int *dims; int nDims;
-  if( nl<nl0 || nl>nl1 ) mexErrMsgTxt("Incorrect number of outputs.");
-  if( nr<nr0 || nr>nr1 ) mexErrMsgTxt("Incorrect number of inputs.");
-  nDims = mxGetNumberOfDimensions(pr[0]); dims = mxGetDimensions(pr[0]);
-  *h=dims[0]; *w=dims[1]; *d=(nDims==2) ? 1 : dims[2]; *I = mxGetPr(pr[0]);
-  if( nDims!=2 && nDims!=3 ) mexErrMsgTxt("I must be a 2D or 3D array.");
-  if( mxGetClassID(pr[0])!=id ) mexErrMsgTxt("I has incorrect type.");
-}
-
-// [Gx,Gy] = grad2(I) - see gradient2.m
-void mGrad2( int nl, mxArray *pl[], int nr, const mxArray *pr[] ) {
-  int h, w, d; float *I, *Gx, *Gy;
-  checkArgs(nl,pl,nr,pr,1,2,1,1,&h,&w,&d,mxSINGLE_CLASS,(void**)&I);
-  if(h<2 || w<2) mexErrMsgTxt("I must be at least 2x2.");
-  pl[0]= mxCreateMatrix3( h, w, d, mxSINGLE_CLASS, 0, (void**) &Gx );
-  pl[1]= mxCreateMatrix3( h, w, d, mxSINGLE_CLASS, 0, (void**) &Gy );
-  grad2( I, Gx, Gy, h, w, d );
-}
-
-// [M,O] = gradMag( I, channel, full ) - see gradientMag.m
-void mGradMag( int nl, mxArray *pl[], int nr, const mxArray *pr[] ) {
-  int h, w, d, c, full; float *I, *M, *O=0;
-  checkArgs(nl,pl,nr,pr,1,2,3,3,&h,&w,&d,mxSINGLE_CLASS,(void**)&I);
-  if(h<2 || w<2) mexErrMsgTxt("I must be at least 2x2.");
-  c = (int) mxGetScalar(pr[1]); full = (int) mxGetScalar(pr[2]);
-  if( c>0 && c<=d ) { I += h*w*(c-1); d=1; }
-  pl[0] = mxCreateMatrix3(h,w,1,mxSINGLE_CLASS,0,(void**)&M);
-  if(nl>=2) pl[1] = mxCreateMatrix3(h,w,1,mxSINGLE_CLASS,0,(void**)&O);
-  gradMag(I, M, O, h, w, d, full>0 );
-}
-
-// gradMagNorm( M, S, norm ) - operates on M - see gradientMag.m
-void mGradMagNorm( int nl, mxArray *pl[], int nr, const mxArray *pr[] ) {
-  int h, w, d; float *M, *S, norm;
-  checkArgs(nl,pl,nr,pr,0,0,3,3,&h,&w,&d,mxSINGLE_CLASS,(void**)&M);
-  if( mxGetM(pr[1])!=h || mxGetN(pr[1])!=w || d!=1 ||
-    mxGetClassID(pr[1])!=mxSINGLE_CLASS ) mexErrMsgTxt("M or S is bad.");
-  S = (float*) mxGetPr(pr[1]); norm = (float) mxGetScalar(pr[2]);
-  gradMagNorm(M,S,h,w,norm);
-}
-
-// H=gradHist(M,O,[...]) - see gradientHist.m
-void mGradHist( int nl, mxArray *pl[], int nr, const mxArray *pr[] ) {
-  int h, w, d, hb, wb, nChns, binSize, nOrients, softBin, useHog;
-  bool full; float *M, *O, *H, clipHog;
-  checkArgs(nl,pl,nr,pr,1,3,2,8,&h,&w,&d,mxSINGLE_CLASS,(void**)&M);
-  O = (float*) mxGetPr(pr[1]);
-  if( mxGetM(pr[1])!=h || mxGetN(pr[1])!=w || d!=1 ||
-    mxGetClassID(pr[1])!=mxSINGLE_CLASS ) mexErrMsgTxt("M or O is bad.");
-  binSize  = (nr>=3) ? (int)   mxGetScalar(pr[2])    : 8;
-  nOrients = (nr>=4) ? (int)   mxGetScalar(pr[3])    : 9;
-  softBin  = (nr>=5) ? (int)   mxGetScalar(pr[4])    : 1;
-  useHog   = (nr>=6) ? (int)   mxGetScalar(pr[5])    : 0;
-  clipHog  = (nr>=7) ? (float) mxGetScalar(pr[6])    : 0.2f;
-  full     = (nr>=8) ? (bool) (mxGetScalar(pr[7])>0) : false;
-  hb = h/binSize; wb = w/binSize;
-  nChns = useHog== 0 ? nOrients : (useHog==1 ? nOrients*4 : nOrients*3+5);
-  pl[0] = mxCreateMatrix3(hb,wb,nChns,mxSINGLE_CLASS,1,(void**)&H);
-  if( nOrients==0 ) return;
-  if( useHog==0 ) {
-    gradHist( M, O, H, h, w, binSize, nOrients, softBin, full );
-  } else if(useHog==1) {
-    hog( M, O, H, h, w, binSize, nOrients, softBin, full, clipHog );
-  } else {
-    fhog( M, O, H, h, w, binSize, nOrients, softBin, clipHog );
-  }
-}
-
-// inteface to various gradient functions (see corresponding Matlab functions)
-void mexFunction( int nl, mxArray *pl[], int nr, const mxArray *pr[] ) {
-  int f; char action[1024]; f=mxGetString(pr[0],action,1024); nr--; pr++;
-  if(f) mexErrMsgTxt("Failed to get action.");
-  else if(!strcmp(action,"gradient2")) mGrad2(nl,pl,nr,pr);
-  else if(!strcmp(action,"gradientMag")) mGradMag(nl,pl,nr,pr);
-  else if(!strcmp(action,"gradientMagNorm")) mGradMagNorm(nl,pl,nr,pr);
-  else if(!strcmp(action,"gradientHist")) mGradHist(nl,pl,nr,pr);
-  else mexErrMsgTxt("Invalid action.");
-}
-#endif

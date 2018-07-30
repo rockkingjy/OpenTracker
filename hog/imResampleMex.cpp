@@ -3,16 +3,11 @@
 * Copyright 2014 Piotr Dollar.  [pdollar-at-gmail.com]
 * Licensed under the Simplified BSD License [see external/bsd.txt]
 *******************************************************************************/
-#include "wrappers.hpp"
-#include "string.h"
-#include <math.h>
-#include <typeinfo>
-#include "sse.hpp"
-typedef unsigned char uchar;
+#include "imResampleMex.hpp"
 
 // compute interpolation values for single column for resapling
 template<class T> void resampleCoef( int ha, int hb, int &n, int *&yas,
-  int *&ybs, T *&wts, int bd[2], int pad=0 )
+  int *&ybs, T *&wts, int bd[2], int pad )
 {
   const T s = T(hb)/T(ha), sInv = 1/s; T wt, wt0=T(1e-3)*s;
   bool ds=ha>hb; int nMax; bd[0]=bd[1]=0;
@@ -128,43 +123,3 @@ void resample( T *A, T *B, int ha, int hb, int wa, int wb, int d, T r ) {
   alFree(xas); alFree(xbs); alFree(xwts); alFree(C);
   alFree(yas); alFree(ybs); alFree(ywts);
 }
-
-// B = imResampleMex(A,hb,wb,nrm); see imResample.m for usage details
-#ifdef MATLAB_MEX_FILE
-void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
-  int *ns, ms[3], n, m, nCh, nDims;
-  void *A, *B; mxClassID id; double nrm;
-
-  // Error checking on arguments
-  if( nrhs!=4) mexErrMsgTxt("Four inputs expected.");
-  if( nlhs>1 ) mexErrMsgTxt("One output expected.");
-  nDims=mxGetNumberOfDimensions(prhs[0]); id=mxGetClassID(prhs[0]);
-  ns = (int*) mxGetDimensions(prhs[0]); nCh=(nDims==2) ? 1 : ns[2];
-  if( (nDims!=2 && nDims!=3) ||
-    (id!=mxSINGLE_CLASS && id!=mxDOUBLE_CLASS && id!=mxUINT8_CLASS) )
-    mexErrMsgTxt("A should be 2D or 3D single, double or uint8 array.");
-  ms[0]=(int)mxGetScalar(prhs[1]); ms[1]=(int)mxGetScalar(prhs[2]); ms[2]=nCh;
-  if( ms[0]<=0 || ms[1]<=0 ) mexErrMsgTxt("downsampling factor too small.");
-  nrm=(double)mxGetScalar(prhs[3]);
-
-  // create output array
-  plhs[0] = mxCreateNumericArray(3, (const mwSize*) ms, id, mxREAL);
-  n=ns[0]*ns[1]*nCh; m=ms[0]*ms[1]*nCh;
-
-  // perform resampling (w appropriate type)
-  A=mxGetData(prhs[0]); B=mxGetData(plhs[0]);
-  if( id==mxDOUBLE_CLASS ) {
-    resample((double*)A, (double*)B, ns[0], ms[0], ns[1], ms[1], nCh, nrm);
-  } else if( id==mxSINGLE_CLASS ) {
-    resample((float*)A, (float*)B, ns[0], ms[0], ns[1], ms[1], nCh, float(nrm));
-  } else if( id==mxUINT8_CLASS ) {
-    float *A1 = (float*) mxMalloc(n*sizeof(float));
-    float *B1 = (float*) mxCalloc(m,sizeof(float));
-    for(int i=0; i<n; i++) A1[i]=(float) ((uchar*)A)[i];
-    resample(A1, B1, ns[0], ms[0], ns[1], ms[1], nCh, float(nrm));
-    for(int i=0; i<m; i++) ((uchar*)B)[i]=(uchar) (B1[i]+.5);
-  } else {
-    mexErrMsgTxt("Unsupported type.");
-  }
-}
-#endif

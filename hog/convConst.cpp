@@ -3,9 +3,7 @@
 * Copyright 2014 Piotr Dollar & Ron Appel.  [pdollar-at-gmail.com]
 * Licensed under the Simplified BSD License [see external/bsd.txt]
 *******************************************************************************/
-#include "wrappers.hpp"
-#include <string.h>
-#include "sse.hpp"
+#include "convConst.hpp"
 
 // convolve one column of I by a 2rx1 ones filter
 void convBoxY( float *I, float *O, int h, int r, int s ) {
@@ -193,58 +191,3 @@ void convMax( float *I, float *O, int h, int w, int d, int r ) {
   }
   alFree(T);
 }
-
-// B=convConst(type,A,r,s); fast 2D convolutions (see convTri.m and convBox.m)
-#ifdef MATLAB_MEX_FILE
-void mexFunction( int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[] ) {
-  int *ns, ms[3], nDims, d, m, r, s; float *A, *B, p;
-  mxClassID id; char type[1024];
-
-  // error checking on arguments
-  if(nrhs!=4) mexErrMsgTxt("Four inputs required.");
-  if(nlhs > 1) mexErrMsgTxt("One output expected.");
-  nDims = mxGetNumberOfDimensions(prhs[1]);
-  id = mxGetClassID(prhs[1]);
-  ns = (int*) mxGetDimensions(prhs[1]);
-  d = (nDims == 3) ? ns[2] : 1;
-  m = (ns[0] < ns[1]) ? ns[0] : ns[1];
-  if( (nDims!=2 && nDims!=3) || id!=mxSINGLE_CLASS || m<4 )
-    mexErrMsgTxt("A must be a 4x4 or bigger 2D or 3D float array.");
-
-  // extract inputs
-  if(mxGetString(prhs[0],type,1024))
-    mexErrMsgTxt("Failed to get type.");
-  A = (float*) mxGetData(prhs[1]);
-  p = (float) mxGetScalar(prhs[2]);
-  r = (int) mxGetScalar(prhs[2]);
-  s = (int) mxGetScalar(prhs[3]);
-  if( s<1 ) mexErrMsgTxt("Invalid sampling value s");
-  if( r<0 ) mexErrMsgTxt("Invalid radius r");
-
-  // create output array (w/o initializing to 0)
-  ms[0]=ns[0]/s; ms[1]=ns[1]/s; ms[2]=d;
-  B = (float*) mxMalloc(ms[0]*ms[1]*d*sizeof(float));
-  plhs[0] = mxCreateNumericMatrix(0, 0, mxSINGLE_CLASS, mxREAL);
-  mxSetData(plhs[0], B); mxSetDimensions(plhs[0],(mwSize*)ms,nDims);
-
-  // perform appropriate type of convolution
-  if(!strcmp(type,"convBox")) {
-    if(r>=m/2) mexErrMsgTxt("mask larger than image (r too large)");
-    convBox( A, B, ns[0], ns[1], d, r, s );
-  } else if(!strcmp(type,"convTri")) {
-    if(r>=m/2) mexErrMsgTxt("mask larger than image (r too large)");
-    convTri( A, B, ns[0], ns[1], d, r, s );
-  } else if(!strcmp(type,"conv11")) {
-    if( s>2 ) mexErrMsgTxt("conv11 can sample by at most s=2");
-    conv11( A, B, ns[0], ns[1], d, r, s );
-  } else if(!strcmp(type,"convTri1")) {
-    if( s>2 ) mexErrMsgTxt("convTri1 can sample by at most s=2");
-    convTri1( A, B, ns[0], ns[1], d, p, s );
-  } else if(!strcmp(type,"convMax")) {
-    if( s>1 ) mexErrMsgTxt("convMax cannot sample");
-    convMax( A, B, ns[0], ns[1], d, r );
-  } else {
-    mexErrMsgTxt("Invalid type.");
-  }
-}
-#endif

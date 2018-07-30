@@ -251,7 +251,7 @@ by the distribution of local intensity gradient or edge directions, even without
 of the corresponding gradient or edge position. \par
 Input - detection window with size: $64 \times 128$. 
 \begin{enumerate}
-	\item Divide the detection window into $16 \times 16$ blocks of $50\%$ overlap.
+	\item Divide the detection window into $16 \text{ pixels} \times 16 \text{ pixels}$ blocks with $50\%$ overlap.
 		\begin{itemize}
 			\item $7 \times 15 = 105$ blocks in total ($(64 \div (16 \div 2) - 1) \times 
 				(128 \div (16 \div 2) - 1)$. 
@@ -268,7 +268,7 @@ Input - detection window with size: $64 \times 128$.
 			For color images, calculate separate gradients for each color channel, and take the one with 
 			the largest norm at the pixel's gradient vector.
 			\item Interpolate votes bi-linearly between neighboring bin center. \\
-			 For example, suppose a pixel have orientation $80^\circ$, next to it has $70^\circ$ and 
+			 For example, suppose a pixel have orientation $85^\circ$, next to it has $70^\circ$ and 
 			 $90^\circ$ bins, then: $85-70=15$, $90-85=5$, so, for bin $70^\circ$ it contributes:
 			  $15/(15+5)=3/4 \times$ gradient magnitude, and for bin $90^\circ$: $5/(15+5)=1/4 \times$
 			  gradient magnitude.
@@ -276,14 +276,14 @@ Input - detection window with size: $64 \times 128$.
 		\end{itemize}
 	\item For each cell accumulating the 1-D histogram of gradient directions or edge orientations over
 	the pixels of the cell.
-	\item Normalization for blocks, for better invariance to illumination, shadowing etc..
+	\item Gradient strengths vary over a wide range owing to local variations in illumination and foreground-background contrast, so local contrast normalization for blocks, \textbf{for better invariance to illumination}, shadowing etc..
 		\begin{itemize}
-			\item L2-Hys (Lowe-style clipped L2 norm) block normalization. That is, L2-norm followed by 
+			\item L2-Hys (Lowe-style clipped L2 norm) block normalization. That is, L2-norm ($v \rightarrow \frac{v}{\sqrt{\abs{v}^2_2+\epsilon}}$) followed by 
 			clipping (limiting the maximum values of v to 0.2) and renormalizing.
 		\end{itemize}		
 	\item Concatenate histograms.
 		\begin{itemize}
-			\item Feature dimension: $36(=4 \times 9)$ for each block (in this example, 105 blocks in total,
+			\item Feature dimension: $36(=4 \text{ cells} \times 9 \text{ bins})$ for each block (in this example, 105 blocks in total,
 			so $36 \times 105$ features in total for this input detection window).
 		\end{itemize}	
 \end{enumerate}
@@ -297,7 +297,8 @@ Input - image size: $w \times h$.
 	\item Pixel-Level Feature Maps. 
 		\begin{itemize}
 			\item For each pixel (x, y), let $\theta(x,y)$ be the orientation and $r(x,y)$ be the magnitude of 
-			the intensity gradient using $[-1, 0, 1]$ as gradient filter.
+			the intensity gradient using $[-1, 0, 1]$ as gradient filter. For color images, we use the channel with 
+			the largest gradient magnitude. 
 			\item The gradient calculated at the pixel is discretized into one of p values by contrast sensitive
 			($B_1$) or contrast insensitive ($B_2$):
 				\begin{equation}
@@ -326,13 +327,20 @@ Input - image size: $w \times h$.
 			\item The feature vector at a cell is the sum (or average) of the pixel-level features in that cell.
 			\item Each pixel contributes to the feature vectors in the four cells around it using 
 			bilinear interpolation.
-			\item This aggregation provides some invariance to small deformations and reduces the size
+			\item This aggregation \textbf{provides some invariance to small deformations} and reduces the size
 			of a feature map.
 		\end{itemize}
 	\item Normalization and Truncation.
 		\begin{itemize}
-			\item Normalization provides the invariance to gain, while gradients provides invariant to bias.
-			\item Let $T_{\alpha}(v)$ denote the truncation of a vector  v by $\alpha$.
+			\item Gradients \textbf{provides invariant to bias}. Normalization \textbf{provides the invariance to gain}.
+			\item We use four normalization factors for C(i,j): $N_{\delta, \gamma}(i,j)$ with 
+			$\delta, \gamma \in \{-1, 1\}$,
+				\begin{equation}
+					N_{\delta, \gamma}(i,j)=(\norm{C(i,j)}^2+\norm{C(i+\delta,j)}^2+
+									\norm{C(i,j+\gamma)}^2+\norm{C(i+\delta,j+\gamma)}^2)^{1/2}
+				\end{equation}
+			Each factor measures the "gradient energy" in a square block of four cells containing (i,j).
+			\item Let $T_{\alpha}(v)$ denote the truncation of a vector  v by $\alpha$ (the minimum of the entry and $\alpha$).
 			\item The feature map is obtained by concatenating the result of normalizing the map C with respect
 			 to each normalization factor followed by truncation:
 			 	\begin{equation}
@@ -344,13 +352,6 @@ Input - image size: $w \times h$.
 						T_{\alpha}(C(i,j)/N_{-1, +1}(i,j)) \\
 					\end{bmatrix}
 				\end{equation}
-			\item We use four normalization factors for C(i,j): $N_{\delta, \gamma}(i,j)$ with 
-			$\delta, \gamma \in \{-1, 1\}$,
-				\begin{equation}
-					N_{\delta, \gamma}(i,j)=(\norm{C(i,j)}^2+\norm{C(i+\delta,j)}^2+
-									\norm{C(i,j+\gamma)}^2+\norm{C(i+\delta,j+\gamma)}^2)^{1/2}
-				\end{equation}
-			Each factor measures the "gradient energy" in a square block of four cells containing (i,j).
 			\item Commonly, HOG features using $p=9$, discretized with $B_2$, cell size $k=8$ and truncation 
 			$\alpha = 0.2$, so we have 36-dimensional feature vector (9 orientations $ \times 4$ 
 			normalizaions).
@@ -361,8 +362,9 @@ Input - image size: $w \times h$.
 			so we have $4 \times (9+18)=108$ dimensional feature vectors. 
 			\item Use an analytic projection of 108 dimensional features to:
 				\begin{enumerate}
-			 		\item 27 (=9+18) sums over 4 different normalizations.
-					\item 4 dimensional features sums over 9 contrast insensitive orientations. 
+			 		\item 27=(9+18) sums over 4 different normalizations.
+					\item 4 dimensions capturing the overall gradient energy in square blocks of four cells 
+					around $(x,y)$. 
 				\end{enumerate}
 			\item In total, the final feature map has 31-dimensional vectors (27+4).
 		\end{itemize}	
@@ -1106,7 +1108,9 @@ This function is to calculate the left-hand side of the equation (\ref{eq:ccot})
 	(A^H \Gamma A + W^H W) \hat{\bm{f}} = A^H \Gamma \hat{\bm{y}}
 \end{equation} \par
 
-
+%=======================================
+\section{SSE speed-up}
+Reference: \url{http://sci.tuomastonteri.fi/programming/sse} \par
 %=======================================
 \section{Some tips of transfer from matlab to $c++$}
 \begin{itemize}
