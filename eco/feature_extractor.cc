@@ -34,6 +34,7 @@ ECO_FEATS FeatureExtractor::extractor(const cv::Mat image,
 	for (int i = 0; i < num_features; ++i) // for each feature
 	{
 		vector<cv::Mat> img_samples_temp(num_scales);
+		//debug("scales:%lu", scales.size());
 		for (unsigned int j = 0; j < scales.size(); ++j) // for each scale
 		{
 			cv::Size2f img_sample_sz;
@@ -73,8 +74,37 @@ ECO_FEATS FeatureExtractor::extractor(const cv::Mat image,
 #endif
 	if (params.useHogFeature)
 	{
+		/* Debug
+		debug("hog_feat_ind_:%d", hog_feat_ind_);
+		debug("img_samples[hog_feat_ind_] size: %lu",
+			  img_samples[hog_feat_ind_].size());
+		imgInfo(img_samples[hog_feat_ind_][0]);
+		showmat3ch(img_samples[hog_feat_ind_][0], 0); */
+		double timer = (double)cv::getTickCount();
+		float timedft = 0;
+
+		//hog_feat_maps_ = get_hog_features_simd(img_samples[hog_feat_ind_]);
+		
+		// 0.006697 s
 		hog_feat_maps_ = get_hog_features(img_samples[hog_feat_ind_]);
+		// 32FCO 25 x 25
+		//imgInfo(hog_feat_maps_[0]);
+		//showmat1ch(hog_feat_maps_[0], 2);
+
+		timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();
+		debug("hog time: %f", timedft);
+		timer = (double)cv::getTickCount();
+
+		// 0.000125 s
 		hog_feat_maps_ = hog_feature_normalization(hog_feat_maps_);
+		// 32FC1 25 x 25
+		//imgInfo(hog_feat_maps_[0]);
+		//showmat1ch(hog_feat_maps_[0], 2);
+
+		timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();
+		debug("hog time norm: %f", timedft);
+		//assert(0);
+
 		sum_features.push_back(hog_feat_maps_);
 	}
 
@@ -149,13 +179,97 @@ cv::Mat FeatureExtractor::sample_patch(const cv::Mat im,
 
 	cv::Mat resized_patch;
 	cv::resize(im_patch, resized_patch, input_sz);
-
-	//imgInfo(resized_patch); // 8UC3 150 x 150
-	//showmat3ch(resized_patch, 0);
+	/* Debug
+	imgInfo(resized_patch); // 8UC3 150 x 150
+	showmat3ch(resized_patch, 0);
 	// resized_patch(121,21,1) in matlab RGB, cv: BGR
-	//debug("%d", resized_patch.at<cv::Vec3b>(120,20)[2]); 
-	//assert(0);
+	debug("%d", resized_patch.at<cv::Vec3b>(120,20)[2]); 
+	assert(0); */
 	return resized_patch;
+}
+
+vector<cv::Mat> FeatureExtractor::get_hog_features_simd(vector<cv::Mat> ims)
+{
+
+	if (ims.empty())
+		return vector<cv::Mat>();
+
+	debug("ims.size: %lu", ims.size());
+	vector<cv::Mat> hog_feats;
+	for (unsigned int i = 0; i < ims.size(); i++)
+	{
+		cv::Mat ims_f;
+		ims[i].convertTo(ims_f, CV_32FC3);
+		int h, w, d, binSize, nOrients, softBin, cell_size, nDim;
+		h = ims[i].rows;
+		w = ims[i].cols;
+		d = 3;
+		binSize = 6;
+		nOrients = 9;
+		softBin = -1;
+		cell_size = 6;
+		nDim = 31;
+		float clip = 0.2f;
+		float *I, *M, *O, *H;
+		I = (float *)wrCalloc(h * w * d, sizeof(float));
+		M = (float *)wrCalloc(h * w * d, sizeof(float));
+		O = (float *)wrCalloc(h * w * d, sizeof(float));
+		H = (float *)wrCalloc((int)std::floor(h / cell_size) * (int)std::floor(w / cell_size) * (nDim + 1), sizeof(float));
+
+		std::vector<cv::Mat> channels;
+		cv::split(ims_f, channels);
+		// transpose because matlab is col-major
+		cv::transpose(channels[0], channels[0]);
+		cv::transpose(channels[1], channels[1]);
+		cv::transpose(channels[2], channels[2]);
+
+		memcpy(I, channels[2].ptr(), h * w * sizeof(float));
+		memcpy(I + h * w, channels[1].ptr(), h * w * sizeof(float));
+		memcpy(I + 2 * h * w, channels[0].ptr(), h * w * sizeof(float));
+
+		double timer = (double)cv::getTickCount();
+		float timedft = 0;
+
+		gradMag(I, M, O, h, w, d, 1);
+
+		timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();
+		debug("gradMag time: %f", timedft);
+		timer = (double)cv::getTickCount();
+
+
+		// error here=========================================
+		//hog(M, O, H, h, w, binSize, nOrients, softBin, 1, 0.2f);
+		fhog(M, O, H, h, w, binSize, nOrients, softBin, 0.2f);
+
+		timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();
+		debug("gradHist time: %f", timedft);
+
+		for (int i = 0; i < h; i++)
+		{
+			printf("%f ", M[i]);
+		}
+		printf("\nM end\n");
+		for (int i = 0; i < h; i++)
+		{
+			printf("%f ", O[i]);
+		}
+		printf("\nO end\n");
+		for (int i = 0; i < std::floor(h / cell_size); i++)
+		{
+			printf("%f ", H[i]);
+		}
+		printf("\nH end\n");
+		debug();
+		/*
+		wrFree(I);
+		wrFree(M);
+		wrFree(O);
+		wrFree(H);*/
+		//debug("%f, %f, %f", M[1], O[1], H[3]);
+		//hog_feats.push_back(featuresMap);
+	}
+	debug();
+	return hog_feats;
 }
 
 vector<cv::Mat> FeatureExtractor::get_hog_features(vector<cv::Mat> ims)
@@ -163,9 +277,8 @@ vector<cv::Mat> FeatureExtractor::get_hog_features(vector<cv::Mat> ims)
 	if (ims.empty())
 		return vector<cv::Mat>();
 
-	// debug("ims.size: %lu", ims.size());
 	vector<cv::Mat> hog_feats;
-	for (unsigned int i = 0; i < ims.size(); i++) // ims.size()=5
+	for (unsigned int i = 0; i < ims.size(); i++)
 	{
 		cv::Mat ims_f;
 		ims[i].convertTo(ims_f, CV_32FC3);
@@ -249,17 +362,20 @@ vector<cv::Mat> FeatureExtractor::hog_feature_normalization(vector<cv::Mat> &hog
 	{
 		cv::Mat temp = hog_feat_maps[i];
 		temp = temp.mul(temp);
-		// float  sum_scales = cv::sum(temp)[0]; *** sum can not work !! while dimension exceeding 3
+		// float sum_scales = cv::sum(temp)[0]; // sum can not work when dimension exceeding 3
 		vector<cv::Mat> temp_vec, result_vec;
 		float sum = 0;
 		cv::split(temp, temp_vec);
 		for (int j = 0; j < temp.channels(); j++)
 			sum += cv::sum(temp_vec[j].mul(temp_vec[j]))[0];
-		float para = hog_features_.data_sz_block0.area() * hog_features_.fparams.nDim;
+		float para = hog_features_.data_sz_block0.area() *
+					 hog_features_.fparams.nDim;
 		hog_feat_maps[i] /= sqrt(sum / para);
 
 		cv::split(hog_feat_maps[i], result_vec);
-		hog_maps_vec.insert(hog_maps_vec.end(), result_vec.begin(), result_vec.end());
+		hog_maps_vec.insert(hog_maps_vec.end(),
+							result_vec.begin(),
+							result_vec.end());
 	}
 
 	return hog_maps_vec;

@@ -3,7 +3,14 @@
 * Copyright 2014 Piotr Dollar.  [pdollar-at-gmail.com]
 * Licensed under the Simplified BSD License [see external/bsd.txt]
 *******************************************************************************/
-#include "rgbConvertMex.hpp"
+#ifndef RGBCONVERTMEX_HPP
+#define RGBCONVERTMEX_HPP
+
+#include "wrappers.hpp"
+#include <cmath>
+#include <typeinfo>
+#include "sse.hpp"
+
 
 // Constants for rgb2luv conversion and lookup table for y-> l conversion
 template<class oT> oT* rgb2luv_setup( oT z, oT *mr, oT *mg, oT *mb,
@@ -131,14 +138,14 @@ template<class iT, class oT> void rgb2gray( iT *I, oT *J, int n, oT nrm ) {
   oT mr=(oT).2989360213*nrm, mg=(oT).5870430745*nrm, mb=(oT).1140209043*nrm;
   for(i=0; i<n; i++) *(GR++)=(oT)*(R++)*mr + (oT)*(G++)*mg + (oT)*(B++)*mb;
 }
-
+/*
 // Convert from rgb (double) to gray (float)
 template<> void rgb2gray( double *I, float *J, int n, float nrm ) {
   float *GR=J; double *R=I, *G=R+n, *B=G+n; int i;
   double mr=.2989360213*nrm, mg=.5870430745*nrm, mb=.1140209043*nrm;
   for(i=0; i<n; i++) *(GR++) = (float) (*(R++)*mr + *(G++)*mg + *(B++)*mb);
 }
-
+*/
 // Copy and normalize only
 template<class iT, class oT> void normalize( iT *I, oT *J, int n, oT nrm ) {
   for(int i=0; i<n; i++) *(J++)=(oT)*(I++)*nrm;
@@ -161,3 +168,5 @@ oT* rgbConvert( iT *I, int n, int d, int flag, oT nrm ) {
   else wrError("Unknown flag.");
   return J;
 }
+
+#endif

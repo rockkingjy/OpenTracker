@@ -11,8 +11,6 @@
 #include "string.h"
 #include "sse.hpp"
 
-#define PI 3.14159265f
-
 // compute x and y gradients for just one column (uses sse)
 void grad1( float *I, float *Gx, float *Gy, int h, int w, int x );
 

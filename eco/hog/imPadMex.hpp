@@ -3,7 +3,12 @@
 * Copyright 2014 Piotr Dollar.  [pdollar-at-gmail.com]
 * Licensed under the Simplified BSD License [see external/bsd.txt]
 *******************************************************************************/
-#include "imPadMex.hpp"
+#ifndef IMPADMEX_HPP
+#define IMPADMEX_HPP
+
+#include "wrappers.hpp"
+#include "string.h"
+typedef unsigned char uchar;
 
 // pad A by [pt,pb,pl,pr] and store result in B
 template<class T> void imPad( T *A, T *B, int h, int w, int d, int pt, int pb,
@@ -64,3 +69,4 @@ template<class T> void imPad( T *A, T *B, int h, int w, int d, int pt, int pb,
   #undef PAD
 }
 
+#endif

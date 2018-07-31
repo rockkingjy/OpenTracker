@@ -24,7 +24,7 @@ CXXFLAGS = -g -Wall `pkg-config --cflags opencv` -lstdc++ -lm -std=c++0x
 # add for gtest
 CXXFLAGS += -isystem $(GTEST_DIR)/include
 
-HEADERS = $(wildcard *.h)
+HEADERS = $(wildcard *.h) $(wildcard hog/*.hpp)
 
 GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
                 $(GTEST_DIR)/include/gtest/internal/*.h
@@ -50,9 +50,10 @@ endif
 
 OBJS = ffttools.o fhog.o interpolator.o optimize_scores.o \
 		regularization_filter.o feature_extractor.o feature_operator.o  \
-		training.o sample_update.o eco.o metrics.o 
+		training.o sample_update.o eco.o metrics.o \
+		hog/convConst.o hog/gradientMex.o
 
-all: runecotracker.bin eco_unittest.bin
+all: makehog runecotracker.bin eco_unittest.bin
 
 runecotracker.bin: $(OBJS) runecotracker.o
 	$(CC) -o $@ $^ $(LDFLAGS) 
@@ -71,6 +72,9 @@ $(TARGET_LIB): $(OBJS)
 
 %.o: %.cu $(HEADERS)
 	$(NVCC) $(ARCH) --compiler-options "$(CXXFLAGS)" -c $< -o $@
+
+makehog:
+	cd hog && make -j`nproc`
 
 # gTest
 GTEST_SRCS_ = $(GTEST_DIR)/src/*.cc $(GTEST_DIR)/src/*.h $(GTEST_HEADERS)
@@ -106,4 +110,4 @@ cvgputest.bin : cvgputest.o
 .PHONY: clean
 
 clean:
-	rm -rf ./.d *.o *.bin *.so *.a
+	rm -rf ./.d *.o *.bin *.so *.a */*.o */*.bin

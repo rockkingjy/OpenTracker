@@ -9,10 +9,11 @@
 #include "recttools.hpp"
 #include "debug.hpp"
 
-namespace eco 
+namespace eco
 {
 template <typename T>
-extern std::vector<T> operator+(const std::vector<T> &a, const std::vector<T> &b)
+extern std::vector<T> operator+(const std::vector<T> &a,
+								const std::vector<T> &b)
 {
 	assert(a.size() == b.size());
 	std::vector<T> result;
@@ -24,7 +25,8 @@ extern std::vector<T> operator+(const std::vector<T> &a, const std::vector<T> &b
 }
 
 template <typename T>
-extern std::vector<T> operator-(const std::vector<T> &a, const std::vector<T> &b)
+extern std::vector<T> operator-(const std::vector<T> &a,
+								const std::vector<T> &b)
 {
 	assert(a.size() == b.size());
 	std::vector<T> result;
@@ -53,25 +55,25 @@ extern void FilterSymmetrize(ECO_FEATS &hf);
 extern vector<cv::Mat> init_projection_matrix(const ECO_FEATS &init_sample,
 											  const vector<int> &compressed_dim,
 											  const vector<int> &feature_dim);
-extern ECO_FEATS FeatureProjection(const ECO_FEATS &x, 
-					const std::vector<cv::Mat> &projection_matrix);
-extern ECO_FEATS FeatureProjectionMultScale(const ECO_FEATS &x, 
-					const std::vector<cv::Mat> &projection_matrix);
+extern ECO_FEATS FeatureProjection(const ECO_FEATS &x,
+								   const std::vector<cv::Mat> &projection_matrix);
+extern ECO_FEATS FeatureProjectionMultScale(const ECO_FEATS &x,
+											const std::vector<cv::Mat> &projection_matrix);
 
-extern float FeatureComputeInnerProduct(const ECO_FEATS &feat1, 
+extern float FeatureComputeInnerProduct(const ECO_FEATS &feat1,
 										const ECO_FEATS &feat2);
 extern float FeatureComputeEnergy(const ECO_FEATS &feat);
 extern ECO_FEATS FeautreComputePower2(const ECO_FEATS &feats);
-extern std::vector<cv::Mat> FeatureComputeScores(const ECO_FEATS &x, 
-												 const ECO_FEATS &f); 
-extern std::vector<cv::Mat> FeatureVectorization(const ECO_FEATS &x); 
+extern std::vector<cv::Mat> FeatureComputeScores(const ECO_FEATS &x,
+												 const ECO_FEATS &f);
+extern std::vector<cv::Mat> FeatureVectorization(const ECO_FEATS &x);
 
-extern ECO_FEATS FeatureVectorMultiply(const ECO_FEATS &x, 
-									   const std::vector<cv::Mat> y, 
+extern ECO_FEATS FeatureVectorMultiply(const ECO_FEATS &x,
+									   const std::vector<cv::Mat> y,
 									   const bool _conj = 0); // feature * yf
 
 extern ECO_FEATS FeatureDotMultiply(const ECO_FEATS &a, const ECO_FEATS &b);
 extern ECO_FEATS FeatureDotDivide(const ECO_FEATS data1, const ECO_FEATS data2);
-}
+} // namespace eco
 
 #endif

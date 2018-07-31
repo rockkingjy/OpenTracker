@@ -7,6 +7,9 @@
 #include <numeric>
 #include <iostream>
 
+#include <iostream>
+#include <cstdio>
+#include <ctime>
 //#include <opencv2/opencv.hpp>
 
 #define getName(var) #var
@@ -18,6 +21,20 @@ using namespace std;
 
 void timerExample();
 inline void timerExample()
+{
+	std::clock_t start;
+	double duration;
+
+	start = std::clock();
+
+	/* Your algorithm here */
+
+	duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
+	std::cout << "time: " << duration << '\n';
+}
+
+void timerExampleCV();
+inline void timerExampleCV()
 {
 	double timer = (double)cv::getTickCount();
 	float timedft = 0;
@@ -329,15 +346,15 @@ inline void showmat3ch(cv::Mat mat, int type)
 			printf("%d ", splitmat[2].at<uchar>(0, j));
 		}
 		else if (type == 1)
-		{ 
+		{
 			printf("%d ", splitmat[2].at<int>(0, j));
 		}
 		else if (type == 2)
-		{ 
+		{
 			printf("%f ", splitmat[2].at<float>(0, j));
 		}
 		else if (type == 3)
-		{ 
+		{
 			printf("%lf ", splitmat[2].at<double>(0, j));
 		}
 	}
@@ -348,19 +365,19 @@ inline void showmat3ch(cv::Mat mat, int type)
 	for (int i = 0; i < mat.rows; i += 1)
 	{
 		if (type == 0)
-		{ 
+		{
 			printf("%d ", splitmat[2].at<uchar>(i, 0));
 		}
 		else if (type == 1)
-		{ 
+		{
 			printf("%d ", splitmat[2].at<int>(i, 0));
 		}
 		else if (type == 2)
-		{ 
+		{
 			printf("%f ", splitmat[2].at<float>(i, 0));
 		}
 		else if (type == 3)
-		{ 
+		{
 			printf("%lf ", splitmat[2].at<double>(i, 0));
 		}
 	}

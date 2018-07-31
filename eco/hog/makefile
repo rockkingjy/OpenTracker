@@ -4,11 +4,11 @@ CXX=g++
 
 LDFLAGS=  -lstdc++ -lm
 
-CXXFLAGS= -Wall -std=c++0x -lstdc++ #-msse3
+CXXFLAGS= -Wall -std=c++0x -lstdc++ -msse4
 
 HEADERS = *.h *.hpp
 
-OBJ = convConst.o gradientMex.o imPadMex.o imResampleMex.o rgbConvertMex.o chnsTestCpp.o
+OBJ = convConst.o gradientMex.o chnsTestCpp.o
 
 all: chnsTestCpp.bin 
 

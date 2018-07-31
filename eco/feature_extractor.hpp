@@ -14,6 +14,14 @@
 #include "fhog.hpp"
 #include "debug.hpp"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include "hog/rgbConvertMex.hpp"
+#include "hog/imPadMex.hpp"
+#include "hog/convConst.hpp"
+#include "hog/imResampleMex.hpp"
+#include "hog/gradientMex.hpp"
+
 #ifdef USE_CAFFE
 #include <caffe/caffe.hpp>
 #include <caffe/util/io.hpp>
@@ -38,6 +46,7 @@ class FeatureExtractor
 						 cv::Size2f sample_sz,
 						 cv::Size2f input_sz);
 
+	vector<cv::Mat> get_hog_features_simd(vector<cv::Mat> ims);
 	vector<cv::Mat> get_hog_features(vector<cv::Mat> ims);
 	vector<cv::Mat> hog_feature_normalization(vector<cv::Mat> &feature);
 	inline vector<cv::Mat> get_hog_feats() const { return hog_feat_maps_; }
@@ -60,8 +69,6 @@ class FeatureExtractor
 	int cnn_feat_ind_ = -1;
 	ECO_FEATS cnn_feat_maps_;
 #endif
-
-
 };
 } // namespace eco
 #endif

@@ -3,7 +3,16 @@
 * Copyright 2014 Piotr Dollar.  [pdollar-at-gmail.com]
 * Licensed under the Simplified BSD License [see external/bsd.txt]
 *******************************************************************************/
-#include "imResampleMex.hpp"
+#ifndef IMRESAMPLEMEX_HPP
+#define IMRESAMPLEMEX_HPP
+
+#include "wrappers.hpp"
+#include "string.h"
+#include <math.h>
+#include <typeinfo>
+#include "sse.hpp"
+typedef unsigned char uchar;
+
 
 // compute interpolation values for single column for resapling
 template<class T> void resampleCoef( int ha, int hb, int &n, int *&yas,
@@ -123,3 +132,5 @@ void resample( T *A, T *B, int ha, int hb, int wa, int wb, int d, T r ) {
   alFree(xas); alFree(xbs); alFree(xwts); alFree(C);
   alFree(yas); alFree(ybs); alFree(ywts);
 }
+
+#endif
