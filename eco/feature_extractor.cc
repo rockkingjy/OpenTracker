@@ -190,7 +190,6 @@ cv::Mat FeatureExtractor::sample_patch(const cv::Mat im,
 
 vector<cv::Mat> FeatureExtractor::get_hog_features_simd(vector<cv::Mat> ims)
 {
-
 	if (ims.empty())
 		return vector<cv::Mat>();
 
@@ -214,8 +213,9 @@ vector<cv::Mat> FeatureExtractor::get_hog_features_simd(vector<cv::Mat> ims)
 		I = (float *)wrCalloc(h * w * d, sizeof(float));
 		M = (float *)wrCalloc(h * w * d, sizeof(float));
 		O = (float *)wrCalloc(h * w * d, sizeof(float));
+		//H = (float *)wrCalloc(h * w * d, sizeof(float));
 		H = (float *)wrCalloc((int)std::floor(h / cell_size) * (int)std::floor(w / cell_size) * (nDim + 1), sizeof(float));
-
+		
 		std::vector<cv::Mat> channels;
 		cv::split(ims_f, channels);
 		// transpose because matlab is col-major
@@ -223,40 +223,55 @@ vector<cv::Mat> FeatureExtractor::get_hog_features_simd(vector<cv::Mat> ims)
 		cv::transpose(channels[1], channels[1]);
 		cv::transpose(channels[2], channels[2]);
 
+		for(int i=0; i<h; i++)
+			for(int j=0; j<w; j++)
+			{
+				*(I + i * w + j) = channels[2].at<float>(i,j);
+				*(I + h * w + i * w + j) = channels[1].at<float>(i,j);
+				*(I + 2 * h * w + i * w + j) = channels[0].at<float>(i,j);
+			}
+/*
 		memcpy(I, channels[2].ptr(), h * w * sizeof(float));
 		memcpy(I + h * w, channels[1].ptr(), h * w * sizeof(float));
 		memcpy(I + 2 * h * w, channels[0].ptr(), h * w * sizeof(float));
+	*/	
+		debug("%lu %lu", I, channels[2].ptr());
+		debug("%lu %lu", I + h * w, channels[1].ptr());
+
 
 		double timer = (double)cv::getTickCount();
 		float timedft = 0;
 
+		debug();
 		gradMag(I, M, O, h, w, d, 1);
 
 		timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();
 		debug("gradMag time: %f", timedft);
-		timer = (double)cv::getTickCount();
-
-
-		// error here=========================================
-		//hog(M, O, H, h, w, binSize, nOrients, softBin, 1, 0.2f);
-		fhog(M, O, H, h, w, binSize, nOrients, softBin, 0.2f);
-
-		timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();
-		debug("gradHist time: %f", timedft);
-
 		for (int i = 0; i < h; i++)
 		{
-			printf("%f ", M[i]);
+			printf("%f ", M[h*149 + i]);
 		}
 		printf("\nM end\n");
 		for (int i = 0; i < h; i++)
 		{
-			printf("%f ", O[i]);
+			printf("%f ", O[h*149 + i]);
 		}
 		printf("\nO end\n");
+
+
+		timer = (double)cv::getTickCount();
+		//hog(M, O, H, h, w, binSize, nOrients, softBin, 1, 0.2f);
+		debug();
+		//H = (float *)wrCalloc(h * w * d, sizeof(float));
+		fhog(M, O, H, h, w, binSize, nOrients, softBin, clip);
+
+		timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();
+		debug("gradHist time: %f", timedft);
+
+
 		for (int i = 0; i < std::floor(h / cell_size); i++)
 		{
-			printf("%f ", H[i]);
+			printf("%f ", H[25*25*30+25*24+i]);
 		}
 		printf("\nH end\n");
 		debug();
