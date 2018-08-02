@@ -12,44 +12,47 @@
 #include "sse.hpp"
 #include <stdlib.h>
 
+#include <stdio.h>
+#define debug(a, args...) printf("%s(%s:%d) " a "\n", __func__, __FILE__, __LINE__, ##args)
+
 // compute x and y gradients for just one column (uses sse)
-void grad1( float *I, float *Gx, float *Gy, int h, int w, int x );
+void grad1(float *I, float *Gx, float *Gy, int h, int w, int x);
 
 // compute x and y gradients at each location (uses sse)
-void grad2( float *I, float *Gx, float *Gy, int h, int w, int d );
+void grad2(float *I, float *Gx, float *Gy, int h, int w, int d);
 
 // build lookup table a[] s.t. a[x*n]~=acos(x) for x in [-1,1]
-float* acosTable();
+float *acosTable();
 
 // compute gradient magnitude and orientation at each location (uses sse)
-void gradMag( float *I, float *M, float *O, int h, int w, int d, bool full );
+void gradMag(float *I, float *M, float *O, int h, int w, int d, bool full);
 
 // normalize gradient magnitude at each location (uses sse)
-void gradMagNorm( float *M, float *S, int h, int w, float norm );
+void gradMagNorm(float *M, float *S, int h, int w, float norm);
 
 // helper for gradHist, quantize O and M into O0, O1 and M0, M1 (uses sse)
-void gradQuantize( float *O, float *M, int *O0, int *O1, float *M0, float *M1,
-  int nb, int n, float norm, int nOrients, bool full, bool interpolate );
+void gradQuantize(float *O, float *M, int *O0, int *O1, float *M0, float *M1,
+                  int nb, int n, float norm, int nOrients, bool full, bool interpolate);
 
 // compute nOrients gradient histograms per bin x bin block of pixels
-void gradHist( float *M, float *O, float *H, int h, int w,
-  int bin, int nOrients, int softBin, bool full );
+void gradHist(float *M, float *O, float *H, int h, int w,
+              int bin, int nOrients, int softBin, bool full);
 
 /******************************************************************************/
 
 // HOG helper: compute 2x2 block normalization values (padded by 1 pixel)
-float* hogNormMatrix( float *H, int nOrients, int hb, int wb, int bin );
+float *hogNormMatrix(float *H, int nOrients, int hb, int wb, int bin);
 
 // HOG helper: compute HOG or FHOG channels
-void hogChannels( float *H, const float *R, const float *N,
-  int hb, int wb, int nOrients, float clip, int type );
+void hogChannels(float *H, const float *R, const float *N,
+                 int hb, int wb, int nOrients, float clip, int type);
 
 // compute HOG features
-void hog( float *M, float *O, float *H, int h, int w, int binSize,
-  int nOrients, int softBin, bool full, float clip );
+void hog(float *M, float *O, float *H, int h, int w, int binSize,
+         int nOrients, int softBin, bool full, float clip);
 
 // compute FHOG features
-void fhog( float *M, float *O, float *H, int h, int w, int binSize,
-  int nOrients, int softBin, float clip );
+void fhog(float *M, float *O, float *H, int h, int w, int binSize,
+          int nOrients, int softBin, float clip);
 
 #endif

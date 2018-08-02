@@ -165,7 +165,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 									  params_);
 	debug("xl size: %lu, %lu, %d x %d", xl.size(), xl[0].size(),
 		  xl[0][0].rows, xl[0][0].cols);
-
+	//assert(0);
 	// 3. Multiply the features by the cosine window.
 	xl = do_windows(xl, cos_window_);
 

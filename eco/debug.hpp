@@ -10,7 +10,8 @@
 #include <iostream>
 #include <cstdio>
 #include <ctime>
-//#include <opencv2/opencv.hpp>
+
+#include <opencv2/opencv.hpp>
 
 #define getName(var) #var
 
@@ -393,7 +394,48 @@ inline void showmatNch(cv::Mat mat, int type)
 	cv::split(mat, splitmat);
 
 	debug("channels: %lu", splitmat.size());
-
+	printf("1th row of channel 0: \n");
+	for (int j = 0; j < mat.cols; j += 1)
+	{
+		if (type == 0)
+		{
+			printf("%d ", splitmat[0].at<uchar>(0, j));
+		}
+		else if (type == 1)
+		{ // first row
+			printf("%d ", splitmat[0].at<int>(0, j));
+		}
+		else if (type == 2)
+		{ // first row
+			printf("%f ", splitmat[0].at<float>(0, j));
+		}
+		else if (type == 3)
+		{ // first row
+			printf("%lf ", splitmat[0].at<double>(0, j));
+		}
+	}	
+	printf("\n");
+	printf("1th col of  channel 0: \n");
+	for (int i = 0; i < mat.rows; i += 1)
+	{
+		if (type == 0)
+		{ // first row
+			printf("%d ", splitmat[0].at<uchar>(i, 0));
+		}
+		else if (type == 1)
+		{ // first row
+			printf("%d ", splitmat[0].at<int>(i, 0));
+		}
+		else if (type == 2)
+		{ // first row
+			printf("%f ", splitmat[0].at<float>(i, 0));
+		}
+		else if (type == 3)
+		{ // first col
+			printf("%lf ", splitmat[0].at<double>(i, 0));
+		}
+	}
+	printf("\n");
 	printf("11th row of channel 0: \n");
 	for (int j = 0; j < mat.cols; j += 1)
 	{
@@ -414,8 +456,6 @@ inline void showmatNch(cv::Mat mat, int type)
 			printf("%lf ", splitmat[0].at<double>(10, j));
 		}
 	}
-	printf("\n\n");
-
 	printf("\n");
 	printf("21th col of  channel 0: \n");
 	for (int i = 0; i < mat.rows; i += 1)
@@ -437,8 +477,28 @@ inline void showmatNch(cv::Mat mat, int type)
 			printf("%lf ", splitmat[0].at<double>(i, 20));
 		}
 	}
+	printf("\n");
+	printf("25th row of channel -1: \n");
+	for (int j = 0; j < mat.cols; j += 1)
+	{
+		if (type == 0)
+		{
+			printf("%d ", splitmat[splitmat.size()-1].at<uchar>(24, j));
+		}
+		else if (type == 1)
+		{ // first row
+			printf("%d ", splitmat[splitmat.size()-1].at<int>(24, j));
+		}
+		else if (type == 2)
+		{ // first row
+			printf("%f ", splitmat[splitmat.size()-1].at<float>(24, j));
+		}
+		else if (type == 3)
+		{ // first row
+			printf("%lf ", splitmat[splitmat.size()-1].at<double>(24, j));
+		}
+	}
 	printf("\n\n");
-
 	printf("End of feature mat\n");
 }
 

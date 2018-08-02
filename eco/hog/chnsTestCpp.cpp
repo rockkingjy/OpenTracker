@@ -47,7 +47,6 @@ int main(int argc, const char *argv[])
   duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
   std::cout << "printf: " << duration << '\n';
 
-
   for (int i = 0; i < h; i++)
   {
     printf("%f ", M[i]);

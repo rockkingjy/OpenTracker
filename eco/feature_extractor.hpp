@@ -46,9 +46,14 @@ class FeatureExtractor
 						 cv::Size2f sample_sz,
 						 cv::Size2f input_sz);
 
-	vector<cv::Mat> get_hog_features_simd(vector<cv::Mat> ims);
-	vector<cv::Mat> get_hog_features(vector<cv::Mat> ims);
+	vector<cv::Mat> get_hog_features(const vector<cv::Mat> ims);
 	vector<cv::Mat> hog_feature_normalization(vector<cv::Mat> &feature);
+
+#ifdef USE_SIMD
+	vector<cv::Mat> get_hog_features_simd(const vector<cv::Mat> ims);
+	vector<cv::Mat> hog_feature_normalization_simd(vector<cv::Mat> &feature);
+#endif	
+
 	inline vector<cv::Mat> get_hog_feats() const { return hog_feat_maps_; }
 
 #ifdef USE_CAFFE

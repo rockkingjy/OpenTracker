@@ -2,10 +2,10 @@
 USE_CAFFE=0
 USE_CUDA=0
 USE_BOOST=1
+USE_SIMD=0
+USE_GTEST=1
 
 CAFFE_PATH=/media/elab/sdd/mycodes/caffe
-
-GTEST_DIR = ../googletest
 
 CC=gcc
 CXX=g++
@@ -20,16 +20,14 @@ ARCH= -gencode arch=compute_30,code=sm_30 \
 LDFLAGS= `pkg-config --libs opencv` -lstdc++ -lm 
 # -O3 double the speed!!!!!!!!!
 CXXFLAGS = -g -Wall `pkg-config --cflags opencv` -lstdc++ -lm -std=c++0x -O3
-	
-# add for gtest
-CXXFLAGS += -isystem $(GTEST_DIR)/include
 
-HEADERS = $(wildcard *.h) $(wildcard hog/*.hpp)
-
-GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
-                $(GTEST_DIR)/include/gtest/internal/*.h
+HEADERS = $(wildcard *.h)
 
 TARGET_LIB = libeco.so # target lib
+
+OBJS = ffttools.o fhog.o interpolator.o optimize_scores.o \
+		regularization_filter.o feature_extractor.o feature_operator.o  \
+		training.o sample_update.o eco.o metrics.o 
 
 ifeq ($(USE_CAFFE), 1)
 CXXFLAGS+= -DUSE_CAFFE
@@ -48,12 +46,28 @@ CXXFLAGS+= -DUSE_BOOST
 LDFLAGS+= -lboost_system -lboost_filesystem -lboost_regex
 endif
 
-OBJS = ffttools.o fhog.o interpolator.o optimize_scores.o \
-		regularization_filter.o feature_extractor.o feature_operator.o  \
-		training.o sample_update.o eco.o metrics.o \
-		hog/convConst.o hog/gradientMex.o
+ifeq ($(USE_SIMD), 1)
+CXXFLAGS+= -DUSE_SIMD
+HEADERS+= $(wildcard hog/*.hpp)
+OBJS+= hog/convConst.o hog/gradientMex.o
+endif
 
-all: makehog runecotracker.bin eco_unittest.bin
+ifeq ($(USE_GTEST), 1)
+GTEST_DIR = ../googletest
+GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
+                $(GTEST_DIR)/include/gtest/internal/*.h
+CXXFLAGS += -isystem $(GTEST_DIR)/include
+endif
+
+ifeq ($(USE_SIMD), 1)
+	ALL+= makehog 
+endif 
+ALL+= runecotracker.bin
+ifeq ($(USE_GTEST), 1) 
+	ALL+= eco_unittest.bin 
+endif
+
+all: $(ALL)
 
 runecotracker.bin: $(OBJS) runecotracker.o
 	$(CC) -o $@ $^ $(LDFLAGS) 
@@ -73,10 +87,12 @@ $(TARGET_LIB): $(OBJS)
 %.o: %.cu $(HEADERS)
 	$(NVCC) $(ARCH) --compiler-options "$(CXXFLAGS)" -c $< -o $@
 
+ifeq ($(USE_SIMD), 1)
 makehog:
 	cd hog && make -j`nproc`
+endif
 
-# gTest
+ifeq ($(USE_GTEST), 1)
 GTEST_SRCS_ = $(GTEST_DIR)/src/*.cc $(GTEST_DIR)/src/*.h $(GTEST_HEADERS)
 
 gtest-all.o : $(GTEST_SRCS_)
@@ -92,21 +108,22 @@ gtest.a : gtest-all.o
 
 gtest_main.a : gtest-all.o gtest_main.o
 	$(AR) $(ARFLAGS) $@ $^
-
-#=====
+#-------------
 eco_unittest.o : eco_unittest.cc ffttools.hpp $(GTEST_HEADERS)
 	$(CXX) $(CXXFLAGS) -c eco_unittest.cc
 
 eco_unittest.bin : ffttools.o eco_unittest.o gtest_main.a
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS) -lpthread
+endif
 
-#=====
+#cv gpu test========
 cvgputest.o : cvgputest.cc 
 	$(CXX) $(CXXFLAGS) -c cvgputest.cc
 
 cvgputest.bin : cvgputest.o
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
 
+#==============
 .PHONY: clean
 
 clean:
