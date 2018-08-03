@@ -306,7 +306,7 @@ vector<cv::Mat> FeatureExtractor::get_hog_features_simd(const vector<cv::Mat> im
 		}
 		printf("\nH end\n");
 	*/
-
+/*
 		// cv: ch->row->col; matlab: col->row->ch;
 		for (int i = 0; i < hb; i++)
 			for (int j = 0; j < wb; j++)
@@ -314,15 +314,24 @@ vector<cv::Mat> FeatureExtractor::get_hog_features_simd(const vector<cv::Mat> im
 				{
 					*(Hb + nDim * (i + j * wb) + l) = *(H + l * hb * wb + i * hb + j);
 				}
-		cv::Mat featuresMap = cv::Mat(cv::Size(wb, hb), CV_32FC(nDim - 1), Hb);
+				*/
+		//cv::Mat featuresMap = cv::Mat(cv::Size(wb, hb), CV_32FC(nDim - 1)), Hb);
+		//featuresMap = featuresMap.clone();
+		cv::Mat featuresMap = cv::Mat(cv::Size(wb, hb), CV_32FC(nDim - 1));
 		debug();
-		showmatNch(featuresMap, 2);
-
+		for (int i = 0; i < hb; i++)
+			for (int j = 0; j < wb; j++)
+				for (int l = 0; l < nDim - 1; l++)
+				{
+					featuresMap.at<cv::Vec<float,31>>(i, j)[l] = *(H + l * hb * wb + i * hb + j);
+				}
+		//showmatNch(featuresMap, 2);
 		hog_feats.push_back(featuresMap);
 		debug();
 		//alFree(I); alFree(M); alFree(O); alFree(H); alFree(Hb);
 		wrFree(I); wrFree(M); wrFree(O); wrFree(H); wrFree(Hb);
 	}
+	debug();
 	return hog_feats;
 }
 
