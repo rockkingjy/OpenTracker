@@ -119,6 +119,8 @@ In `makefile`, make sure change to:
 USE_CAFFE=0
 USE_CUDA=0
 USE_BOOST=0
+USE_SIMD=0
+USE_GTEST=0
 ```
 and in `eco/runecotracker.cc`, make sure to choose the dataset `Demo`:
 ``` 
