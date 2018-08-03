@@ -283,10 +283,17 @@ void gradHist(float *M, float *O, float *H, int h, int w,
   int x, y;
   int *O0, *O1;
   float xb, init;
+  /*
+  O0 = (int *)wrMalloc(h * sizeof(int));
+  M0 = (float *)wrMalloc(h * sizeof(float));
+  O1 = (int *)wrMalloc(h * sizeof(int));
+  M1 = (float *)wrMalloc(h * sizeof(float));
+  */
   O0 = (int *)alMalloc(h * sizeof(int), 16);
   M0 = (float *)alMalloc(h * sizeof(float), 16);
   O1 = (int *)alMalloc(h * sizeof(int), 16);
   M1 = (float *)alMalloc(h * sizeof(float), 16);
+
   // main loop
   for (x = 0; x < w0; x++)
   {
@@ -500,6 +507,12 @@ void gradHist(float *M, float *O, float *H, int h, int w,
 #undef GH
     }
   }
+  /*
+  wrFree(O0);
+  wrFree(O1);
+  wrFree(M0);
+  wrFree(M1);
+  */
   alFree(O0);
   alFree(O1);
   alFree(M0);
@@ -677,9 +690,10 @@ void fhog(float *M, float *O, float *H, int h, int w, int binSize,
   int o, x;
   // compute unnormalized constrast sensitive histograms, B1
   R1 = (float *)wrCalloc(wb * hb * nOrients * 2, sizeof(float));
-  R2 = (float *)wrCalloc(wb * hb * nOrients, sizeof(float));
   gradHist(M, O, R1, h, w, binSize, nOrients * 2, softBin, true);
   // compute unnormalized contrast insensitive histograms, B2
+  R2 = (float *)wrCalloc(wb * hb * nOrients, sizeof(float));
+  debug();
   for (o = 0; o < nOrients; o++)
     for (x = 0; x < nb; x++)
       R2[o * nb + x] = R1[o * nb + x] + R1[(o + nOrients) * nb + x];
@@ -690,8 +704,6 @@ void fhog(float *M, float *O, float *H, int h, int w, int binSize,
   hogChannels(H + nbo * 2, R2, N, hb, wb, nOrients * 1, clip, 1); //9 dimensions
   hogChannels(H + nbo * 3, R1, N, hb, wb, nOrients * 2, clip, 2); //4 dimensions
   wrFree(N);
-  //debug();
   wrFree(R1);
-  //debug();
   wrFree(R2);
 }
