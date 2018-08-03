@@ -58,9 +58,15 @@ void gradMag( float *I, float *M, float *O, int h, int w, int d, bool full ) {
   float *acost = acosTable(), acMult=10000.0f;
   // allocate memory for storing one column of output (padded so h4%4==0)
   h4=(h%4==0) ? h : h-(h%4)+4; s=d*h4*sizeof(float);
+/*
+  M2=(float*) alMalloc(s,0); _M2=(__m128*) M2;
+  Gx=(float*) alMalloc(s,0); _Gx=(__m128*) Gx;
+  Gy=(float*) alMalloc(s,0); _Gy=(__m128*) Gy;
+*/
   M2=(float*) alMalloc(s,16); _M2=(__m128*) M2;
   Gx=(float*) alMalloc(s,16); _Gx=(__m128*) Gx;
   Gy=(float*) alMalloc(s,16); _Gy=(__m128*) Gy;
+
   // compute gradient magnitude and orientation for each column
   for( x=0; x<w; x++ ) {
     // compute gradients (Gx, Gy) with maximum squared magnitude (M2)
@@ -148,8 +154,13 @@ void gradHist( float *M, float *O, float *H, int h, int w,
   const int hb=h/bin, wb=w/bin, h0=hb*bin, w0=wb*bin, nb=wb*hb;
   const float s=(float)bin, sInv=1/s, sInv2=1/s/s;
   float *H0, *H1, *M0, *M1; int x, y; int *O0, *O1; float xb, init;
+    /*
+  O0=(int*)alMalloc(h*sizeof(int),0); M0=(float*) alMalloc(h*sizeof(float),0);
+  O1=(int*)alMalloc(h*sizeof(int),0); M1=(float*) alMalloc(h*sizeof(float),0);
+  */
   O0=(int*)alMalloc(h*sizeof(int),16); M0=(float*) alMalloc(h*sizeof(float),16);
   O1=(int*)alMalloc(h*sizeof(int),16); M1=(float*) alMalloc(h*sizeof(float),16);
+
   // main loop
   for( x=0; x<w0; x++ ) {
     // compute target orientation bins for entire column - very fast
@@ -298,12 +309,12 @@ void fhog( float *M, float *O, float *H, int h, int w, int binSize,
   const int hb=h/binSize, wb=w/binSize, nb=hb*wb, nbo=nb*nOrients;
   float *N, *R1, *R2; int o, x;
   // compute unnormalized constrast sensitive histograms
-  R1 = (float*) alMalloc(wb*hb*nOrients*2*sizeof(float),16);
-  //R1 = (float*) wrCalloc(wb*hb*nOrients*2,sizeof(float));
+  //R1 = (float*) alMalloc(wb*hb*nOrients*2*sizeof(float),16);
+  R1 = (float*) wrCalloc(wb*hb*nOrients*2,sizeof(float));
   gradHist( M, O, R1, h, w, binSize, nOrients*2, softBin, true );
   // compute unnormalized contrast insensitive histograms
-  R2 = (float*) alMalloc(wb*hb*nOrients*sizeof(float),16);
-  //R2 = (float*) wrCalloc(wb*hb*nOrients,sizeof(float));
+  //R2 = (float*) alMalloc(wb*hb*nOrients*sizeof(float),16);
+  R2 = (float*) wrCalloc(wb*hb*nOrients,sizeof(float));
   for( o=0; o<nOrients; o++ ) for( x=0; x<nb; x++ )
     R2[o*nb+x] = R1[o*nb+x]+R1[(o+nOrients)*nb+x];
   // compute block normalization values
@@ -312,6 +323,6 @@ void fhog( float *M, float *O, float *H, int h, int w, int binSize,
   hogChannels( H+nbo*0, R1, N, hb, wb, nOrients*2, clip, 1 );
   hogChannels( H+nbo*2, R2, N, hb, wb, nOrients*1, clip, 1 );
   hogChannels( H+nbo*3, R1, N, hb, wb, nOrients*2, clip, 2 );
-  alFree(N); alFree(R1); alFree(R2);
-  //wrFree(N); wrFree(R1); wrFree(R2);
+  //alFree(N); alFree(R1); alFree(R2);
+  wrFree(N); wrFree(R1); wrFree(R2);
 }

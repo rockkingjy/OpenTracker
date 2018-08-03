@@ -14,7 +14,6 @@
 #include "fhog.hpp"
 #include "debug.hpp"
 
-
 #ifdef USE_SIMD
 #include <stdio.h>
 #include <stdlib.h>
