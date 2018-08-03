@@ -190,23 +190,34 @@ vector<cv::Mat> FeatureExtractor::get_hog_features_simd(const vector<cv::Mat> im
 	{
 		int h, w, d, binSize, nOrients, softBin, nDim, hb, wb, useHog;
 		bool full = 1;
-		useHog = 2;
+		useHog = 2;//0;//2;
 		h = ims[k].rows;
 		w = ims[k].cols;
 		d = ims[k].channels();
 		binSize = 6;
 		nOrients = 9;
 		softBin = -1;
-		nDim = useHog == 0 ? nOrients : (useHog == 1 ? nOrients * 4 : nOrients * 3 + 5);
+		nDim = useHog == 0 ? nOrients : 
+						(useHog == 1 ? nOrients * 4 : nOrients * 3 + 5);
 		hb = h / binSize;
 		wb = w / binSize;
 		float clipHog = 0.2f;
 
 		float *I, *M, *O, *H, *Hb;
+
+  		I = (float*) alMalloc(h * w * d * sizeof(float),16);
+  		M = (float*) alMalloc(h * w * sizeof(float),16);
+  		O = (float*) alMalloc(h * w * sizeof(float),16);
+  		H = (float*) alMalloc(hb * wb * nDim * sizeof(float),16);
+  		Hb = (float*) alMalloc(hb * wb * (nDim - 1) * sizeof(float),16);
+
+/*
 		I = (float *)wrMalloc(h * w * d * sizeof(float));
 		M = (float *)wrCalloc(h * w, sizeof(float));
 		O = (float *)wrCalloc(h * w, sizeof(float));
 		H = (float *)wrMalloc(hb * wb * nDim * sizeof(float));
+		Hb = (float *)wrMalloc(hb * wb * (nDim - 1) * sizeof(float));
+		*/
 		/*
 		std::vector<cv::Mat> channels;
 		cv::split(ims_f, channels);
@@ -227,6 +238,7 @@ vector<cv::Mat> FeatureExtractor::get_hog_features_simd(const vector<cv::Mat> im
 			}
 
 		gradMag(I, M, O, h, w, d, 1);
+		/*
 		for (int i = 0; i < h; i++)
 		{
 			//printf("%f ", M[h * 149 + i]);
@@ -251,7 +263,7 @@ vector<cv::Mat> FeatureExtractor::get_hog_features_simd(const vector<cv::Mat> im
 			printf("%f ", O[150 + i]);
 		}
 		printf("\nO end\n");
-
+*/
 		if (useHog == 0)
 		{
 			gradHist(M, O, H, h, w, binSize, nOrients, softBin, full);
@@ -283,7 +295,7 @@ vector<cv::Mat> FeatureExtractor::get_hog_features_simd(const vector<cv::Mat> im
 			//printf("%f ", H[i]);
 		}
 		printf("\nH end\n");
-		assert(0);
+		//assert(0);
 		/* Debug
 		for (int i = 0; i < std::floor(h / cell_size); i++)
 		{
@@ -300,7 +312,6 @@ vector<cv::Mat> FeatureExtractor::get_hog_features_simd(const vector<cv::Mat> im
 	*/
 
 		// cv: ch->row->col; matlab: col->row->ch;
-		Hb = (float *)wrMalloc(hb * wb * (nDim - 1) * sizeof(float));
 		for (int i = 0; i < hb; i++)
 			for (int j = 0; j < wb; j++)
 				for (int l = 0; l < nDim - 1; l++)
@@ -313,11 +324,8 @@ vector<cv::Mat> FeatureExtractor::get_hog_features_simd(const vector<cv::Mat> im
 
 		hog_feats.push_back(featuresMap);
 		debug();
-		wrFree(I);
-		wrFree(M);
-		wrFree(O);
-		wrFree(H);
-		wrFree(Hb);
+		alFree(I); alFree(M); alFree(O); alFree(H); alFree(Hb);
+		//wrFree(I); wrFree(M); wrFree(O); wrFree(H); wrFree(Hb);
 	}
 	return hog_feats;
 }

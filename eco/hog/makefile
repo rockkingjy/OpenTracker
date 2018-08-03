@@ -5,7 +5,7 @@ CXX=g++
 LDFLAGS=  -lstdc++ -lm
 
 # with -O3, hog is speed-up with simd
-CXXFLAGS= -Wall -std=c++0x -lstdc++ -O3
+CXXFLAGS= -Wall -std=c++0x -lstdc++ -O3 -msse4
 
 HEADERS = *.h *.hpp
 

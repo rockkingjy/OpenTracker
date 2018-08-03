@@ -14,6 +14,8 @@
 #include "fhog.hpp"
 #include "debug.hpp"
 
+
+#ifdef USE_SIMD
 #include <stdio.h>
 #include <stdlib.h>
 #include "hog/rgbConvertMex.hpp"
@@ -21,6 +23,7 @@
 #include "hog/convConst.hpp"
 #include "hog/imResampleMex.hpp"
 #include "hog/gradientMex.hpp"
+#endif
 
 #ifdef USE_CAFFE
 #include <caffe/caffe.hpp>

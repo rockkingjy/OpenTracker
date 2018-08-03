@@ -2,7 +2,7 @@
 USE_CAFFE=0
 USE_CUDA=0
 USE_BOOST=0
-USE_SIMD=0
+USE_SIMD=1
 USE_GTEST=0 
 
 CAFFE_PATH=/media/elab/sdd/mycodes/caffe
@@ -19,7 +19,7 @@ ARCH= -gencode arch=compute_30,code=sm_30 \
 
 LDFLAGS= `pkg-config --libs opencv` -lstdc++ -lm 
 # -O3 double the speed!!!!!!!!!
-CXXFLAGS = -g -Wall `pkg-config --cflags opencv` -lstdc++ -lm -std=c++0x -O3
+CXXFLAGS = -g -Wall `pkg-config --cflags opencv` -lstdc++ -lm -std=c++0x -O3 -msse4
 
 HEADERS = $(wildcard *.h)
 
