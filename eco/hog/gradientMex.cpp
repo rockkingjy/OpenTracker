@@ -690,8 +690,8 @@ void fhog(float *M, float *O, float *H, int h, int w, int binSize,
   hogChannels(H + nbo * 2, R2, N, hb, wb, nOrients * 1, clip, 1); //9 dimensions
   hogChannels(H + nbo * 3, R1, N, hb, wb, nOrients * 2, clip, 2); //4 dimensions
   wrFree(N);
-  debug();
+  //debug();
   wrFree(R1);
-  debug();
+  //debug();
   wrFree(R2);
 }

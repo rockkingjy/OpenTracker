@@ -63,6 +63,7 @@ int main(int argc, char **argv)
     ReadVideo readvideo;
     readvideo.IniRead(bboxGroundtruth, frameDraw, window_name);
 */
+
     // Read from the datasets==========================================
     ::google::InitGoogleLogging(argv[0]);
     cv::Rect2f bboxGroundtruth;

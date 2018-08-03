@@ -2,8 +2,8 @@
 USE_CAFFE=0
 USE_CUDA=0
 USE_BOOST=1
-USE_SIMD=0
-USE_GTEST=1
+USE_SIMD=1
+USE_GTEST=1 
 
 CAFFE_PATH=/media/elab/sdd/mycodes/caffe
 

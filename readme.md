@@ -72,6 +72,13 @@ Included                   | OS
  :hammer:                  | Rasperberry PI 3 
  :hammer:                  | Windows10
 
+## Speed-up
+Included    | Method    
+------------|-------------
+:hammer:    | GPU
+:hammer:    | SSE
+:hammer:    | NEON
+
 # Quick start
 --------------------------------
 With quick start, you can have a quick first taste of this repository, without any panic. No need to install Caffe, CUDA etc. (**But of course you have to install OpenCV 3.0 first**).

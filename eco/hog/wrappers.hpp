@@ -9,24 +9,11 @@
 //#include <stddef.h>
 #include <stdlib.h>
 
-#ifdef MATLAB_MEX_FILE
-
-// wrapper functions if compiling from Matlab
-#include "mex.h"
-inline void wrError(const char *errormsg) { mexErrMsgTxt(errormsg); }
-inline void *wrCalloc(size_t num, size_t size) { return mxCalloc(num, size); }
-inline void *wrMalloc(size_t size) { return mxMalloc(size); }
-inline void wrFree(void *ptr) { mxFree(ptr); }
-
-#else
-
 // wrapper functions if compiling from C/C++
 inline void wrError(const char *errormsg) { throw errormsg; }
 inline void *wrCalloc(size_t num, size_t size) { return calloc(num, size); }
 inline void *wrMalloc(size_t size) { return malloc(size); }
 inline void wrFree(void *ptr) { free(ptr); }
-
-#endif
 
 // platform independent aligned memory allocation (see also alFree)
 inline void *alMalloc(size_t size, int alignment)

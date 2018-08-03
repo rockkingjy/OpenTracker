@@ -80,26 +80,13 @@ ECO_FEATS FeatureExtractor::extractor(const cv::Mat image,
 			  img_samples[hog_feat_ind_].size());
 		imgInfo(img_samples[hog_feat_ind_][0]);
 		showmat3ch(img_samples[hog_feat_ind_][0], 0); */
-#ifdef USE_SIMD		
-		double timer = (double)cv::getTickCount();
-		float timedft = 0;
-
+#ifdef USE_SIMD
 		hog_feat_maps_ = get_hog_features_simd(img_samples[hog_feat_ind_]);
-		
-		imgInfo(hog_feat_maps_[0]);
+		//imgInfo(hog_feat_maps_[0]);
 		showmatNch(hog_feat_maps_[0], 2);
-
-		timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();
-		debug("hog time: %f", timedft);
-		timer = (double)cv::getTickCount();
-
 		hog_feat_maps_ = hog_feature_normalization_simd(hog_feat_maps_);
-
-		imgInfo(hog_feat_maps_[0]);
+		//imgInfo(hog_feat_maps_[0]);
 		showmatNch(hog_feat_maps_[0], 2);
-
-		timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();
-		debug("hog time norm: %f", timedft);
 #else
 		// 0.006697 s
 		hog_feat_maps_ = get_hog_features(img_samples[hog_feat_ind_]);
@@ -195,13 +182,10 @@ vector<cv::Mat> FeatureExtractor::get_hog_features_simd(const vector<cv::Mat> im
 {
 	if (ims.empty())
 		return vector<cv::Mat>();
-
-	debug("ims.size: %lu", ims.size());
+	//debug("ims.size: %lu", ims.size());
 	vector<cv::Mat> hog_feats;
 	for (unsigned int k = 0; k < ims.size(); k++)
 	{
-		//cv::Mat ims_f;
-		//ims[k].convertTo(ims_f, CV_32FC3);
 		int h, w, d, binSize, nOrients, softBin, cell_size, nDim, hb, wb;
 		h = ims[k].rows;
 		w = ims[k].cols;
@@ -236,13 +220,13 @@ vector<cv::Mat> FeatureExtractor::get_hog_features_simd(const vector<cv::Mat> im
 			{
 				*(I + i * w + j) = (float)ims[k].at<cv::Vec3b>(j, i)[2];
 				*(I + h * w + i * w + j) = (float)ims[k].at<cv::Vec3b>(j, i)[1];
-				*(I + 2 * h * w + i * w + j) =  (float)ims[k].at<cv::Vec3b>(j, i)[0];
+				*(I + 2 * h * w + i * w + j) = (float)ims[k].at<cv::Vec3b>(j, i)[0];
 			}
 			
 		gradMag(I, M, O, h, w, d, 1);
 		fhog(M, O, H, h, w, binSize, nOrients, softBin, clip);
 
-		/*
+		/* Debug
 		debug("gradMag time: %f", timedft);
 		for (int i = 0; i < h; i++)
 		{
@@ -280,17 +264,12 @@ vector<cv::Mat> FeatureExtractor::get_hog_features_simd(const vector<cv::Mat> im
 				}		
 		cv::Mat featuresMap = cv::Mat(cv::Size(wb, hb),  CV_32FC(nDim), Hb);
 		hog_feats.push_back(featuresMap);
-		//debug("Hb: %lu, hog_feats[0]:%lu, featuresMap:%lu", Hb, hog_feats[0], featuresMap);
 		wrFree(I);
 		wrFree(M);
 		wrFree(O);
-		debug();
 		wrFree(H);
-		debug();
 		wrFree(Hb);
-		debug();
 	}
-	debug();
 	return hog_feats;
 }
 

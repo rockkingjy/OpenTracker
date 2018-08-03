@@ -28,7 +28,7 @@ class ReadDatasets
     int f;      // file index
     int isLost; // lost flag
     float x, y, w, h;
-    float x1, y1, x2, y2, x3, y3, x4, y4; //gt for vot
+    float x1, y1, x2, y2, x3, y3, x4, y4; 
     std::string s;
     std::string path;
     ifstream *groundtruth;

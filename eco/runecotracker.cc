@@ -37,7 +37,7 @@ int main(int argc, char **argv)
     if (databaseType == "Demo")
     {
         path = "../sequences/Crossing";
-        // some of the dataset has '\t' as the delimiter, so first change it to ','.
+        // some of the dataset has '\t' as the delimiter, change it to ','.
         fstream gt(path + "/groundtruth_rect.txt");
         string tmp;
         size_t index = 1;
@@ -274,7 +274,7 @@ int main(int argc, char **argv)
         os << float(fpseco); 
         putText(frameDraw, "FPS: " + os.str(), Point(100, 30), FONT_HERSHEY_SIMPLEX,
                 0.75, Scalar(0, 225, 0), 2);
-   
+
         if (DEBUG == 0)
         {
             imshow("OpenTracker", frameDraw);
@@ -290,9 +290,9 @@ int main(int argc, char **argv)
         }
         waitKey(1);
         // Read next image======================================================
+        cout << "Frame:" << f << " FPS:" << fpseco << endl;
         f++;
         osfile.str("");
-        cout << "Frame:" << f << " FPS:" << fpseco << endl;
         if (databaseType == "Demo")
         {
             getline(*groundtruth, s, ',');
