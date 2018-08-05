@@ -58,11 +58,7 @@ void gradMag( float *I, float *M, float *O, int h, int w, int d, bool full ) {
   float *acost = acosTable(), acMult=10000.0f;
   // allocate memory for storing one column of output (padded so h4%4==0)
   h4=(h%4==0) ? h : h-(h%4)+4; s=d*h4*sizeof(float);
-/*
-  M2=(float*) alMalloc(s,0); _M2=(__m128*) M2;
-  Gx=(float*) alMalloc(s,0); _Gx=(__m128*) Gx;
-  Gy=(float*) alMalloc(s,0); _Gy=(__m128*) Gy;
-*/
+
   M2=(float*) alMalloc(s,16); _M2=(__m128*) M2;
   Gx=(float*) alMalloc(s,16); _Gx=(__m128*) Gx;
   Gy=(float*) alMalloc(s,16); _Gy=(__m128*) Gy;
@@ -154,10 +150,6 @@ void gradHist( float *M, float *O, float *H, int h, int w,
   const int hb=h/bin, wb=w/bin, h0=hb*bin, w0=wb*bin, nb=wb*hb;
   const float s=(float)bin, sInv=1/s, sInv2=1/s/s;
   float *H0, *H1, *M0, *M1; int x, y; int *O0, *O1; float xb, init;
-    /*
-  O0=(int*)alMalloc(h*sizeof(int),0); M0=(float*) alMalloc(h*sizeof(float),0);
-  O1=(int*)alMalloc(h*sizeof(int),0); M1=(float*) alMalloc(h*sizeof(float),0);
-  */
   O0=(int*)alMalloc(h*sizeof(int),16); M0=(float*) alMalloc(h*sizeof(float),16);
   O1=(int*)alMalloc(h*sizeof(int),16); M1=(float*) alMalloc(h*sizeof(float),16);
 

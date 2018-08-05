@@ -190,7 +190,7 @@ vector<cv::Mat> FeatureExtractor::get_hog_features_simd(const vector<cv::Mat> im
 	{
 		int h, w, d, binSize, nOrients, softBin, nDim, hb, wb, useHog;
 		bool full = 1;
-		useHog = 2;//0;//2;
+		useHog = 2;
 		h = ims[k].rows;
 		w = ims[k].cols;
 		d = ims[k].channels();
@@ -204,7 +204,7 @@ vector<cv::Mat> FeatureExtractor::get_hog_features_simd(const vector<cv::Mat> im
 		float clipHog = 0.2f;
 
 		float *I, *M, *O, *H, *Hb;
-
+		debug();
   		I = (float*) alMalloc(h * w * d * sizeof(float),16);
   		M = (float*) alMalloc(h * w * sizeof(float),16);
   		O = (float*) alMalloc(h * w * sizeof(float),16);
@@ -228,6 +228,7 @@ vector<cv::Mat> FeatureExtractor::get_hog_features_simd(const vector<cv::Mat> im
 		memcpy(I + h * w, channels[1].ptr(), h * w * sizeof(float));
 		memcpy(I + 2 * h * w, channels[0].ptr(), h * w * sizeof(float));
 		*/
+		debug();
 		for (int i = 0; i < h; i++)
 			for (int j = 0; j < w; j++)
 			{
@@ -237,6 +238,7 @@ vector<cv::Mat> FeatureExtractor::get_hog_features_simd(const vector<cv::Mat> im
 			}
 
 		gradMag(I, M, O, h, w, d, 1);
+		debug();
 		/*
 		for (int i = 0; i < h; i++)
 		{
@@ -275,7 +277,7 @@ vector<cv::Mat> FeatureExtractor::get_hog_features_simd(const vector<cv::Mat> im
 		{
 			fhog(M, O, H, h, w, binSize, nOrients, softBin, clipHog);
 		}
-
+		debug();
 		for (int i = 0; i < hb; i++)
 		{
 			printf("%f ", H[i]);
