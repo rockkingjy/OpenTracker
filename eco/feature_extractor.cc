@@ -82,9 +82,10 @@ ECO_FEATS FeatureExtractor::extractor(const cv::Mat image,
 		showmat3ch(img_samples[hog_feat_ind_][0], 0); */
 #ifdef USE_SIMD
 		hog_feat_maps_ = get_hog_features_simd(img_samples[hog_feat_ind_]);
-		//imgInfo(hog_feat_maps_[0]);]
+		//imgInfo(hog_feat_maps_[0]);
 		//debug();
 		//showmatNch(hog_feat_maps_[0], 2);
+		assert(0);
 		hog_feat_maps_ = hog_feature_normalization_simd(hog_feat_maps_);
 		//imgInfo(hog_feat_maps_[0]);
 		//debug();
@@ -282,6 +283,7 @@ vector<cv::Mat> FeatureExtractor::get_hog_features_simd(const vector<cv::Mat> im
 		{
 			printf("%f ", H[i]);
 		}
+		/*
 		printf("\nH end\n");
 		for (int i = 0; i < hb; i++)
 		{
@@ -292,7 +294,7 @@ vector<cv::Mat> FeatureExtractor::get_hog_features_simd(const vector<cv::Mat> im
 		{
 			printf("%f ", H[25 * 25 * 30 + i]);
 		}
-		printf("\nH end\n");
+		printf("\nH end\n");*/
 		//assert(0);
 		/* Debug
 		for (int i = 0; i < std::floor(h / cell_size); i++)

@@ -36,6 +36,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	debug("base_target_size_:%f x %f", base_target_size_.height, base_target_size_.width);
 	// window size, taking padding into account
 	float img_sample_size__tmp = sqrt(base_target_size_.area() * std::pow(params_.search_area_scale, 2));
+	//img_sample_size__tmp=((int)img_sample_size__tmp%4==0) ? (int)img_sample_size__tmp : (int)img_sample_size__tmp-((int)img_sample_size__tmp%4)+4; 
 	img_sample_size_ = cv::Size2i(img_sample_size__tmp, img_sample_size__tmp);
 	debug("img_sample_size_: %d x %d", img_sample_size_.height, img_sample_size_.width);
 

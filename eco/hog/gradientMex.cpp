@@ -14,22 +14,28 @@ void grad1( float *I, float *Gx, float *Gy, int h, int w, int x ) {
   // compute column of Gx
   Ip=I-h; In=I+h; r=.5f;
   if(x==0) { r=1; Ip+=h; } else if(x==w-1) { r=1; In-=h; }
+  // if h not 4x or address not 16-aligned, calculate normally,
   if( h<4 || h%4>0 || (size_t(I)&15) || (size_t(Gx)&15) ) {
     for( y=0; y<h; y++ ) *Gx++=(*In++-*Ip++)*r;
-  } else {
+  } else { // use sse
     _G=(__m128*) Gx; _Ip=(__m128*) Ip; _In=(__m128*) In; _r = SET(r);
     for(y=0; y<h; y+=4) *_G++=MUL(SUB(*_In++,*_Ip++),_r);
   }
   // compute column of Gy
   #define GRADY(r) *Gy++=(*In++-*Ip++)*r;
   Ip=I; In=Ip+1;
+  // all calculate normally:
   // GRADY(1); Ip--; for(y=1; y<h-1; y++) GRADY(.5f); In--; GRADY(1);
+  // sse speed-up:
+  // calculate normally for the leading elements(not 16x)
   y1=((~((size_t) Gy) + 1) & 15)/4; if(y1==0) y1=4; if(y1>h-1) y1=h-1;
-  GRADY(1); Ip--; for(y=1; y<y1; y++) GRADY(.5f);
+  GRADY(1); Ip--; for(y=1; y<y1; y++) GRADY(.5f); 
+  // use sse for the main elements
   _r = SET(.5f); _G=(__m128*) Gy;
   for(; y+4<h-1; y+=4, Ip+=4, In+=4, Gy+=4)
     *_G++=MUL(SUB(LDu(*In),LDu(*Ip)),_r);
-  for(; y<h-1; y++) GRADY(.5f); In--; GRADY(1);
+  // calculate normally for the final elements(not 16x)
+  for(; y<h-1; y++) GRADY(.5f); In--; GRADY(1); 
   #undef GRADY
 }
 
@@ -58,11 +64,9 @@ void gradMag( float *I, float *M, float *O, int h, int w, int d, bool full ) {
   float *acost = acosTable(), acMult=10000.0f;
   // allocate memory for storing one column of output (padded so h4%4==0)
   h4=(h%4==0) ? h : h-(h%4)+4; s=d*h4*sizeof(float);
-
   M2=(float*) alMalloc(s,16); _M2=(__m128*) M2;
   Gx=(float*) alMalloc(s,16); _Gx=(__m128*) Gx;
   Gy=(float*) alMalloc(s,16); _Gy=(__m128*) Gy;
-
   // compute gradient magnitude and orientation for each column
   for( x=0; x<w; x++ ) {
     // compute gradients (Gx, Gy) with maximum squared magnitude (M2)
@@ -102,7 +106,7 @@ void gradMag( float *I, float *M, float *O, int h, int w, int d, bool full ) {
 void gradMagNorm( float *M, float *S, int h, int w, float norm ) {
   __m128 *_M, *_S, _norm; int i=0, n=h*w, n4=n/4;
   _S = (__m128*) S; _M = (__m128*) M; _norm = SET(norm);
-  bool sse = !(size_t(M)&15) && !(size_t(S)&15);
+  bool sse = !(size_t(M)&15) && !(size_t(S)&15);// address 16x or not
   if(sse) for(; i<n4; i++) { *_M=MUL(*_M,RCP(ADD(*_S++,_norm))); _M++; }
   if(sse) i*=4; for(; i<n; i++) M[i] /= (S[i] + norm);
 }
@@ -152,12 +156,10 @@ void gradHist( float *M, float *O, float *H, int h, int w,
   float *H0, *H1, *M0, *M1; int x, y; int *O0, *O1; float xb, init;
   O0=(int*)alMalloc(h*sizeof(int),16); M0=(float*) alMalloc(h*sizeof(float),16);
   O1=(int*)alMalloc(h*sizeof(int),16); M1=(float*) alMalloc(h*sizeof(float),16);
-
   // main loop
   for( x=0; x<w0; x++ ) {
     // compute target orientation bins for entire column - very fast
     gradQuantize(O+x*h,M+x*h,O0,O1,M0,M1,nb,h0,sInv2,nOrients,full,softBin>=0);
-
     if( softBin<0 && softBin%2==0 ) {
       // no interpolation w.r.t. either orienation or spatial bin
       H1=H+(x/bin)*hb;
@@ -168,7 +170,6 @@ void gradHist( float *M, float *O, float *H, int h, int w,
       else if( bin==4 ) for(y=0; y<h0;) { GH; GH; GH; GH; H1++; }
       else for( y=0; y<h0;) { for( int y1=0; y1<bin; y1++ ) { GH; } H1++; }
       #undef GH
-
     } else if( softBin%2==0 || bin==1 ) {
       // interpolate w.r.t. orientation only, not spatial bin
       H1=H+(x/bin)*hb;
@@ -179,10 +180,10 @@ void gradHist( float *M, float *O, float *H, int h, int w,
       else if( bin==4 ) for(y=0; y<h0;) { GH; GH; GH; GH; H1++; }
       else for( y=0; y<h0;) { for( int y1=0; y1<bin; y1++ ) { GH; } H1++; }
       #undef GH
-
     } else {
       // interpolate using trilinear interpolation
       float ms[4], xyd, yb, xd, yd; __m128 _m, _m0, _m1;
+      //float __attribute__((aligned(16))) ms[4], xyd, yb, xd, yd; __m128 _m, _m0, _m1;
       bool hasLf, hasRt; int xb0, yb0;
       if( x==0 ) { init=(0+.5f)*sInv-0.5f; xb=init; }
       hasLf = xb>=0; xb0 = hasLf?(int)xb:-1; hasRt = xb0 < wb-1;
