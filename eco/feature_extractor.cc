@@ -204,19 +204,19 @@ vector<cv::Mat> FeatureExtractor::get_hog_features_simd(const vector<cv::Mat> im
 		float clipHog = 0.2f;
 
 		float *I, *M, *O, *H, *Hb;
-/*
+
   		I = (float*) alMalloc(h * w * d * sizeof(float),16);
   		M = (float*) alMalloc(h * w * sizeof(float),16);
   		O = (float*) alMalloc(h * w * sizeof(float),16);
   		H = (float*) alMalloc(hb * wb * nDim * sizeof(float),16);
   		Hb = (float*) alMalloc(hb * wb * (nDim - 1) * sizeof(float),16);
-*/
+/*
 		I = (float *)wrMalloc(h * w * d * sizeof(float));
 		M = (float *)wrCalloc(h * w, sizeof(float));
 		O = (float *)wrCalloc(h * w, sizeof(float));
 		H = (float *)wrMalloc(hb * wb * nDim * sizeof(float));
 		Hb = (float *)wrMalloc(hb * wb * (nDim - 1) * sizeof(float));
-		
+*/	
 		/*
 		std::vector<cv::Mat> channels;
 		cv::split(ims_f, channels);
@@ -328,8 +328,8 @@ vector<cv::Mat> FeatureExtractor::get_hog_features_simd(const vector<cv::Mat> im
 		//showmatNch(featuresMap, 2);
 		hog_feats.push_back(featuresMap);
 		debug();
-		//alFree(I); alFree(M); alFree(O); alFree(H); alFree(Hb);
-		wrFree(I); wrFree(M); wrFree(O); wrFree(H); wrFree(Hb);
+		alFree(I); alFree(M); alFree(O); alFree(H); alFree(Hb);
+		//wrFree(I); wrFree(M); wrFree(O); wrFree(H); wrFree(Hb);
 	}
 	debug();
 	return hog_feats;

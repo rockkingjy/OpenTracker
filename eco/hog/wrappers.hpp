@@ -21,7 +21,7 @@ inline void wrFree(void *ptr) { free(ptr); }
 
 
 // platform independent aligned memory allocation (see also alFree)
-// __m128 should be 128/8=16byte aligned
+// __m128 should be 128/8=16 byte aligned
 inline void *alMalloc(size_t size, int alignment)
 {
   const size_t pSize = sizeof(void *), a = alignment - 1;

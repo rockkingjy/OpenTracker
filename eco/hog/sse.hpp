@@ -7,8 +7,8 @@
 #define _SSE_HPP_
 #include <emmintrin.h> // SSE2:<e*.h>, SSE3:<p*.h>, SSE4:<s*.h>
 
-#define RETf inline __m128
-#define RETi inline __m128i
+#define RETf inline __m128  // 128 bits, four single precision floats.
+#define RETi inline __m128i // 128 bits of any size packed integers
 
 // set, load and store values
 RETf SET( const float &x ) { return _mm_set1_ps(x); }
