@@ -165,8 +165,6 @@ void gradHist( float *M, float *O, float *H, int h, int w,
   float *H0, *H1, *M0, *M1; int x, y; int *O0, *O1; float xb, init;
   O0=(int*)alMalloc(h*sizeof(int),16); M0=(float*) alMalloc(h*sizeof(float),16);
   O1=(int*)alMalloc(h*sizeof(int),16); M1=(float*) alMalloc(h*sizeof(float),16);
-
-      debug("%f, %p, %f, %p", *(H+5620), (H+5620), *(H+5621), (H+5621));
   // main loop
   for( x=0; x<w0; x++ ) {
     //debug("%p, %p", O+x*h,M+x*h);
@@ -189,8 +187,6 @@ void gradHist( float *M, float *O, float *H, int h, int w,
 		}
     printf("\nM0 end\n");
   */
-
-    //assert(0);
     if( softBin<0 && softBin%2==0 ) {
       // no interpolation w.r.t. either orienation or spatial bin
       H1=H+(x/bin)*hb;
@@ -211,10 +207,9 @@ void gradHist( float *M, float *O, float *H, int h, int w,
       else if( bin==4 ) for(y=0; y<h0;) { GH; GH; GH; GH; H1++; }
       else for( y=0; y<h0;) { for( int y1=0; y1<bin; y1++ ) { GH; } H1++; }
       #undef GH
-    } else {// =========??????????????????????????!!!!!!!!!!!!!!
+    } else {
       // interpolate using trilinear interpolation
       float ms[4], xyd, yb, xd, yd; __m128 _m, _m0, _m1;
-      //float __attribute__((aligned(16))) ms[4], xyd, yb, xd, yd; __m128 _m, _m0, _m1;
       bool hasLf, hasRt; int xb0, yb0;
       if( x==0 ) { init=(0+.5f)*sInv-0.5f; xb=init; }
       hasLf = xb>=0; xb0 = hasLf?(int)xb:-1; hasRt = xb0 < wb-1;
@@ -252,15 +247,6 @@ void gradHist( float *M, float *O, float *H, int h, int w,
       #undef GH
     }
   }
-  debug("%d, %d, %d, %d",wb, hb, nOrients, nb*nOrients );
-  //debug("%f, %p, %f, %p", *(H), (H), *(H+5625), (H+5625));
-    for (int i = 0; i < nb*nOrients; i++)
-		{
-      //if(*(H+i)>1)
-			 //printf("%d:%f;", i, *(H+i));
-		}
-   // printf("\nH end\n");
-    //assert(0);
   alFree(O0); alFree(O1); alFree(M0); alFree(M1);
   // normalize boundary bins which only get 7/8 of weight of interior bins
   if( softBin%2!=0 ) for( int o=0; o<nOrients; o++ ) {
