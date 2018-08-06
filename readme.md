@@ -29,13 +29,17 @@ Or, **if you have problems with the implementation of a complicate cutting-edge 
 
 **Attention!** OpenTracker is **NOT** designed just for tracking human beings as the demo images, it can track **everything**, even some special points!
 
-**2018/06/28 -- New features** Now it support automatic initialization with Web camera using **OpenPose**!
 
-**2018/07/05 -- New features** Now it support **macOS**!
+**2018/08/06 -- New features** Speed up with SSE, speed up from 25FPS to 104FPS(quicker than matlab version) with scale one.
+
+**2018/07/07 -- New features** OpenTracker Implement Notes draft published! Check **notes/OpenTrackerNotes.pdf**. Complete version is comming!
 
 **2018/07/06 -- New features** Now it support **Nvidia Jetson TX1/2**!
 
-**2018/07/07 -- New features** OpenTracker Implement Notes draft published! Check **notes/OpenTrackerNotes.pdf**. Complete version is comming!
+**2018/07/05 -- New features** Now it support **macOS**!
+
+**2018/06/28 -- New features** Now it support automatic initialization with Web camera using **OpenPose**!
+
 
 ## Supported tracker (more in progressing):
 Included                                   | Tracker    
@@ -73,11 +77,12 @@ Included                   | OS
  :hammer:                  | Windows10
 
 ## Speed-up
-Included    | Method    
+Included    | Method    | FPS
 ------------|-------------
-:hammer:    | GPU
-:hammer:    | SSE
-:hammer:    | NEON
+            | no speed-up | ~25
+:hammer:    | GPU         |
+:hammer:    | SSE         | ~105
+:hammer:    | NEON        |
 
 # Quick start
 --------------------------------
