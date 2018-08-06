@@ -78,7 +78,7 @@ Included                   | OS
 
 ## Speed-up
 Included    | Method    | FPS
-------------|-------------
+------------|-------------|------
             | no speed-up | ~25
 :hammer:    | GPU         |
 :hammer:    | SSE         | ~105
