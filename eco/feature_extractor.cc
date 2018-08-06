@@ -197,7 +197,7 @@ vector<cv::Mat> FeatureExtractor::get_hog_features_simd(const vector<cv::Mat> im
 		d = ims[k].channels();
 		binSize = 6;
 		nOrients = 9;
-		softBin = -1;
+		softBin = -2;
 		nDim = useHog == 0 ? nOrients : 
 						(useHog == 1 ? nOrients * 4 : nOrients * 3 + 5);
 		hb = h / binSize;

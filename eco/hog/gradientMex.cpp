@@ -118,22 +118,19 @@ void gradQuantize( float *O, float *M, int *O0, int *O1, float *M0, float *M1,
   // assumes all *OUTPUT* matrices are 4-byte aligned
   int i, o0, o1; float o, od, m;
   __m128i _o0, _o1, *_O0, *_O1; __m128 _o, _od, _m, *_M0, *_M1;
-  //int _o0, _o1, *_O0, *_O1; float _o, _od, _m, *_M0, *_M1;
   // define useful constants
   const float oMult=(float)nOrients/(full?2*PI:PI); const int oMax=nOrients*nb;
   const __m128 _norm=SET(norm), _oMult=SET(oMult), _nbf=SET((float)nb);
   const __m128i _oMax=SET(oMax), _nb=SET(nb);
-  //===========
-  // if h not 4x or address not 16-aligned, calculate normally,
-//  if( h<4 || h%4>0 || (size_t(I)&15) || (size_t(Gx)&15) ) {
-//  }
+  /* original version
+  // O0=O*oMult*wb*hb; M0=M/bin/bin; M1,O1=0; 
   for(int i = 0; i<n; i++ ) {
     o=O[i]*oMult; o0=(int) (o+.5f);
     o0*=nb; if(o0>=oMax) o0=0; O0[i]=o0;
     M0[i]=M[i]*norm; M1[i]=0; O1[i]=0;
   }
-  //===========
-  /*
+  */
+  // speed-up version
   // perform the majority of the work with sse
   _O0=(__m128i*) O0; _O1=(__m128i*) O1; _M0=(__m128*) M0; _M1=(__m128*) M1;
   if( interpolate ) for( i=0; i<=n-4; i+=4 ) {
@@ -157,7 +154,6 @@ void gradQuantize( float *O, float *M, int *O0, int *O1, float *M0, float *M1,
     o0*=nb; if(o0>=oMax) o0=0; O0[i]=o0;
     M0[i]=M[i]*norm; M1[i]=0; O1[i]=0;
   }
-  */
 }
 
 // compute nOrients gradient histograms per bin x bin block of pixels
@@ -174,6 +170,12 @@ void gradHist( float *M, float *O, float *H, int h, int w,
     //debug("%p, %p", O+x*h,M+x*h);
     // compute target orientation bins for entire column - very fast
     gradQuantize(O+x*h,M+x*h,O0,O1,M0,M1,nb,h0,sInv2,nOrients,full,softBin>=0);
+ /*
+    for (int i = 0; i < h; i++)
+		{
+			printf("%f ", *(O+i));
+		}
+    printf("\nO end\n");
     for (int i = 0; i < h; i++)
 		{
 			printf("%d ",*(O0+i));
@@ -181,20 +183,11 @@ void gradHist( float *M, float *O, float *H, int h, int w,
     printf("\nO0 end\n");
     for (int i = 0; i < h; i++)
 		{
-			printf("%d ", *(O1+i));
-		}
-    printf("\nO1 end\n");
-    for (int i = 0; i < h; i++)
-		{
 			printf("%f ", *(M0+i));
 		}
     printf("\nM0 end\n");
-    for (int i = 0; i < h; i++)
-		{
-			printf("%f ", *(M1+i));
-		}
-    printf("\nM1 end\n");
-    assert(0);
+    */
+    //assert(0);
     if( softBin<0 && softBin%2==0 ) {
       // no interpolation w.r.t. either orienation or spatial bin
       H1=H+(x/bin)*hb;
@@ -204,6 +197,8 @@ void gradHist( float *M, float *O, float *H, int h, int w,
       else if( bin==3 ) for(y=0; y<h0;) { GH; GH; GH; H1++; }
       else if( bin==4 ) for(y=0; y<h0;) { GH; GH; GH; GH; H1++; }
       else for( y=0; y<h0;) { for( int y1=0; y1<bin; y1++ ) { GH; } H1++; }
+      debug("%f", *(H+333));
+      //assert(0);
       #undef GH
     } else if( softBin%2==0 || bin==1 ) {
       // interpolate w.r.t. orientation only, not spatial bin
@@ -256,6 +251,13 @@ void gradHist( float *M, float *O, float *H, int h, int w,
       #undef GH
     }
   }
+      for (int i = 0; i < nb*nOrients*2; i++)
+		{
+      if(*(H+i)>1)
+			  printf("%d, %f ", i, *(H+i));
+		}
+    printf("\nH end\n");
+    assert(0);
   alFree(O0); alFree(O1); alFree(M0); alFree(M1);
   // normalize boundary bins which only get 7/8 of weight of interior bins
   if( softBin%2!=0 ) for( int o=0; o<nOrients; o++ ) {
@@ -265,7 +267,6 @@ void gradHist( float *M, float *O, float *H, int h, int w,
     y=hb-1; for( x=0; x<wb; x++ ) H[o*nb+x*hb+y]*=8.f/7.f;
   }
 }
-
 /******************************************************************************/
 
 // HOG helper: compute 2x2 block normalization values (padded by 1 pixel)
