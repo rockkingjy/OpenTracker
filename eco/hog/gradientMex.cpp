@@ -118,6 +118,7 @@ void gradQuantize( float *O, float *M, int *O0, int *O1, float *M0, float *M1,
   // assumes all *OUTPUT* matrices are 4-byte aligned
   int i, o0, o1; float o, od, m;
   __m128i _o0, _o1, *_O0, *_O1; __m128 _o, _od, _m, *_M0, *_M1;
+  //int _o0, _o1, *_O0, *_O1; float _o, _od, _m, *_M0, *_M1;
   // define useful constants
   const float oMult=(float)nOrients/(full?2*PI:PI); const int oMax=nOrients*nb;
   const __m128 _norm=SET(norm), _oMult=SET(oMult), _nbf=SET((float)nb);
@@ -126,7 +127,13 @@ void gradQuantize( float *O, float *M, int *O0, int *O1, float *M0, float *M1,
   // if h not 4x or address not 16-aligned, calculate normally,
 //  if( h<4 || h%4>0 || (size_t(I)&15) || (size_t(Gx)&15) ) {
 //  }
+  for(int i = 0; i<n; i++ ) {
+    o=O[i]*oMult; o0=(int) (o+.5f);
+    o0*=nb; if(o0>=oMax) o0=0; O0[i]=o0;
+    M0[i]=M[i]*norm; M1[i]=0; O1[i]=0;
+  }
   //===========
+  /*
   // perform the majority of the work with sse
   _O0=(__m128i*) O0; _O1=(__m128i*) O1; _M0=(__m128*) M0; _M1=(__m128*) M1;
   if( interpolate ) for( i=0; i<=n-4; i+=4 ) {
@@ -150,6 +157,7 @@ void gradQuantize( float *O, float *M, int *O0, int *O1, float *M0, float *M1,
     o0*=nb; if(o0>=oMax) o0=0; O0[i]=o0;
     M0[i]=M[i]*norm; M1[i]=0; O1[i]=0;
   }
+  */
 }
 
 // compute nOrients gradient histograms per bin x bin block of pixels
@@ -163,27 +171,27 @@ void gradHist( float *M, float *O, float *H, int h, int w,
   O1=(int*)alMalloc(h*sizeof(int),16); M1=(float*) alMalloc(h*sizeof(float),16);
   // main loop
   for( x=0; x<w0; x++ ) {
-    debug("%p, %p", O+x*h,M+x*h);
+    //debug("%p, %p", O+x*h,M+x*h);
     // compute target orientation bins for entire column - very fast
     gradQuantize(O+x*h,M+x*h,O0,O1,M0,M1,nb,h0,sInv2,nOrients,full,softBin>=0);
     for (int i = 0; i < h; i++)
 		{
-			printf("%d ", *(O0+i*sizeof(int)));
+			printf("%d ",*(O0+i));
 		}
     printf("\nO0 end\n");
     for (int i = 0; i < h; i++)
 		{
-			printf("%d ", *(O1+i*sizeof(int)));
+			printf("%d ", *(O1+i));
 		}
     printf("\nO1 end\n");
     for (int i = 0; i < h; i++)
 		{
-			printf("%f ", *(M0+i*sizeof(float)));
+			printf("%f ", *(M0+i));
 		}
     printf("\nM0 end\n");
     for (int i = 0; i < h; i++)
 		{
-			printf("%f ", *(M1+i*sizeof(float)));
+			printf("%f ", *(M1+i));
 		}
     printf("\nM1 end\n");
     assert(0);
