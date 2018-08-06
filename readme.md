@@ -55,7 +55,7 @@ Included                                   | Tracker
 
 ## Supported Dataset (more in progressing):
 
-Included                                   | Dataset    | Reference
+Included                                   | Dataset      | Reference
 -------------------------------------------|--------------|-----------
 :ballot_box_with_check:                    | VOT-2017     | [Web](http://votchallenge.net/vot2017/dataset.html)
 :ballot_box_with_check:                    | TB-2015      | [Web](http://cvlab.hanyang.ac.kr/tracker_benchmark/index.html)
@@ -77,12 +77,12 @@ Included                   | OS
  :hammer:                  | Windows10
 
 ## Speed-up
-Included    | Method    | FPS
-------------|-------------|------
-            | no speed-up | ~25
-:hammer:    | GPU         |
-:hammer:    | SSE         | ~105
-:hammer:    | NEON        |
+Included                | Method      | FPS
+------------------------|-------------|------
+:ballot_box_with_check: | no speed-up | ~25
+:ballot_box_with_check: | SSE         | ~105
+:hammer:                | NEON        |  
+:hammer:                | GPU         |  
 
 # Quick start
 --------------------------------
