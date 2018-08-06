@@ -12,6 +12,7 @@
 #include "sse.hpp"
 #include <stdlib.h>
 
+#include <assert.h>
 #include <stdio.h>
 #define debug(a, args...) printf("%s(%s:%d) " a "\n", __func__, __FILE__, __LINE__, ##args)
 

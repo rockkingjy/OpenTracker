@@ -7,20 +7,16 @@
 #define _SSE_HPP_
 #include <emmintrin.h> // SSE2:<e*.h>, SSE3:<p*.h>, SSE4:<s*.h>
 
-#define RETf inline __m128  // 128 bits, four single precision floats
-#define RETi inline __m128i // 128 bits of any size packed integers(int, short, char)
+#define RETf inline __m128
+#define RETi inline __m128i
 
 // set, load and store values
 RETf SET( const float &x ) { return _mm_set1_ps(x); }
 RETf SET( float x, float y, float z, float w ) { return _mm_set_ps(x,y,z,w); }
 RETi SET( const int &x ) { return _mm_set1_epi32(x); }
-//must be aligned on a 16-byte boundary
 RETf LD( const float &x ) { return _mm_load_ps(&x); }
-//does not need to be aligned on any particular boundary
-RETf LDu( const float &x ) { return _mm_loadu_ps(&x); } 
-//store 128 bit
-RETf STR( float &x, const __m128 y ) { _mm_store_ps(&x,y); return y; } 
-//store the lower 32 bit of y
+RETf LDu( const float &x ) { return _mm_loadu_ps(&x); }
+RETf STR( float &x, const __m128 y ) { _mm_store_ps(&x,y); return y; }
 RETf STR1( float &x, const __m128 y ) { _mm_store_ss(&x,y); return y; }
 RETf STRu( float &x, const __m128 y ) { _mm_storeu_ps(&x,y); return y; }
 RETf STR( float &x, const float y ) { return STR(x,SET(y)); }

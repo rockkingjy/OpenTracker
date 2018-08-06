@@ -122,6 +122,11 @@ void gradQuantize( float *O, float *M, int *O0, int *O1, float *M0, float *M1,
   const float oMult=(float)nOrients/(full?2*PI:PI); const int oMax=nOrients*nb;
   const __m128 _norm=SET(norm), _oMult=SET(oMult), _nbf=SET((float)nb);
   const __m128i _oMax=SET(oMax), _nb=SET(nb);
+  //===========
+  // if h not 4x or address not 16-aligned, calculate normally,
+//  if( h<4 || h%4>0 || (size_t(I)&15) || (size_t(Gx)&15) ) {
+//  }
+  //===========
   // perform the majority of the work with sse
   _O0=(__m128i*) O0; _O1=(__m128i*) O1; _M0=(__m128*) M0; _M1=(__m128*) M1;
   if( interpolate ) for( i=0; i<=n-4; i+=4 ) {
@@ -158,8 +163,30 @@ void gradHist( float *M, float *O, float *H, int h, int w,
   O1=(int*)alMalloc(h*sizeof(int),16); M1=(float*) alMalloc(h*sizeof(float),16);
   // main loop
   for( x=0; x<w0; x++ ) {
+    debug("%p, %p", O+x*h,M+x*h);
     // compute target orientation bins for entire column - very fast
     gradQuantize(O+x*h,M+x*h,O0,O1,M0,M1,nb,h0,sInv2,nOrients,full,softBin>=0);
+    for (int i = 0; i < h; i++)
+		{
+			printf("%d ", *(O0+i*sizeof(int)));
+		}
+    printf("\nO0 end\n");
+    for (int i = 0; i < h; i++)
+		{
+			printf("%d ", *(O1+i*sizeof(int)));
+		}
+    printf("\nO1 end\n");
+    for (int i = 0; i < h; i++)
+		{
+			printf("%f ", *(M0+i*sizeof(float)));
+		}
+    printf("\nM0 end\n");
+    for (int i = 0; i < h; i++)
+		{
+			printf("%f ", *(M1+i*sizeof(float)));
+		}
+    printf("\nM1 end\n");
+    assert(0);
     if( softBin<0 && softBin%2==0 ) {
       // no interpolation w.r.t. either orienation or spatial bin
       H1=H+(x/bin)*hb;

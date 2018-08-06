@@ -283,6 +283,7 @@ vector<cv::Mat> FeatureExtractor::get_hog_features_simd(const vector<cv::Mat> im
 		{
 			printf("%f ", H[i]);
 		}
+		assert(0);
 		/*
 		printf("\nH end\n");
 		for (int i = 0; i < hb; i++)
