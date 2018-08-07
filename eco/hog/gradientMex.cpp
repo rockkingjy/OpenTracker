@@ -187,7 +187,7 @@ void gradHist( float *M, float *O, float *H, int h, int w,
 		}
     printf("\nM0 end\n");
   */
-    if( softBin<0 && softBin%2==0 ) {
+    if( softBin<0 && softBin%2==0 ) { // softBin<0 and even
       // no interpolation w.r.t. either orienation or spatial bin
       H1=H+(x/bin)*hb;
       #define GH H1[O0[y]]+=M0[y]; y++;
@@ -197,7 +197,7 @@ void gradHist( float *M, float *O, float *H, int h, int w,
       else if( bin==4 ) for(y=0; y<h0;) { GH; GH; GH; GH; H1++; }
       else for( y=0; y<h0;) { for( int y1=0; y1<bin; y1++ ) { GH; } H1++; }
       #undef GH
-    } else if( softBin%2==0 || bin==1 ) {
+    } else if( softBin%2==0 || bin==1 ) { // softBin>=0 and even
       // interpolate w.r.t. orientation only, not spatial bin
       H1=H+(x/bin)*hb;
       #define GH H1[O0[y]]+=M0[y]; H1[O1[y]]+=M1[y]; y++;
@@ -207,9 +207,9 @@ void gradHist( float *M, float *O, float *H, int h, int w,
       else if( bin==4 ) for(y=0; y<h0;) { GH; GH; GH; GH; H1++; }
       else for( y=0; y<h0;) { for( int y1=0; y1<bin; y1++ ) { GH; } H1++; }
       #undef GH
-    } else {
+    } else { // softBin odd
       // interpolate using trilinear interpolation
-      float ms[4], xyd, yb, xd, yd; __m128 _m, _m0, _m1;
+      float ms[4], xyd, yb, xd, yd; //__m128 _m, _m0, _m1;
       bool hasLf, hasRt; int xb0, yb0;
       if( x==0 ) { init=(0+.5f)*sInv-0.5f; xb=init; }
       hasLf = xb>=0; xb0 = hasLf?(int)xb:-1; hasRt = xb0 < wb-1;
@@ -220,25 +220,40 @@ void gradHist( float *M, float *O, float *H, int h, int w,
       #define GH(H,ma,mb) H1=H; STRu(*H1,ADD(LDu(*H1),MUL(ma,mb)));
       // leading rows, no top bin
       for( ; y<bin/2; y++ ) {
+        //debug("%d", y);// 0, 1, 2
         yb0=-1; GHinit;
         if(hasLf) { H0[O0[y]+1]+=ms[1]*M0[y]; H0[O1[y]+1]+=ms[1]*M1[y]; }
         if(hasRt) { H0[O0[y]+hb+1]+=ms[3]*M0[y]; H0[O1[y]+hb+1]+=ms[3]*M1[y]; }
       }
       // main rows, has top and bottom bins, use SSE for minor speedup
-      if( softBin<0 ) for( ; ; y++ ) {
-        yb0 = (int) yb; if(yb0>=hb-1) break; GHinit; _m0=SET(M0[y]);
-        if(hasLf) { _m=SET(0,0,ms[1],ms[0]); GH(H0+O0[y],_m,_m0); }
-        if(hasRt) { _m=SET(0,0,ms[3],ms[2]); GH(H0+O0[y]+hb,_m,_m0); }
-      } else for( ; ; y++ ) {
+      if( softBin<0 ) for( ; ; y++ ) { // softBin < 0 odd
         yb0 = (int) yb; if(yb0>=hb-1) break; GHinit;
-        _m0=SET(M0[y]); _m1=SET(M1[y]);
+        // none speedup version
+        if(hasLf) { H0[O0[y]+1]+=ms[1]*M0[y]; H0[O0[y]]+=ms[0]*M0[y]; }
+        if(hasRt) { H0[O0[y]+hb+1]+=ms[3]*M0[y]; H0[O0[y]+hb]+=ms[2]*M0[y]; }
+      // speedup version, have potential bugs 
+      //  _m0=SET(M0[y]);
+      //  if(hasLf) { _m=SET(0,0,ms[1],ms[0]); GH(H0+O0[y],_m,_m0); }
+      //  if(hasRt) { _m=SET(0,0,ms[3],ms[2]); GH(H0+O0[y]+hb,_m,_m0); }
+      } else for( ; ; y++ ) { //softBin > 0 odd
+        yb0 = (int) yb; if(yb0>=hb-1) break; GHinit;        
+        // none speedup version
+        if(hasLf) { 
+          H0[O0[y]+1]+=ms[1]*M0[y]; H0[O1[y]+1]+=ms[1]*M1[y]; 
+          H0[O0[y]]+=ms[0]*M0[y]; H0[O1[y]]+=ms[0]*M1[y]; }
+        if(hasRt) { 
+          H0[O0[y]+hb+1]+=ms[3]*M0[y]; H0[O1[y]+hb+1]+=ms[3]*M1[y];
+          H0[O0[y]+hb]+=ms[2]*M0[y]; H0[O1[y]+hb]+=ms[2]*M1[y];  }
+      // speedup version, have potential bugs 
+      /*  _m0=SET(M0[y]); _m1=SET(M1[y]);
         if(hasLf) { _m=SET(0,0,ms[1],ms[0]);
           GH(H0+O0[y],_m,_m0); GH(H0+O1[y],_m,_m1); }
         if(hasRt) { _m=SET(0,0,ms[3],ms[2]);
-          GH(H0+O0[y]+hb,_m,_m0); GH(H0+O1[y]+hb,_m,_m1); }
+          GH(H0+O0[y]+hb,_m,_m0); GH(H0+O1[y]+hb,_m,_m1); }*/
       }
       // final rows, no bottom bin
       for( ; y<h0; y++ ) {
+        //debug("%d", y); // 147, 148, 149
         yb0 = (int) yb; GHinit;
         if(hasLf) { H0[O0[y]]+=ms[0]*M0[y]; H0[O1[y]]+=ms[0]*M1[y]; }
         if(hasRt) { H0[O0[y]+hb]+=ms[2]*M0[y]; H0[O1[y]+hb]+=ms[2]*M1[y]; }
