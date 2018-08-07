@@ -85,11 +85,11 @@ ECO_FEATS FeatureExtractor::extractor(const cv::Mat image,
 		hog_feat_maps_ = hog_feature_normalization_simd(hog_feat_maps_);
 #else
 		// 0.006697 s
-		hog_feat_maps_ = get_hog_features(img_samples[hog_feat_ind_]);
 		// 32FCO 25 x 25
+		hog_feat_maps_ = get_hog_features(img_samples[hog_feat_ind_]);
 		// 0.000125 s
-		hog_feat_maps_ = hog_feature_normalization(hog_feat_maps_);
 		// 32FC1 25 x 25
+		hog_feat_maps_ = hog_feature_normalization(hog_feat_maps_);
 #endif
 		sum_features.push_back(hog_feat_maps_);
 	}

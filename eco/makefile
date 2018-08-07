@@ -2,16 +2,14 @@
 USE_CAFFE=0
 USE_CUDA=0
 USE_BOOST=0
+#0:no-simd;1:sse;2:neon (comment should not in the same line as the parameter)
 USE_SIMD=1
 USE_GTEST=0 
 
 CAFFE_PATH=/media/elab/sdd/mycodes/caffe
-
 CC=gcc
 CXX=g++
 NVCC=nvcc
-
-# used for cuda
 ARCH= -gencode arch=compute_30,code=sm_30 \
       -gencode arch=compute_35,code=sm_35 \
       -gencode arch=compute_50,code=[sm_50,compute_50] \
@@ -19,11 +17,10 @@ ARCH= -gencode arch=compute_30,code=sm_30 \
 
 LDFLAGS= `pkg-config --libs opencv` -lstdc++ -lm 
 # -O3 double the speed!!!!!!!!!
-CXXFLAGS = -g -Wall `pkg-config --cflags opencv` -lstdc++ -lm -std=c++0x -msse4  -O3 
-
+CXXFLAGS = -g -Wall `pkg-config --cflags opencv` -lstdc++ -lm -std=c++0x -O3 
 HEADERS = $(wildcard *.h)
 
-TARGET_LIB = libeco.so # target lib
+TARGET_LIB = libeco.so
 
 OBJS = ffttools.o fhog.o interpolator.o optimize_scores.o \
 		regularization_filter.o feature_extractor.o feature_operator.o  \
@@ -47,9 +44,15 @@ LDFLAGS+= -lboost_system -lboost_filesystem -lboost_regex
 endif
 
 ifeq ($(USE_SIMD), 1)
-CXXFLAGS+= -DUSE_SIMD
+CXXFLAGS+= -DUSE_SIMD -msse4
 HEADERS+= $(wildcard hog/*.hpp)
-OBJS+= hog/convConst.o hog/gradientMex.o
+OBJS+= hog/gradientMex.o
+endif
+
+ifeq ($(USE_SIMD), 2)
+CXXFLAGS+= -DUSE_SIMD -mfpu=neon
+HEADERS+= $(wildcard hog/*.hpp)
+OBJS+= hog/gradientMex.o
 endif
 
 ifeq ($(USE_GTEST), 1)
@@ -59,9 +62,6 @@ GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
 CXXFLAGS += -isystem $(GTEST_DIR)/include
 endif
 
-ifeq ($(USE_SIMD), 1)
-	ALL+= makehog 
-endif 
 ALL+= runecotracker.bin
 ifeq ($(USE_GTEST), 1) 
 	ALL+= eco_unittest.bin 
@@ -87,11 +87,7 @@ $(TARGET_LIB): $(OBJS)
 %.o: %.cu $(HEADERS)
 	$(NVCC) $(ARCH) --compiler-options "$(CXXFLAGS)" -c $< -o $@
 
-ifeq ($(USE_SIMD), 1)
-makehog:
-	cd hog && make -j`nproc`
-endif
-
+#gtest=========
 ifeq ($(USE_GTEST), 1)
 GTEST_SRCS_ = $(GTEST_DIR)/src/*.cc $(GTEST_DIR)/src/*.h $(GTEST_HEADERS)
 
