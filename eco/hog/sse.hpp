@@ -3,11 +3,13 @@
 * Copyright 2014 Piotr Dollar.  [pdollar-at-gmail.com]
 * Licensed under the Simplified BSD License [see external/bsd.txt]
 *******************************************************************************/
+// Intel Intrinsics Guide: https://software.intel.com/sites/landingpage/IntrinsicsGuide/#
+
 #ifndef _SSE_HPP_
 #define _SSE_HPP_
 
-#if defined(__ARM_NEON__)
-#include "sse2neon.hpp"
+#ifdef USE_NEON
+#include "sse2neon.h"
 #else
 #include <emmintrin.h>// SSE2:<e*.h>, SSE3:<p*.h>, SSE4:<s*.h>
 #endif

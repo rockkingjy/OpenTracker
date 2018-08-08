@@ -219,6 +219,16 @@ For ECO_HC, means just HOG feature, in **eco/parameters.cc**, change to:
 
 CN feature not implemented yet, comes later.
 
+### Speed-up with SIMD
+If you are using Intel computer, in `eco\makefile`, set:
+```
+USE_SIMD=1
+```
+If you are using ARM like Jetson TX1/2 or Rasberrypi 3, in `eco\makefile`, set:
+```
+USE_SIMD=2
+```
+
 ### Speed-up with GPU
 If you have a GPU, it can speed-up with gpu.
 

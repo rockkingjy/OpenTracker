@@ -2,8 +2,9 @@
 USE_CAFFE=0
 USE_CUDA=0
 USE_BOOST=0
-#0:no-simd;1:sse;2:neon (comment should not in the same line as the parameter)
-USE_SIMD=1
+#0:no-simd;1:sse-Intel;2:neon-TX2;3:neon-Raspberrypi3
+#(comment should not in the same line as the parameter)
+USE_SIMD=2
 USE_GTEST=0 
 
 CAFFE_PATH=/media/elab/sdd/mycodes/caffe
@@ -50,7 +51,13 @@ OBJS+= hog/gradientMex.o
 endif
 
 ifeq ($(USE_SIMD), 2)
-CXXFLAGS+= -DUSE_SIMD -mfpu=neon
+CXXFLAGS+= -DUSE_SIMD -DUSE_NEON -ffast-math -flto -march=armv8-a+crypto -mcpu=cortex-a57+crypto 
+HEADERS+= $(wildcard hog/*.hpp)
+OBJS+= hog/gradientMex.o
+endif
+
+ifeq ($(USE_SIMD), 3)
+CXXFLAGS+= -DUSE_SIMD -DUSE_NEON -ffast-math -flto -march=armv7-a+simd
 HEADERS+= $(wildcard hog/*.hpp)
 OBJS+= hog/gradientMex.o
 endif

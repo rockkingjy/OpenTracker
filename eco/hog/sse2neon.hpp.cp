@@ -1,10 +1,5 @@
-//
-//  sse_to_neon.hpp
-//  neon_test
-//
-//  Created by Tim Oberhauser on 11/16/13.
-//  Copyright (c) 2013 Tim Oberhauser. All rights reserved.
-//
+
+// NEON Intrinsics Guide: https://developer.arm.com/technologies/neon/intrinsics
 
 #ifndef SSE2NEON_HPP
 #define SSE2NEON_HPP
@@ -50,35 +45,6 @@ typedef int16x8_t __m128i;
 typedef float32x4_t __m128;
 
 
-// ADDITION
-inline __m128i _mm_add_epi16(const __m128i& a, const __m128i& b){
-    return vaddq_s16(reinterpret_cast<int16x8_t>(a),reinterpret_cast<int16x8_t>(b));
-}
-
-inline __m128 _mm_add_ps(const __m128& a, const __m128& b){
-    return vaddq_f32(a,b);
-}
-
-
-// SUBTRACTION
-inline __m128i _mm_sub_epi16(const __m128i& a, const __m128i& b){
-    return vsubq_s16(reinterpret_cast<int16x8_t>(a),reinterpret_cast<int16x8_t>(b));
-}
-
-inline __m128 _mm_sub_ps(const __m128& a, const __m128& b){
-    return vsubq_f32(a,b);
-}
-
-
-// MULTIPLICATION
-inline __m128i _mm_mullo_epi16(const __m128i& a, const __m128i& b){
-    return vqrdmulhq_s16(reinterpret_cast<int16x8_t>(a),reinterpret_cast<int16x8_t>(b));
-}
-
-inline __m128 _mm_mul_ps(const __m128& a, const __m128& b){
-    return vmulq_f32(a,b);
-}
-
 
 // SET VALUE
 inline __m128i _mm_set1_epi16(const int16_t w){
@@ -115,6 +81,36 @@ inline __m128i _mm_load_si128(__m128i* p){//For SSE address p must be 16-byte al
 
 inline __m128 _mm_load_ps(const float32_t* p){
     return reinterpret_cast<__m128>(vld1q_f32(p));
+}
+
+
+// ADDITION
+inline __m128i _mm_add_epi16(const __m128i& a, const __m128i& b){
+    return vaddq_s16(reinterpret_cast<int16x8_t>(a),reinterpret_cast<int16x8_t>(b));
+}
+
+inline __m128 _mm_add_ps(const __m128& a, const __m128& b){
+    return vaddq_f32(a,b);
+}
+
+
+// SUBTRACTION
+inline __m128i _mm_sub_epi16(const __m128i& a, const __m128i& b){
+    return vsubq_s16(reinterpret_cast<int16x8_t>(a),reinterpret_cast<int16x8_t>(b));
+}
+
+inline __m128 _mm_sub_ps(const __m128& a, const __m128& b){
+    return vsubq_f32(a,b);
+}
+
+
+// MULTIPLICATION
+inline __m128i _mm_mullo_epi16(const __m128i& a, const __m128i& b){
+    return vqrdmulhq_s16(reinterpret_cast<int16x8_t>(a),reinterpret_cast<int16x8_t>(b));
+}
+
+inline __m128 _mm_mul_ps(const __m128& a, const __m128& b){
+    return vmulq_f32(a,b);
 }
 
 
