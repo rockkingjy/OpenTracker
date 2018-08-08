@@ -30,7 +30,9 @@ Or, **if you have problems with the implementation of a complicate cutting-edge 
 **Attention!** OpenTracker is **NOT** designed just for tracking human beings as the demo images, it can track **everything**, even some special points!
 
 
-**2018/08/06 -- New features** Speed up with SSE, speed up from 25FPS to 104FPS(quicker than matlab version) with scale one.
+**2018/08/08 -- New features** Speed up with NEON, speed up from ~32FPS to ~42FPS on Jetson TX2 with scale one.
+
+**2018/08/06 -- New features** Speed up with SSE, speed up from ~86FPS to ~102FPS(quicker than matlab version) with scale one.
 
 **2018/07/07 -- New features** OpenTracker Implement Notes draft published! Check **notes/OpenTrackerNotes.pdf**. Complete version is comming!
 
@@ -77,11 +79,12 @@ Included                   | OS
  :hammer:                  | Windows10
 
 ## Speed-up
-Included                | Method      | FPS
-------------------------|-------------|------
-:ballot_box_with_check: | no speed-up | ~25
-:ballot_box_with_check: | SSE         | ~105
-:hammer:                | NEON        |  
+Included                | Method                  | FPS(scale=1) | FPS(scale=7)
+------------------------|----------------------   |--------------|-------------
+:ballot_box_with_check: | no speed-up(Intel i9)   | ~86          | ~36
+:ballot_box_with_check: | SSE(Intel i9)           | ~102         | ~52
+:ballot_box_with_check: | no speed-up(Jestson TX2)| ~32          | ~10
+:ballot_box_with_check: | NEON(Jetson TX2)        | ~42          | ~18 
 :hammer:                | GPU         |  
 
 # Quick start
