@@ -57,7 +57,7 @@ OBJS+= hog/gradientMex.o
 endif
 
 ifeq ($(USE_SIMD), 3)
-CXXFLAGS+= -DUSE_SIMD -DUSE_NEON -ffast-math -flto -march=armv7-a+simd
+CXXFLAGS+= -DUSE_SIMD -DUSE_NEON -ffast-math -flto -mfpu=neon
 HEADERS+= $(wildcard hog/*.hpp)
 OBJS+= hog/gradientMex.o
 endif

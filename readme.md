@@ -30,17 +30,19 @@ Or, **if you have problems with the implementation of a complicate cutting-edge 
 **Attention!** OpenTracker is **NOT** designed just for tracking human beings as the demo images, it can track **everything**, even some special points!
 
 
+**2018/08/09 -- New features** Now it supports **Raspberry Pi 3**, and speed up with NEON!
+
 **2018/08/08 -- New features** Speed up with NEON, speed up from ~32FPS to ~42FPS on Jetson TX2 with scale one.
 
 **2018/08/06 -- New features** Speed up with SSE, speed up from ~86FPS to ~102FPS(quicker than matlab version) with scale one.
 
 **2018/07/07 -- New features** OpenTracker Implement Notes draft published! Check **notes/OpenTrackerNotes.pdf**. Complete version is comming!
 
-**2018/07/06 -- New features** Now it support **Nvidia Jetson TX1/2**!
+**2018/07/06 -- New features** Now it supports **Nvidia Jetson TX1/2**!
 
-**2018/07/05 -- New features** Now it support **macOS**!
+**2018/07/05 -- New features** Now it supports **macOS**!
 
-**2018/06/28 -- New features** Now it support automatic initialization with Web camera using **OpenPose**!
+**2018/06/28 -- New features** Now it supports automatic initialization with Web camera using **OpenPose**!
 
 
 ## Supported tracker (more in progressing):
@@ -74,18 +76,21 @@ Included                   | OS
 ---------------------------|-------------
 :ballot_box_with_check:    | Ubuntu 16.04
 :ballot_box_with_check:    | macOS Sierra
-:ballot_box_with_check:    | NVIDIA Jetson TX1/2 (with Ubuntu installed)
- :hammer:                  | Rasperberry PI 3 
+:ballot_box_with_check:    | NVIDIA Jetson TX1/2
+:ballot_box_with_check:    | Rasperberry PI 3 
  :hammer:                  | Windows10
 
 ## Speed-up
 Included                | Method                  | FPS(scale=1) | FPS(scale=7)
 ------------------------|----------------------   |--------------|-------------
+                        | Matlab ECO-HOG(Intel i9)| ~71          | ~71
 :ballot_box_with_check: | no speed-up(Intel i9)   | ~86          | ~36
 :ballot_box_with_check: | SSE(Intel i9)           | ~102         | ~52
 :ballot_box_with_check: | no speed-up(Jestson TX2)| ~32          | ~10
-:ballot_box_with_check: | NEON(Jetson TX2)        | ~42          | ~18 
-:hammer:                | GPU         |  
+:ballot_box_with_check: | NEON(Jetson TX2)        | ~42          | ~18
+:ballot_box_with_check: | no speed-up(Raspberrypi)| ~11          | ~3
+:ballot_box_with_check: | NEON(Raspberrypi)       | ~13          | ~5
+:hammer:                | GPU                     |              |
 
 # Quick start
 --------------------------------
@@ -109,7 +114,7 @@ make
 ```
 brew install tesseract
 git clone https://github.com/rockkingjy/OpenTracker
-cd OpenTracker/kcv
+cd OpenTracker/kcf
 make
 ./runkcftracker.bin
 ```
@@ -227,9 +232,13 @@ If you are using Intel computer, in `eco\makefile`, set:
 ```
 USE_SIMD=1
 ```
-If you are using ARM like Jetson TX1/2 or Rasberrypi 3, in `eco\makefile`, set:
+If you are using ARM like Jetson TX1/2, in `eco\makefile`, set:
 ```
 USE_SIMD=2
+```
+If you are using ARM like Rasberrypi 3, in `eco\makefile`, set:
+```
+USE_SIMD=3
 ```
 
 ### Speed-up with GPU
