@@ -390,7 +390,7 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 		samples_scales.push_back(currentScaleFactor_ * scale_factors_[i]);
 	}
 
-	// 1: Extract features at multiple resolutions #3 x slower#
+	// 1: Extract features at multiple resolutions
 	ECO_FEATS xt = feature_extractor_.extractor(frame, sample_pos, samples_scales, params_);
 	//debug("xt size: %lu, %lu, %d x %d", xt.size(), xt[0].size(), xt[0][0].rows, xt[0][0].cols);
 	localizationtime = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
@@ -416,11 +416,11 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	debug("localization time4: %f", localizationtime);
 	timereco = (double)cv::getTickCount();
 
-	// 5: Interpolate features to the continuous domain #2 x slower#
+	// 5: Interpolate features to the continuous domain
 	xtf_proj = interpolate_dft(xtf_proj, interp1_fs_, interp2_fs_);
 	//debug("xtf_proj size: %lu, %lu, %d x %d", xtf_proj.size(), xtf_proj[0].size(), xtf_proj[0][0].rows, xtf_proj[0][0].cols);
 	localizationtime = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
-	debug("localization time5: %f", localizationtime);
+	debug("localization time5: %f", localizationtime); //#2 x slower#
 	timereco = (double)cv::getTickCount();
 
 	// 6: Compute the scores in Fourier domain for different scales of target
@@ -431,9 +431,7 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 
 	for (size_t i = 0; i < xtf_proj.size(); i++) // for each feature
 	{
-		int pad = (filter_size_[output_index_].height -
-				   xtf_proj[i][0].rows) /
-				  2;
+		int pad = (filter_size_[output_index_].height - xtf_proj[i][0].rows) / 2;
 		cv::Rect temp_roi = cv::Rect(pad, pad,
 									 xtf_proj[i][0].cols, xtf_proj[i][0].rows);
 
@@ -479,7 +477,7 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	}
 
 	localizationtime = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
-	debug("localization time7: %f", localizationtime);
+	debug("localization time7: %f", localizationtime); // #2 x slower#
 
 	//**************************************************************************
 	//*****                     Model update

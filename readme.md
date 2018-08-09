@@ -83,9 +83,9 @@ Included                   | OS
 ## Speed-up
 Included                | Method                  | FPS(scale=1) | FPS(scale=7)
 ------------------------|-------------------------|--------------|-------------
-:ballot_box_with_check: | Matlab ECO-HOG(Intel i9)| ~71          | ~71 
+:ballot_box_with_check: | Matlab ECO-HOG(Intel i9)| ~65          | ~42 
 :ballot_box_with_check: | no speed-up(Intel i9)   | ~86          | ~36
-:ballot_box_with_check: | SSE(Intel i9)           | ~102:cherries:| ~52
+:ballot_box_with_check: | SSE(Intel i9)           | ~102:cherries:| ~52:cherries:
 :ballot_box_with_check: | no speed-up(Jestson TX2)| ~32          | ~10
 :ballot_box_with_check: | NEON(Jetson TX2)        | ~42          | ~18
 :ballot_box_with_check: | no speed-up(Raspberrypi)| ~11          | ~3
