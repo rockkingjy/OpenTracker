@@ -1,11 +1,15 @@
 
 #include "kcf/kcftracker.hpp"
+#include "eco/eco.hpp"
+
+#ifdef USE_CAFFE
 #include "goturn/network/regressor.h"
 #include "goturn/tracker/tracker.h"
-#include "eco/eco.hpp"
+#endif
+
 #include "inputs/readdatasets.hpp"
-#include "inputs/openpose.hpp"
 #include "inputs/readvideo.hpp"
+//#include "inputs/openpose.hpp"
 
 #include <gflags/gflags.h>
 #include <glog/logging.h>
@@ -26,7 +30,7 @@ using namespace std;
 // Convert to string
 int main(int argc, char **argv)
 {
-    /*
+/*
     // Read using openpose============================================
     cv::Rect2f bboxGroundtruth;
     cv::Mat frame, frameDraw;
@@ -45,11 +49,11 @@ int main(int argc, char **argv)
     */
 /*
     // Read from Video and choose a bbox===============================
-    ::google::InitGoogleLogging(argv[0]);
+    //::google::InitGoogleLogging(argv[0]);
     cv::Rect2f bboxGroundtruth;
     cv::Mat frame, frameDraw;
     cv::VideoCapture capture;
-    capture.open("sequences/tracking.mp4");
+    capture.open("sequences/oneperson.mp4");
     if (!capture.isOpened())
     {
         std::cout << "Capture device failed to open!" << std::endl;
@@ -61,11 +65,10 @@ int main(int argc, char **argv)
     std::string window_name = "OpenTracker";
     cv::namedWindow(window_name);
     ReadVideo readvideo;
-    readvideo.IniRead(bboxGroundtruth, frameDraw, window_name);
+    readvideo.IniRead(bboxGroundtruth, frameDraw, window_name, capture);
 */
-
     // Read from the datasets==========================================
-    ::google::InitGoogleLogging(argv[0]);
+//    ::google::InitGoogleLogging(argv[0]);
     cv::Rect2f bboxGroundtruth;
     cv::Mat frame, frameDraw;
     ReadDatasets readdatasets;
@@ -105,6 +108,7 @@ int main(int argc, char **argv)
     Rect2d dsstbbox((int)bboxGroundtruth.x, (int)bboxGroundtruth.y, (int)bboxGroundtruth.width, (int)bboxGroundtruth.height);
     dssttracker.init(frame, dsstbbox);
 
+#ifdef USE_CAFFE
     // Create GOTURN tracker:
     const string model_file = "goturn/nets/deploy.prototxt";
     const string pretrain_file = "goturn/nets/goturun_tracker.caffemodel";
@@ -116,6 +120,7 @@ int main(int argc, char **argv)
     BoundingBox bbox_estimate_uncentered;
     bbox_gt.getRect(goturnbbox);
     goturntracker.Init(frame, bbox_gt, &regressor);
+#endif
 
     // Create ECO trakcer;
     eco::ECO ecotracker;
@@ -167,14 +172,14 @@ int main(int argc, char **argv)
             putText(frameDraw, "DSST tracking failure detected", cv::Point(10, 100), FONT_HERSHEY_SIMPLEX,
                     0.75, Scalar(0, 0, 255), 2);
         }
-
+#ifdef USE_CAFFE
         //GOTURN=====================
         double timergoturn = (double)getTickCount();
         goturntracker.Track(frame, &regressor, &bbox_estimate_uncentered);
         bbox_estimate_uncentered.putRect(goturnbbox);
         float fpsgoturn = getTickFrequency() / ((double)getTickCount() - timergoturn);
         rectangle(frameDraw, goturnbbox, Scalar(255, 255, 0), 2, 1);
-
+#endif
 
         //ECO========================
         double timeeco = (double)getTickCount();
@@ -206,11 +211,12 @@ int main(int argc, char **argv)
         line(frameDraw, cv::Point(frameDraw.cols - 100, 75), cv::Point(frameDraw.cols - 10, 75), Scalar(0, 255, 0), 2, 1);
         putText(frameDraw, "DSST ", cv::Point(frameDraw.cols - 180, 100), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0, 0, 255), 2);
         line(frameDraw, cv::Point(frameDraw.cols - 100, 100), cv::Point(frameDraw.cols - 10, 100), Scalar(0, 0, 255), 2, 1);
-        putText(frameDraw, "GOTURN ", cv::Point(frameDraw.cols - 180, 125), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(255, 255, 0), 2);
-        line(frameDraw, cv::Point(frameDraw.cols - 100, 125), cv::Point(frameDraw.cols - 10, 125), Scalar(255, 255, 0), 2, 1);
-        putText(frameDraw, "ECO ", cv::Point(frameDraw.cols - 180, 150), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(255, 0, 255), 2);
-        line(frameDraw, cv::Point(frameDraw.cols - 100, 150), cv::Point(frameDraw.cols - 10, 150), Scalar(255, 0, 255), 2, 1);
-
+        putText(frameDraw, "ECO ", cv::Point(frameDraw.cols - 180, 125), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(255, 0, 255), 2);
+        line(frameDraw, cv::Point(frameDraw.cols - 100, 125), cv::Point(frameDraw.cols - 10, 125), Scalar(255, 0, 255), 2, 1);
+#ifdef USE_CAFFE
+        putText(frameDraw, "GOTURN ", cv::Point(frameDraw.cols - 180, 150), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(255, 255, 0), 2);
+        line(frameDraw, cv::Point(frameDraw.cols - 100, 150), cv::Point(frameDraw.cols - 10, 150), Scalar(255, 255, 0), 2, 1);
+#endif
         // Display frameDraw.=========================================================
         //cvNamedWindow("Tracking", CV_WINDOW_NORMAL);
         imshow("OpenTracker", frameDraw);
@@ -226,8 +232,9 @@ int main(int argc, char **argv)
         waitKey(1);
 
         // Read the next frame
+/* Read from dataset */
         readdatasets.ReadNextFrame(bboxGroundtruth, frame);
-/*
+/* Read from video and choose a bbox 
         capture >> frame;
         if (frame.empty())
             return false;

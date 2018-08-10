@@ -18,7 +18,7 @@ class ReadVideo
 public:
   ReadVideo();
   virtual ~ReadVideo();
-  void IniRead(cv::Rect2f &bboxGroundtruth, cv::Mat &frame, std::string window_name);
+  void IniRead(cv::Rect2f &bboxGroundtruth, cv::Mat &frame, std::string window_name, cv::VideoCapture &capture);
   static void mouseHandler(int event, int x, int y, int flags, void *param)
   {
     switch (event)
@@ -55,6 +55,7 @@ private:
   static bool drawing_now_flag_;
   static bool bbox_get_flag_;
   static cv::Rect2f bbox_;
+
 };
 
 #endif

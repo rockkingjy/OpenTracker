@@ -86,6 +86,8 @@ Included                | Method                  | FPS(scale=1) | FPS(scale=7)
 :ballot_box_with_check: | Matlab ECO-HOG(Intel i9)| ~65          | ~42 
 :ballot_box_with_check: | no speed-up(Intel i9)   | ~86          | ~36
 :ballot_box_with_check: | SSE(Intel i9)           | ~102:cherries:| ~52:cherries:
+:ballot_box_with_check: | no speed-up(MacBook Air Intel i5)| ~60        | ~22 
+:ballot_box_with_check: | SSE(MacBook Air Intel i5)        | ~75        | ~33
 :ballot_box_with_check: | no speed-up(Jestson TX2)| ~32          | ~10
 :ballot_box_with_check: | NEON(Jetson TX2)        | ~42          | ~18
 :ballot_box_with_check: | no speed-up(Raspberrypi)| ~11          | ~3
@@ -167,6 +169,14 @@ git clone https://github.com/rockkingjy/OpenTracker
 cd OpenTracker/eco
 make
 ./runecotracker.bin
+```
+
+## Quick Run (almost) all the tracker:
+```
+git clone https://github.com/rockkingjy/OpenTracker
+cd OpenTracker/kcf
+make 
+./trackerscompare.bin
 ```
 
 # Compile and Run 

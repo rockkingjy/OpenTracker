@@ -1,6 +1,7 @@
-USE_CAFFE=1
-USE_CUDA=1
-USE_BOOST=1
+USE_CAFFE=0
+USE_CUDA=0
+USE_BOOST=0
+USE_SIMD=1
 OPENPOSE=0
 
 CAFFE_PATH=/media/elab/sdd/mycodes/caffe
@@ -10,24 +11,34 @@ CXX=g++
 
 LDFLAGS= `pkg-config --libs opencv` -lstdc++ -lm 
 
-CXXFLAGS= -g -Wall `pkg-config --cflags opencv` -lstdc++ -lm -std=c++0x 
+CXXFLAGS= -g -Wall `pkg-config --cflags opencv` -lstdc++ -lm -std=c++0x -O3
 
-HEADERS = $(wildcard *.h) *.hpp $(wildcard kcf/*.h) $(wildcard goturn/*/*.h) $(wildcard eco/*.h)
+HEADERS = $(wildcard *.h) *.hpp $(wildcard kcf/*.h) $(wildcard eco/*.h)
 
-OBJ = kcf/fhog.o kcf/kcftracker.o \
-	goturn/network/regressor_base.o goturn/network/regressor.o \
-	goturn/helper/bounding_box.o goturn/helper/helper.o goturn/helper/image_proc.o \
-	goturn/helper/high_res_timer.o goturn/tracker/tracker.o trackerscompare.o \
-	eco/ffttools.o eco/fhog.o eco/interpolator.o eco/optimize_scores.o \
-	eco/regularization_filter.o eco/feature_extractor.o eco/feature_operator.o  \
-	eco/training.o eco/sample_update.o eco/eco.o \
-	inputs/readdatasets.o inputs/readvideo.o
+OBJS=kcf/fhog.o \
+	kcf/kcftracker.o \
+	eco/ffttools.o \
+	eco/fhog.o \
+	eco/interpolator.o \
+	eco/optimize_scores.o \
+	eco/regularization_filter.o \
+	eco/feature_extractor.o \
+	eco/feature_operator.o  \
+	eco/training.o \
+	eco/sample_update.o \
+	eco/eco.o \
+	inputs/readdatasets.o inputs/readvideo.o \
+	trackerscompare.o 
 
 
 ifeq ($(USE_CAFFE), 1)
 CXXFLAGS+= -DUSE_CAFFE
 LDFLAGS+= -L$(CAFFE_PATH)/build/lib -lcaffe -lglog 
 CXXFLAGS+= -I$(CAFFE_PATH)/build/include/ -I$(CAFFE_PATH)/include/ 
+HEADERS+= $(wildcard goturn/*/*.h)
+OBJS+=goturn/network/regressor_base.o goturn/network/regressor.o \
+	goturn/helper/bounding_box.o goturn/helper/helper.o goturn/helper/image_proc.o \
+	goturn/helper/high_res_timer.o goturn/tracker/tracker.o
 endif
 
 ifeq ($(USE_CUDA), 1)
@@ -42,13 +53,35 @@ endif
 
 ifeq ($(OPENPOSE), 1) 
 LDFLAGS+=-lpthread -lopenpose -lgflags
-OBJ+=inputs/openpose.o
+OBJS+=inputs/openpose.o
 endif
 
+ifeq ($(USE_SIMD), 1)
+CXXFLAGS+= -DUSE_SIMD -msse4
+HEADERS+= $(wildcard eco/hog/*.hpp)
+OBJS+= eco/hog/gradientMex.o
+endif
 
-all: makekcf makegoturn makeeco trackerscompare.bin
+ifeq ($(USE_SIMD), 2)
+CXXFLAGS+= -DUSE_SIMD -DUSE_NEON -ffast-math -flto -march=armv8-a+crypto -mcpu=cortex-a57+crypto 
+HEADERS+= $(wildcard eco/hog/*.hpp)
+OBJS+= eco/hog/gradientMex.o
+endif
 
-trackerscompare.bin: $(OBJ)
+ifeq ($(USE_SIMD), 3)
+CXXFLAGS+= -DUSE_SIMD -DUSE_NEON -ffast-math -flto -mfpu=neon
+HEADERS+= $(wildcard eco/hog/*.hpp)
+OBJS+= eco/hog/gradientMex.o
+endif
+
+ALL+= makekcf makeeco trackerscompare.bin
+ifeq ($(USE_CAFFE), 1) 
+	ALL+= makegoturn 
+endif
+
+all: $(ALL)
+
+trackerscompare.bin: $(OBJS)
 	$(CC) -o $@ $^ $(LDFLAGS) 
 
 %.o: %.c $(HEADERS)
@@ -61,8 +94,10 @@ trackerscompare.bin: $(OBJ)
 makekcf:
 	cd kcf && make -j`nproc`
 
+ifeq ($(USE_CAFFE), 1) 
 makegoturn:
 	cd goturn && make -j`nproc`
+endif
 
 makeeco:
 	cd eco && make -j`nproc`
