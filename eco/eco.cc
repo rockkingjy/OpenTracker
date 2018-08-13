@@ -36,7 +36,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	debug("base_target_size_:%f x %f", base_target_size_.height, base_target_size_.width);
 	// window size, taking padding into account
 	float img_sample_size__tmp = sqrt(base_target_size_.area() * std::pow(params_.search_area_scale, 2));
-	//img_sample_size__tmp=((int)img_sample_size__tmp%4==0) ? (int)img_sample_size__tmp : (int)img_sample_size__tmp-((int)img_sample_size__tmp%4)+4; 
+	//img_sample_size__tmp=((int)img_sample_size__tmp%4==0) ? (int)img_sample_size__tmp : (int)img_sample_size__tmp-((int)img_sample_size__tmp%4)+4;
 	img_sample_size_ = cv::Size2i(img_sample_size__tmp, img_sample_size__tmp);
 	debug("img_sample_size_: %d x %d", img_sample_size_.height, img_sample_size_.width);
 
@@ -253,6 +253,10 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 			  hf_full_[i][0].rows, hf_full_[i][0].cols);
 	}
 	frames_since_last_train_ = 0;
+
+#ifdef USE_MULTI_THREAD
+	thread_flag_train_ = true;
+#endif
 	printf("\n==================End of Init===============================\n");
 }
 
@@ -372,6 +376,9 @@ void ECO::reset(cv::Mat &im, const cv::Rect2f &rect)
 			  hf_full_[i][0].rows, hf_full_[i][0].cols);
 	}
 	frames_since_last_train_ = 0;
+#ifdef USE_MULTI_THREAD
+	thread_flag_train_ = true;
+#endif
 	printf("\n=====================End of Reset============================\n");
 }
 
@@ -531,9 +538,21 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 		//debug("%lu %lu", sample_energy_.size(), FeautreComputePower2(xlf_proj).size());
 		sample_energy_ = sample_energy_ * (1 - params_.learning_rate) +
 						 FeautreComputePower2(xlf_proj) * params_.learning_rate;
+
+#ifdef USE_MULTI_THREAD
+		while (thread_flag_train_ == false)
+			;
+		int rc = pthread_create(&thread_train_, NULL, thread_train, this);
+		if (rc)
+		{
+			cout << "Error:unable to create thread," << rc << endl;
+			exit(-1);
+		}
+#else
 		eco_trainer_.train_filter(sample_update_.get_samples(),
 								  sample_update_.get_prior_weights(),
 								  sample_energy_); // #6 x slower#
+#endif
 		frames_since_last_train_ = 0;
 
 		float t2 = ((double)cv::getTickCount() - t1) / cv::getTickFrequency();
@@ -654,6 +673,20 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	}
 	return true;
 }
+
+#ifdef USE_MULTI_THREAD
+void *ECO::thread_train(void *params)
+{
+	debug("thread running");
+	ECO *eco = (ECO *)params;
+	eco->thread_flag_train_ = false;
+	eco->eco_trainer_.train_filter(eco->sample_update_.get_samples(),
+								   eco->sample_update_.get_prior_weights(),
+								   eco->sample_energy_);
+	eco->thread_flag_train_ = true;
+	pthread_exit(NULL);
+}
+#endif
 
 void ECO::init_features()
 {

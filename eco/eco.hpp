@@ -16,6 +16,10 @@
 #include <opencv2/core/cuda.hpp>
 #endif 
 
+#ifdef USE_MULTI_THREAD
+#include <pthread.h>
+#endif
+
 #include "parameters.hpp"
 #include "interpolator.hpp"
 #include "regularization_filter.hpp"
@@ -64,6 +68,9 @@ class ECO
 						   cv::Point2f shift,
 						   std::vector<cv::Mat> kx, 
 						   std::vector<cv::Mat> ky);
+#ifdef USE_MULTI_THREAD
+	static void *thread_train(void *id);
+#endif
 
   private:
 	EcoParameters 		params_;
@@ -98,6 +105,11 @@ class ECO
 
 	ECO_FEATS 			sample_energy_;
 	ECO_FEATS 			hf_full_;
+
+#ifdef USE_MULTI_THREAD
+	bool 				thread_flag_train_;
+	pthread_t			thread_train_;
+#endif
 	
 };
 
