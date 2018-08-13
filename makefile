@@ -2,6 +2,7 @@ USE_CAFFE=0
 USE_CUDA=0
 USE_BOOST=0
 USE_SIMD=1
+USE_MULTI_THREAD=1
 OPENPOSE=0
 
 CAFFE_PATH=/media/elab/sdd/mycodes/caffe
@@ -9,7 +10,7 @@ CAFFE_PATH=/media/elab/sdd/mycodes/caffe
 CC=gcc
 CXX=g++
 
-LDFLAGS= `pkg-config --libs opencv` -lstdc++ -lm 
+LDFLAGS= `pkg-config --libs opencv` -lstdc++ -lm
 
 CXXFLAGS= -g -Wall `pkg-config --cflags opencv` -lstdc++ -lm -std=c++0x -O3
 
@@ -72,6 +73,11 @@ ifeq ($(USE_SIMD), 3)
 CXXFLAGS+= -DUSE_SIMD -DUSE_NEON -ffast-math -flto -mfpu=neon
 HEADERS+= $(wildcard eco/hog/*.hpp)
 OBJS+= eco/hog/gradientMex.o
+endif
+
+ifeq ($(USE_MULTI_THREAD), 1)
+CXXFLAGS+= -DUSE_MULTI_THREAD
+LDFLAGS+= -pthread
 endif
 
 ALL+= makekcf makeeco trackerscompare.bin
