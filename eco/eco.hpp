@@ -109,6 +109,7 @@ class ECO
 
 #ifdef USE_MULTI_THREAD
 	bool 				thread_flag_train_;
+  public:
 	pthread_t			thread_train_;
 #endif
 	

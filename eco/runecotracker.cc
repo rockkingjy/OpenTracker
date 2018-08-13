@@ -420,6 +420,15 @@ int main(int argc, char **argv)
         }
 */      
     }
+#ifdef USE_MULTI_THREAD
+    void *status;
+    int rc = pthread_join(ecotracker.thread_train_, &status);
+    if (rc)
+    {
+         cout << "Error:unable to join," << rc << std::endl;
+         exit(-1);
+    }
+#endif
     AvgPrecision /= (float)(f - 2);
     SuccessRate /= (float)(f - 2);
     AvgIou = std::accumulate(Iou.begin(), Iou.end(), 0.0f) / Iou.size();
