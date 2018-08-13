@@ -18,6 +18,7 @@
 
 #ifdef USE_MULTI_THREAD
 #include <pthread.h>
+#include <unistd.h>
 #endif
 
 #include "parameters.hpp"
@@ -69,7 +70,7 @@ class ECO
 						   std::vector<cv::Mat> kx, 
 						   std::vector<cv::Mat> ky);
 #ifdef USE_MULTI_THREAD
-	static void *thread_train(void *id);
+	static void *thread_train(void *params);
 #endif
 
   private:

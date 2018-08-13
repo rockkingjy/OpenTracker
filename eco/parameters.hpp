@@ -143,7 +143,7 @@ struct EcoParameters
 
 	// Scale parameters for the translation model
 	// Only used if: use_scale_filter = false
-	size_t  number_of_scales = 7;//1;			    // Number of scales to run the detector
+	size_t  number_of_scales = 1;//1;			    // Number of scales to run the detector
 	float   scale_step	= 1.01f;//1.02f;                // The scale factor
 	float 	min_scale_factor;
 	float	max_scale_factor;

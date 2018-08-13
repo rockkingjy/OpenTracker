@@ -541,7 +541,9 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 
 #ifdef USE_MULTI_THREAD
 		while (thread_flag_train_ == false)
-			;
+		{
+			usleep(10); // sleep to allow change of flag in the thread
+		}
 		int rc = pthread_create(&thread_train_, NULL, thread_train, this);
 		if (rc)
 		{
@@ -683,6 +685,7 @@ void *ECO::thread_train(void *params)
 	eco->eco_trainer_.train_filter(eco->sample_update_.get_samples(),
 								   eco->sample_update_.get_prior_weights(),
 								   eco->sample_energy_);
+	debug("thread end");							
 	eco->thread_flag_train_ = true;
 	pthread_exit(NULL);
 }
