@@ -128,12 +128,12 @@ cv::Mat magnitude(const cv::Mat img)
 		assert(0);
 	return res;
 }
-// complex element-wise multiplication // gpu_implemented
-cv::Mat complexDotMultiplication(const cv::Mat a, const cv::Mat b)
+// complex element-wise multiplication for 32Float type
+cv::Mat complexDotMultiplication(const cv::Mat &a, const cv::Mat &b)
 {
 	cv::Mat res;
 	res = complexDotMultiplicationCPU(a, b);
-/*
+	/*
 #ifdef USE_CUDA
 	res = complexDotMultiplicationGPU(a, b);
 #else
@@ -142,7 +142,43 @@ cv::Mat complexDotMultiplication(const cv::Mat a, const cv::Mat b)
 */
 	return res;
 }
-cv::Mat complexDotMultiplicationCPU(const cv::Mat a, const cv::Mat b)
+
+cv::Mat complexDotMultiplicationCPU(const cv::Mat &a, const cv::Mat &b)
+{
+	cv::Mat temp_a;
+	cv::Mat temp_b;
+	a.copyTo(temp_a);
+	b.copyTo(temp_b);
+
+	if (a.channels() == 1) // for single channel image a
+	{
+		std::vector<cv::Mat> a_vector =
+			{a, cv::Mat::zeros(a.size(), CV_32FC1)};
+		cv::merge(a_vector, temp_a);
+	}
+	if (b.channels() == 1) // for single channel image b
+	{
+		std::vector<cv::Mat> b_vector =
+			{b, cv::Mat::zeros(b.size(), CV_32FC1)};
+		cv::merge(b_vector, temp_b);
+	}
+
+	cv::Mat res = cv::Mat::zeros(temp_a.size(), CV_32FC2);
+	//(a0+ia1)x(b0+ib1)=(a0b0-a1b1)+i(a0b1+a1b0)
+    //#pragma omp parallel for collapse(2)
+	for (size_t j = 0; j < temp_a.cols; j++)
+	{
+		for(size_t i = 0; i < temp_a.rows; i++)
+		{
+			res.at<cv::Vec2f>(i, j)[0] = temp_a.at<cv::Vec2f>(i, j)[0] * temp_b.at<cv::Vec2f>(i, j)[0] - temp_a.at<cv::Vec2f>(i, j)[1] * temp_b.at<cv::Vec2f>(i, j)[1];
+			res.at<cv::Vec2f>(i, j)[1] = temp_a.at<cv::Vec2f>(i, j)[0] * temp_b.at<cv::Vec2f>(i, j)[1] + temp_a.at<cv::Vec2f>(i, j)[1] * temp_b.at<cv::Vec2f>(i, j)[0];
+
+		}
+	}
+	return res;
+}
+/*
+cv::Mat complexDotMultiplicationCPU(const cv::Mat &a, const cv::Mat &b)
 {
 	cv::Mat res;
 
@@ -179,7 +215,7 @@ cv::Mat complexDotMultiplicationCPU(const cv::Mat a, const cv::Mat b)
 }
 // Only with quite large matrix, GPU is faster!!!!!
 #ifdef USE_CUDA
-cv::Mat complexDotMultiplicationGPU(const cv::Mat a, const cv::Mat b)
+cv::Mat complexDotMultiplicationGPU(const cv::Mat &a, const cv::Mat &b)
 {
 	cv::Mat res;
 
@@ -234,6 +270,7 @@ cv::Mat complexDotMultiplicationGPU(const cv::Mat a, const cv::Mat b)
 	return res;
 }
 #endif
+*/
 // complex element-wise division
 cv::Mat complexDotDivision(const cv::Mat a, const cv::Mat b)
 {

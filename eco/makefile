@@ -4,8 +4,10 @@ USE_BOOST=0
 #0:no-simd;1:sse-Intel;2:neon-TX2;3:neon-Raspberrypi3
 #(comment should not in the same line as the parameter)
 USE_SIMD=1
+#USE_OPENMP=1
+#USE_EIGEN=1
 USE_MULTI_THREAD=1
-USE_GTEST=0 
+USE_GTEST=1
 
 CAFFE_PATH=/media/elab/sdd/mycodes/caffe
 CC=gcc
@@ -61,6 +63,15 @@ CXXFLAGS+= -DUSE_SIMD -DUSE_NEON -ffast-math -flto -mfpu=neon
 HEADERS+= $(wildcard hog/*.hpp)
 OBJS+= hog/gradientMex.o
 endif
+
+#ifeq ($(USE_OPENMP), 1)
+#CXXFLAGS+= -DUSE_OPENMP -fopenmp
+#LDFLAGS+= -fopenmp
+#endif
+
+#ifeq ($(USE_EIGEN), 1)
+#CXXFLAGS+= -DUSE_EIGEN -I/usr/include/eigen3
+#endif
 
 ifeq ($(USE_MULTI_THREAD), 1)
 CXXFLAGS+= -DUSE_MULTI_THREAD

@@ -269,7 +269,7 @@ TEST(debug, copyTo_clone_Difference)
 */
 TEST(ffttoolsTest, complexDotMultiplication)
 {
-  int N = 10000;
+  int N = 25;
   cv::Mat mat_float(N, N, CV_32FC2);
   for (int j = 0; j < mat_float.rows; j++)
     for (int i = 0; i < mat_float.cols; i++)
@@ -292,12 +292,13 @@ TEST(ffttoolsTest, complexDotMultiplication)
 
   cv::Mat res;
   res = eco::complexDotMultiplicationCPU(mat_float, mat_float1);  
-  int iter = 1;
+  int iter = 70;
   double timer = (double)cv::getTickCount();
   float timedft = 0;
   while (iter > 0)
   {
-    res = eco::complexDotMultiplicationCPU(mat_float, mat_float1);   
+    res = eco::complexDotMultiplicationCPU(mat_float, mat_float1);  
+    res = eco::complexDotMultiplicationCPU(mat_float, mat_float1);  
     iter--;
   }
   timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();
@@ -305,6 +306,7 @@ TEST(ffttoolsTest, complexDotMultiplication)
   //showmat2channels(res, 2);
 }
 
+/*
 #ifdef USE_CUDA
 TEST(ffttoolsTest, complexDotMultiplicationGPU)
 {
@@ -346,5 +348,5 @@ TEST(ffttoolsTest, complexDotMultiplicationGPU)
   //showmat2channels(res, 2);
 }
 #endif
-
+*/
 } //namespace

@@ -6,10 +6,11 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 {
 	printf("\n=========================Init================================\n");
 	// 1. Initialize all the parameters.
+	/*
 #ifdef USE_CUDA
 	cv::cuda::setDevice(params_.gpu_id);
 #endif
-
+*/
 	// Image infomations
 	imgInfo(im);
 	debug("rect: %f, %f, %f, %f", rect.x, rect.y, rect.width, rect.height);
@@ -97,10 +98,9 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 		interp1_fs_.push_back(interp1_fs1);
 		interp2_fs_.push_back(interp2_fs1);
 		//imgInfo(interp1_fs1);
-		//showmat2chall(interp1_fs1, 2);
-		//showmat2chall(interp2_fs1, 2);
+		//showmat2channels(interp1_fs1, 2);
+		//showmat2channels(interp2_fs1, 2);
 	}
-
 	// Construct spatial regularization filter, refer SRDCF
 	for (size_t i = 0; i < filter_size_.size(); i++) // for each feature
 	{
@@ -427,7 +427,7 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	xtf_proj = interpolate_dft(xtf_proj, interp1_fs_, interp2_fs_);
 	//debug("xtf_proj size: %lu, %lu, %d x %d", xtf_proj.size(), xtf_proj[0].size(), xtf_proj[0][0].rows, xtf_proj[0][0].cols);
 	localizationtime = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
-	debug("localization time5: %f", localizationtime); //#2 x slower#
+	debug("localization time5: %f", localizationtime);
 	timereco = (double)cv::getTickCount();
 
 	// 6: Compute the scores in Fourier domain for different scales of target
@@ -484,7 +484,7 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	}
 
 	localizationtime = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
-	debug("localization time7: %f", localizationtime); // #2 x slower#
+	debug("localization time7: %f", localizationtime); 
 
 	//**************************************************************************
 	//*****                     Model update
@@ -685,7 +685,7 @@ void *ECO::thread_train(void *params)
 	eco->eco_trainer_.train_filter(eco->sample_update_.get_samples(),
 								   eco->sample_update_.get_prior_weights(),
 								   eco->sample_energy_);
-	debug("thread end");							
+	debug("thread end");
 	eco->thread_flag_train_ = true;
 	pthread_exit(NULL);
 }
@@ -910,11 +910,15 @@ ECO_FEATS ECO::interpolate_dft(const ECO_FEATS &xlf, vector<cv::Mat> &interp1_fs
 
 	for (size_t i = 0; i < xlf.size(); i++)
 	{
+		double timer = (double)cv::getTickCount();
+		float timedft = 0;
+
 		cv::Mat interp1_fs_mat =
 			subwindow(interp1_fs[i], cv::Rect(cv::Point(0, 0), cv::Size(interp1_fs[i].rows, interp1_fs[i].rows)), IPL_BORDER_REPLICATE);
 		cv::Mat interp2_fs_mat =
 			subwindow(interp2_fs[i], cv::Rect(cv::Point(0, 0), cv::Size(interp2_fs[i].cols, interp2_fs[i].cols)), IPL_BORDER_REPLICATE);
 		vector<cv::Mat> temp;
+
 		for (size_t j = 0; j < xlf[i].size(); j++)
 		{
 			temp.push_back(complexDotMultiplication(

@@ -37,12 +37,12 @@ the use of this software, even if advised of the possibility of such damage.
 #define FFTTOOLS_HPP
 
 #include <opencv2/imgproc/imgproc.hpp>
-
+/*
 #ifdef USE_CUDA
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/cuda.hpp>
 #endif 
-
+*/
 namespace eco
 {
 cv::Mat dft_f(const cv::Mat img_org, const bool backwards = false);
@@ -59,11 +59,13 @@ cv::Mat fftshift_d(const cv::Mat org_img,
 cv::Mat real(const cv::Mat img);
 cv::Mat imag(const cv::Mat img);
 cv::Mat magnitude(const cv::Mat img);
-cv::Mat complexDotMultiplication(const cv::Mat a, const cv::Mat b);
-cv::Mat complexDotMultiplicationCPU(const cv::Mat a, const cv::Mat b);
+cv::Mat complexDotMultiplication(const cv::Mat &a, const cv::Mat &b);
+cv::Mat complexDotMultiplicationCPU(const cv::Mat &a, const cv::Mat &b);
+/*
 #ifdef USE_CUDA
-cv::Mat complexDotMultiplicationGPU(const cv::Mat a, const cv::Mat b);
+cv::Mat complexDotMultiplicationGPU(const cv::Mat &a, const cv::Mat &b);
 #endif
+*/
 cv::Mat complexDotDivision(const cv::Mat a, const cv::Mat b);
 cv::Mat complexMatrixMultiplication(const cv::Mat &a, const cv::Mat &b);
 cv::Mat complexConvolution(const cv::Mat a_input,
