@@ -7,7 +7,7 @@ USE_SIMD=1
 #USE_OPENMP=1
 #USE_EIGEN=1
 USE_MULTI_THREAD=1
-USE_GTEST=1
+USE_GTEST=0
 
 CAFFE_PATH=/media/elab/sdd/mycodes/caffe
 CC=gcc

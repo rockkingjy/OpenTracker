@@ -178,6 +178,7 @@ cv::Mat complexDotMultiplicationCPU(const cv::Mat &a, const cv::Mat &b)
 	return res;
 }
 /*
+// use .mul() much slower than for loop
 cv::Mat complexDotMultiplicationCPU(const cv::Mat &a, const cv::Mat &b)
 {
 	cv::Mat res;

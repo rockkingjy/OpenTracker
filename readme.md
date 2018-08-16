@@ -92,7 +92,7 @@ Included                | Method(single thread)   | FPS(scale=1) | FPS(scale=7)
 :ballot_box_with_check: | no speed-up(Jestson TX2)| ~32          | ~10
 :ballot_box_with_check: | NEON(Jetson TX2)        | ~42          | ~18
 :ballot_box_with_check: | no speed-up(Raspberrypi)| ~11          | ~3
-:ballot_box_with_check: | NEON(Raspberrypi)       | ~13          | ~5
+:ballot_box_with_check: | NEON(Raspberrypi)       | ~17          | ~6
 :hammer:                | GPU                     |              |
 
 # Quick start
