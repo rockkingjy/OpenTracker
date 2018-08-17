@@ -73,8 +73,8 @@ void OptimizeScores::compute_scores()
 		std::vector<cv::Mat> ival, H_yy, H_xx, H_xy, det_H;
 		for (unsigned int i = 0; i < scores_fs_.size(); i++)
 		{
-			ky_exp_ky.push_back(complexDotMultiplication(real2complex(kyMat), exp_iky[i]));
-			kx_exp_kx.push_back(complexDotMultiplication(real2complex(kxMat), exp_ikx[i]));
+			ky_exp_ky.push_back(complexDotMultiplication(kyMat, exp_iky[i]));
+			kx_exp_kx.push_back(complexDotMultiplication(kxMat, exp_ikx[i]));
 		
 			y_resp.push_back(exp_iky[i] * scores_fs_[i]);
 			resp_x.push_back(scores_fs_[i] * exp_ikx[i]);
@@ -88,8 +88,8 @@ void OptimizeScores::compute_scores()
 			cv::split(ival[i], tmp);
 			cv::merge(std::vector<cv::Mat>({-1 * tmp[1], tmp[0]}), ival[i]);
 
-			H_yy.push_back(real(-1 * complexDotMultiplication(real2complex(ky2Mat), exp_iky[i]) * resp_x[i] + ival[i]));
-			H_xx.push_back(real(-1 * y_resp[i] * complexDotMultiplication(real2complex(kx2Mat), exp_ikx[i]) + ival[i]));
+			H_yy.push_back(real(-1 * complexDotMultiplication(ky2Mat, exp_iky[i]) * resp_x[i] + ival[i]));
+			H_xx.push_back(real(-1 * y_resp[i] * complexDotMultiplication(kx2Mat, exp_ikx[i]) + ival[i]));
 			H_xy.push_back(real(-1 * ky_exp_ky[i] * (scores_fs_[i] * kx_exp_kx[i])));
 
 			det_H.push_back(H_yy[i].mul(H_xx[i]) - H_xy[i].mul(H_xy[i]));

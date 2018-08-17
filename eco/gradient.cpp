@@ -4,7 +4,7 @@
 * Licensed under the Simplified BSD License [see external/bsd.txt]
 *******************************************************************************/
 
-#include "gradientMex.hpp"
+#include "gradient.hpp"
 
 #define PI 3.14159265f
 
@@ -324,7 +324,7 @@ void hogChannels( float *H, const float *R, const float *N,
 void hog( float *M, float *O, float *H, int h, int w, int binSize,
   int nOrients, int softBin, bool full, float clip )
 {
-  float *N, *R; const int hb=h/binSize, wb=w/binSize, nb=hb*wb;
+  float *N, *R; const int hb=h/binSize, wb=w/binSize;//, nb=hb*wb;
   // compute unnormalized gradient histograms
   R = (float*) wrCalloc(wb*hb*nOrients,sizeof(float));
   gradHist( M, O, R, h, w, binSize, nOrients, softBin, full );

@@ -1,6 +1,8 @@
 #ifndef FEATURE_EXTRACTOR_HPP
 #define FEATURE_EXTRACTOR_HPP
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <iostream>
 #include <string>
 #include <math.h>
@@ -15,13 +17,7 @@
 #include "debug.hpp"
 
 #ifdef USE_SIMD
-#include <stdio.h>
-#include <stdlib.h>
-#include "hog/rgbConvertMex.hpp"
-#include "hog/imPadMex.hpp"
-#include "hog/convConst.hpp"
-#include "hog/imResampleMex.hpp"
-#include "hog/gradientMex.hpp"
+#include "gradient.hpp"
 #endif
 
 #ifdef USE_CAFFE

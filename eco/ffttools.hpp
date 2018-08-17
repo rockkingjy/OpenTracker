@@ -43,6 +43,11 @@ the use of this software, even if advised of the possibility of such damage.
 #include <opencv2/core/cuda.hpp>
 #endif 
 */
+#ifdef USE_SIMD
+#include "sse.hpp"
+#include "wrappers.hpp"
+#endif
+
 namespace eco
 {
 cv::Mat dft_f(const cv::Mat img_org, const bool backwards = false);
@@ -61,6 +66,9 @@ cv::Mat imag(const cv::Mat img);
 cv::Mat magnitude(const cv::Mat img);
 cv::Mat complexDotMultiplication(const cv::Mat &a, const cv::Mat &b);
 cv::Mat complexDotMultiplicationCPU(const cv::Mat &a, const cv::Mat &b);
+#ifdef USE_SIMD
+cv::Mat complexDotMultiplicationSIMD(const cv::Mat &a, const cv::Mat &b);
+#endif
 /*
 #ifdef USE_CUDA
 cv::Mat complexDotMultiplicationGPU(const cv::Mat &a, const cv::Mat &b);

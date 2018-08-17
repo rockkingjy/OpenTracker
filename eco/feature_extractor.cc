@@ -288,7 +288,7 @@ vector<cv::Mat> FeatureExtractor::get_hog_features_simd(const vector<cv::Mat> im
 			for (int j = 0; j < wb; j++)
 				for (int l = 0; l < nDim - 1; l++)
 				{
-					featuresMap.at<cv::Vec<float,31>>(j, i)[l] = *(H + l * hb * wb + i * hb + j);
+					featuresMap.at<cv::Vec<float,31>>(j, i)[l] = *(H + l * hb * wb + i * wb + j);
 				}
 		hog_feats.push_back(featuresMap);
 		wrFree(I); wrFree(M); wrFree(O); wrFree(H); 

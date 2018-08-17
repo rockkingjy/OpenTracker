@@ -305,7 +305,48 @@ TEST(ffttoolsTest, complexDotMultiplication)
   debug("complexDotMultiplication time: %f", timedft);
   //showmat2channels(res, 2);
 }
+#ifdef USE_SIMD
+TEST(ffttoolsTest, complexDotMultiplicationSIMD)
+{
+  int N = 5; //25;
+  cv::Mat mat_float(N, N*2, CV_32FC2);
+  for (int j = 0; j < mat_float.rows; j++)
+    for (int i = 0; i < mat_float.cols; i++)
+    {
+      mat_float.at<cv::Vec2f>(j, i)[0] = i + j * mat_float.cols;
+      mat_float.at<cv::Vec2f>(j, i)[1] = i + j * mat_float.cols;
+    }
+  //debug("channels: %d", mat_float.channels());
+  showmat2channels(mat_float, 2);
 
+  cv::Mat mat_float1(N, N*2, CV_32FC2);
+  for (int j = 0; j < mat_float1.rows; j++)
+    for (int i = 0; i < mat_float1.cols; i++)
+    {
+      mat_float1.at<cv::Vec2f>(j, i)[0] = i + j * mat_float1.cols;
+      mat_float1.at<cv::Vec2f>(j, i)[1] = -i;
+    }
+  //debug("channels: %d", mat_float1.channels());
+  showmat2channels(mat_float1, 2);
+
+  cv::Mat res;
+  res = eco::complexDotMultiplicationSIMD(mat_float, mat_float1);
+  /*  
+  int iter = 70;
+  double timer = (double)cv::getTickCount();
+  float timedft = 0;
+  while (iter > 0)
+  {
+    res = eco::complexDotMultiplicationSIMD(mat_float, mat_float1);  
+    res = eco::complexDotMultiplicationSIMD(mat_float, mat_float1);  
+    iter--;
+  }
+  timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();
+  debug("complexDotMultiplication time: %f", timedft);
+  */
+  showmat2channels(res, 2);
+}
+#endif
 /*
 #ifdef USE_CUDA
 TEST(ffttoolsTest, complexDotMultiplicationGPU)

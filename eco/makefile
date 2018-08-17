@@ -7,7 +7,7 @@ USE_SIMD=1
 #USE_OPENMP=1
 #USE_EIGEN=1
 USE_MULTI_THREAD=1
-USE_GTEST=0
+USE_GTEST=1
 
 CAFFE_PATH=/media/elab/sdd/mycodes/caffe
 CC=gcc
@@ -21,7 +21,7 @@ ARCH= -gencode arch=compute_30,code=sm_30 \
 LDFLAGS= `pkg-config --libs opencv` -lstdc++ -lm 
 # -O3 double the speed!!!!!!!!!
 CXXFLAGS = -g -Wall `pkg-config --cflags opencv` -lstdc++ -lm -std=c++0x -O3 
-HEADERS = $(wildcard *.h)
+HEADERS = $(wildcard *.h) $(wildcard *.hpp)
 
 TARGET_LIB = libeco.so
 
@@ -48,20 +48,17 @@ endif
 
 ifeq ($(USE_SIMD), 1)
 CXXFLAGS+= -DUSE_SIMD -msse4
-HEADERS+= $(wildcard hog/*.hpp)
-OBJS+= hog/gradientMex.o
+OBJS+= gradient.o
 endif
 
 ifeq ($(USE_SIMD), 2)
 CXXFLAGS+= -DUSE_SIMD -DUSE_NEON -ffast-math -flto -march=armv8-a+crypto -mcpu=cortex-a57+crypto 
-HEADERS+= $(wildcard hog/*.hpp)
-OBJS+= hog/gradientMex.o
+OBJS+= gradient.o
 endif
 
 ifeq ($(USE_SIMD), 3)
 CXXFLAGS+= -DUSE_SIMD -DUSE_NEON -ffast-math -flto -mfpu=neon
-HEADERS+= $(wildcard hog/*.hpp)
-OBJS+= hog/gradientMex.o
+OBJS+= gradient.o
 endif
 
 #ifeq ($(USE_OPENMP), 1)

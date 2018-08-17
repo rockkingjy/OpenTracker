@@ -275,7 +275,7 @@ std::vector<cv::Mat> FeatureVectorization(const ECO_FEATS &x)
 	}
 	return res;
 }
- // gpu_implemented
+
 ECO_FEATS FeatureVectorMultiply(const ECO_FEATS &x,
 								const std::vector<cv::Mat> y,
 								const bool _conj)
@@ -299,7 +299,7 @@ ECO_FEATS FeatureVectorMultiply(const ECO_FEATS &x,
 	return res;
 }
 
-// features operation // gpu_implemented
+// features operation 
 ECO_FEATS FeatureDotMultiply(const ECO_FEATS &a, const ECO_FEATS &b)
 {
 	ECO_FEATS res;

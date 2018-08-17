@@ -907,12 +907,8 @@ void ECO::cos_window()
 ECO_FEATS ECO::interpolate_dft(const ECO_FEATS &xlf, vector<cv::Mat> &interp1_fs, vector<cv::Mat> &interp2_fs)
 {
 	ECO_FEATS result;
-
 	for (size_t i = 0; i < xlf.size(); i++)
 	{
-		double timer = (double)cv::getTickCount();
-		float timedft = 0;
-
 		cv::Mat interp1_fs_mat =
 			subwindow(interp1_fs[i], cv::Rect(cv::Point(0, 0), cv::Size(interp1_fs[i].rows, interp1_fs[i].rows)), IPL_BORDER_REPLICATE);
 		cv::Mat interp2_fs_mat =

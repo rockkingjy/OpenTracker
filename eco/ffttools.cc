@@ -132,7 +132,12 @@ cv::Mat magnitude(const cv::Mat img)
 cv::Mat complexDotMultiplication(const cv::Mat &a, const cv::Mat &b)
 {
 	cv::Mat res;
+#ifdef USE_SIMD
+	//res = complexDotMultiplicationCPU(a, b);
+	res = complexDotMultiplicationSIMD(a, b);
+#else
 	res = complexDotMultiplicationCPU(a, b);
+#endif
 	/*
 #ifdef USE_CUDA
 	res = complexDotMultiplicationGPU(a, b);
@@ -142,6 +147,101 @@ cv::Mat complexDotMultiplication(const cv::Mat &a, const cv::Mat &b)
 */
 	return res;
 }
+
+#ifdef USE_SIMD
+cv::Mat complexDotMultiplicationSIMD(const cv::Mat &a, const cv::Mat &b)
+{
+	if(a.rows != b.rows || a.cols != b.cols)
+	{
+		printf("Error: Mat a and b different size!\n");
+		assert(0);
+	}
+	//debug("type a: %d, b: %d", a.type() & CV_MAT_DEPTH_MASK, b.type() & CV_MAT_DEPTH_MASK);
+	if((a.type() & CV_MAT_DEPTH_MASK) != 5 || (b.type() & CV_MAT_DEPTH_MASK) != 5)
+	{
+		printf("Error: Mat a or b type is not float!\n");
+		assert(0);		
+	}
+	int h = a.rows;
+	int w = a.cols;
+	float *ar, *ai, *br, *bi, *rr, *ri;
+	ar = (float *)wrCalloc(h * w, sizeof(float));
+	ai = (float *)wrCalloc(h * w, sizeof(float));
+	br = (float *)wrCalloc(h * w, sizeof(float));
+	bi = (float *)wrCalloc(h * w, sizeof(float));
+	rr = (float *)wrCalloc(h * w, sizeof(float));
+	ri = (float *)wrCalloc(h * w, sizeof(float)); 
+	if (a.channels() == 1)
+	{
+		for (int i = 0; i < h; i++)
+			for (int j = 0; j < w; j++)
+			{
+				*(ar + i * w + j) = a.at<float>(i, j);
+			}
+	}
+	else if (a.channels() == 2)
+	{
+		for (int i = 0; i < h; i++)
+			for (int j = 0; j < w; j++)
+			{
+				*(ar + i * w + j) = a.at<cv::Vec2f>(i, j)[0];
+				*(ai + i * w + j) = a.at<cv::Vec2f>(i, j)[1];
+			}
+	}
+	else
+	{
+		printf("Error: a.channels error!\n");
+		assert(0);
+	}
+
+	if (b.channels() == 1)
+	{
+		for (int i = 0; i < h; i++)
+			for (int j = 0; j < w; j++)
+			{
+				*(br + i * w + j) = b.at<float>(i, j);
+			}
+	}
+	else if (b.channels() == 2)
+	{
+		for (int i = 0; i < h; i++)
+			for (int j = 0; j < w; j++)
+			{
+				*(br + i * w + j) = b.at<cv::Vec2f>(i, j)[0];
+				*(bi + i * w + j) = b.at<cv::Vec2f>(i, j)[1];
+			}
+	}
+	else
+	{
+		printf("Error: b.channels error!\n");
+		assert(0);
+	}
+
+	//(a0+ia1)x(b0+ib1)=(a0b0-a1b1)+i(a0b1+a1b0)
+	for (int i = 0; i < h; i++)
+		for (int j = 0; j < w; j++)
+		{
+			*(rr + i * w + j) = *(ar + i * w + j) * *(br + i * w + j) - *(ai + i * w + j) * *(bi + i * w + j);
+			*(ri + i * w + j) = *(ar + i * w + j) * *(bi + i * w + j) + *(ai + i * w + j) * *(br + i * w + j); 
+		}
+
+	cv::Mat res = cv::Mat::zeros(h, w, CV_32FC2);
+	for (int i = 0; i < h; i++)
+		for (int j = 0; j < w; j++)
+		{
+			res.at<cv::Vec2f>(i, j)[0] = *(rr + i * w + j);
+			res.at<cv::Vec2f>(i, j)[1] = *(ri + i * w + j);
+		}
+
+	wrFree(ar);
+	wrFree(ai);
+	wrFree(br);
+	wrFree(bi);
+	wrFree(rr);
+	wrFree(ri);
+	return res;
+}
+#endif
 
 cv::Mat complexDotMultiplicationCPU(const cv::Mat &a, const cv::Mat &b)
 {
@@ -165,14 +265,13 @@ cv::Mat complexDotMultiplicationCPU(const cv::Mat &a, const cv::Mat &b)
 
 	cv::Mat res = cv::Mat::zeros(temp_a.size(), CV_32FC2);
 	//(a0+ia1)x(b0+ib1)=(a0b0-a1b1)+i(a0b1+a1b0)
-    //#pragma omp parallel for collapse(2)
-	for (size_t j = 0; j < temp_a.cols; j++)
+	//#pragma omp parallel for collapse(2)
+	for (int j = 0; j < temp_a.cols; j++)
 	{
-		for(size_t i = 0; i < temp_a.rows; i++)
+		for (int i = 0; i < temp_a.rows; i++)
 		{
 			res.at<cv::Vec2f>(i, j)[0] = temp_a.at<cv::Vec2f>(i, j)[0] * temp_b.at<cv::Vec2f>(i, j)[0] - temp_a.at<cv::Vec2f>(i, j)[1] * temp_b.at<cv::Vec2f>(i, j)[1];
 			res.at<cv::Vec2f>(i, j)[1] = temp_a.at<cv::Vec2f>(i, j)[0] * temp_b.at<cv::Vec2f>(i, j)[1] + temp_a.at<cv::Vec2f>(i, j)[1] * temp_b.at<cv::Vec2f>(i, j)[0];
-
 		}
 	}
 	return res;
