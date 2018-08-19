@@ -20,7 +20,7 @@ inline void *alMalloc(size_t size, int alignment)
 {
   const size_t pSize = sizeof(void *), a = alignment - 1;
   void *raw = wrMalloc(size + a + pSize);
-  // get the aligned address, allignment should be 2^N.
+  // get the aligned address, alignment should be 2^N.
   void *aligned = (void *)(((size_t)raw + pSize + a) & ~a); 
   *(void **)((size_t)aligned - pSize) = raw; // save address of raw in -1
   return aligned;

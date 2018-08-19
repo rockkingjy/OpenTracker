@@ -171,6 +171,22 @@ cv::Mat complexDotMultiplicationSIMD(const cv::Mat &a, const cv::Mat &b)
 	bi = (float *)wrCalloc(h * w, sizeof(float));
 	rr = (float *)wrCalloc(h * w, sizeof(float));
 	ri = (float *)wrCalloc(h * w, sizeof(float)); 
+/*
+	ar = (float *)alMalloc(h * w * sizeof(float), 16);
+	ai = (float *)alMalloc(h * w * sizeof(float), 16);
+	br = (float *)alMalloc(h * w * sizeof(float), 16);
+	bi = (float *)alMalloc(h * w * sizeof(float), 16);
+	rr = (float *)alMalloc(h * w * sizeof(float), 16);
+	ri = (float *)alMalloc(h * w * sizeof(float), 16); 
+*/
+//	debug("%p, %p, %p, %p, %p, %p", ar, ai, br, bi, rr, ri);
+/*	debug("%p, %p, %p, %p, %p, %p", *(void **)((char *)ar - sizeof(void *)),
+									*(void **)((char *)ai - sizeof(void *)), 
+									*(void **)((char *)br - sizeof(void *)), 
+									*(void **)((char *)bi - sizeof(void *)), 
+									*(void **)((char *)rr - sizeof(void *)),
+									*(void **)((char *)ri - sizeof(void *)));
+*/
 	if (a.channels() == 1)
 	{
 		for (int i = 0; i < h; i++)
@@ -216,14 +232,42 @@ cv::Mat complexDotMultiplicationSIMD(const cv::Mat &a, const cv::Mat &b)
 		printf("Error: b.channels error!\n");
 		assert(0);
 	}
-
+	
 	//(a0+ia1)x(b0+ib1)=(a0b0-a1b1)+i(a0b1+a1b0)
+/*
 	for (int i = 0; i < h; i++)
 		for (int j = 0; j < w; j++)
 		{
 			*(rr + i * w + j) = *(ar + i * w + j) * *(br + i * w + j) - *(ai + i * w + j) * *(bi + i * w + j);
 			*(ri + i * w + j) = *(ar + i * w + j) * *(bi + i * w + j) + *(ai + i * w + j) * *(br + i * w + j); 
 		}
+*/
+//	#pragma omp parallel for simd 
+/*
+	for (int i = 0; i < h * w; i++)
+	{
+		*(rr + i) = *(ar + i) * *(br + i) - *(ai + i) * *(bi + i);
+		*(ri + i) = *(ar + i) * *(bi + i) + *(ai + i) * *(br + i); 
+	}
+*/
+	__m128 *_ar, *_ai, *_br, *_bi, *_rr, *_ri;
+	_ar = (__m128*)ar;
+	_ai = (__m128*)ai;
+	_br = (__m128*)br;
+	_bi = (__m128*)bi;
+	_rr = (__m128*)rr;
+	_ri = (__m128*)ri;
+	int i = 0, j = 0;
+	for (; i < h * w - 4; i+=4, j++)
+	{
+		*(_rr + j) = SUB(MUL(*(_ar + j), *(_br + j)), MUL(*(_ai + j), *(_bi + j)));
+		*(_ri + j) = ADD(MUL(*(_ar + j), *(_bi + j)), MUL(*(_ai + j), *(_br + j))); 
+	}
+	for (; i < h * w; i++)
+	{
+		*(rr + i) = *(ar + i) * *(br + i) - *(ai + i) * *(bi + i);
+		*(ri + i) = *(ar + i) * *(bi + i) + *(ai + i) * *(br + i); 
+	}
 
 	cv::Mat res = cv::Mat::zeros(h, w, CV_32FC2);
 	for (int i = 0; i < h; i++)
@@ -239,6 +283,14 @@ cv::Mat complexDotMultiplicationSIMD(const cv::Mat &a, const cv::Mat &b)
 	wrFree(bi);
 	wrFree(rr);
 	wrFree(ri);
+/*
+	alFree(ar);
+	alFree(ai);
+	alFree(br);
+	alFree(bi);
+	alFree(rr);
+	alFree(ri);
+*/	
 	return res;
 }
 #endif
