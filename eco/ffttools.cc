@@ -257,11 +257,15 @@ cv::Mat complexDotMultiplicationSIMD(const cv::Mat &a, const cv::Mat &b)
 	_bi = (__m128*)bi;
 	_rr = (__m128*)rr;
 	_ri = (__m128*)ri;
+	//debug("%p, %p", _ar, ++_ar);
+	//assert(0);
 	int i = 0, j = 0;
 	for (; i < h * w - 4; i+=4, j++)
 	{
-		*(_rr + j) = SUB(MUL(*(_ar + j), *(_br + j)), MUL(*(_ai + j), *(_bi + j)));
-		*(_ri + j) = ADD(MUL(*(_ar + j), *(_bi + j)), MUL(*(_ai + j), *(_br + j))); 
+		*_rr++ = SUB(MUL(*_ar, *_br), MUL(*_ai, *_bi));
+		*_ri++ = ADD(MUL(*_ar++, *_bi++), MUL(*_ai++, *_br++)); 
+//		*(_rr + j) = SUB(MUL(*(_ar + j), *(_br + j)), MUL(*(_ai + j), *(_bi + j)));
+//		*(_ri + j) = ADD(MUL(*(_ar + j), *(_bi + j)), MUL(*(_ai + j), *(_br + j))); 
 	}
 	for (; i < h * w; i++)
 	{

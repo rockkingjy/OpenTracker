@@ -317,7 +317,7 @@ TEST(ffttoolsTest, complexDotMultiplicationSIMD)
       mat_float.at<cv::Vec2f>(j, i)[1] = i + j * mat_float.cols;
     }
   //debug("channels: %d", mat_float.channels());
-  showmat2channels(mat_float, 2);
+  //showmat2channels(mat_float, 2);
 
   cv::Mat mat_float1(N, N*2, CV_32FC2);
   for (int j = 0; j < mat_float1.rows; j++)
@@ -327,11 +327,10 @@ TEST(ffttoolsTest, complexDotMultiplicationSIMD)
       mat_float1.at<cv::Vec2f>(j, i)[1] = -i;
     }
   //debug("channels: %d", mat_float1.channels());
-  showmat2channels(mat_float1, 2);
+  //showmat2channels(mat_float1, 2);
 
   cv::Mat res;
   res = eco::complexDotMultiplicationSIMD(mat_float, mat_float1);
-  /*  
   int iter = 70;
   double timer = (double)cv::getTickCount();
   float timedft = 0;
@@ -343,8 +342,8 @@ TEST(ffttoolsTest, complexDotMultiplicationSIMD)
   }
   timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();
   debug("complexDotMultiplication time: %f", timedft);
-  */
-  showmat2channels(res, 2);
+  
+  //showmat2channels(res, 2);
 }
 #endif
 /*
