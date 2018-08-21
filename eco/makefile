@@ -8,6 +8,7 @@ USE_SIMD=1
 #USE_EIGEN=1
 USE_MULTI_THREAD=1
 USE_GTEST=1
+USE_VOT_TRAX=1
 
 CAFFE_PATH=/media/elab/sdd/mycodes/caffe
 CC=gcc
@@ -82,9 +83,18 @@ GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
 CXXFLAGS += -isystem $(GTEST_DIR)/include
 endif
 
+ifeq ($(USE_VOT_TRAX), 1)
+CXXFLAGS+= -ltrax
+LDFLAGS+= -ltrax 
+endif
+
+
 ALL+= runecotracker.bin
 ifeq ($(USE_GTEST), 1) 
 	ALL+= eco_unittest.bin 
+endif
+ifeq ($(USE_VOT_TRAX), 1)
+	ALL+= vot_eco.bin 
 endif
 
 all: $(ALL)
@@ -106,6 +116,12 @@ $(TARGET_LIB): $(OBJS)
 
 %.o: %.cu $(HEADERS)
 	$(NVCC) $(ARCH) --compiler-options "$(CXXFLAGS)" -c $< -o $@
+
+
+ifeq ($(USE_VOT_TRAX), 1)
+vot_eco.bin: $(OBJS) vot_eco.o 
+	$(CC) -o $@ $^ $(LDFLAGS) 
+endif
 
 #gtest=========
 ifeq ($(USE_GTEST), 1)

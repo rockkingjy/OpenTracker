@@ -1,4 +1,4 @@
-/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4; tab-width: 4 -*- */
+/* -*- Mode: C++; indent-tabs-mode: nil; c-basic-offset: 4; tab-width: 4 -*- */
 /*
  * This is an example of a stationary tracker. It only reports the initial
  * position for all frames and is used for testing purposes.
@@ -34,55 +34,42 @@
  *
  */
 
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <iostream>
 #include <stdio.h>
-#include <ctype.h>
+#include "eco.hpp"
 
-// Uncomment line below if you want to use rectangles instead of polygons
-// #define VOT_RECTANGLE
+#define VOT_RECTANGLE
 #include "vot.h"
 
-int main( int argc, char** argv)
-{
-    int f;
 
-    // *****************************************
-    // VOT: Call vot_initialize at the beginning
-    // *****************************************
-    vot_region* selection = vot_initialize();
+int main( int argc, char** argv) {
 
-    // Process the first frame
-    const char* imagefile = vot_frame();
-    if (!imagefile) {
-        vot_quit();
-        exit(0);
-    }
+    eco::ECO tracker;
+    VOT vot;
 
-    for(f = 1;; f++)
-    {
+    cv::Rect initialization;
+    initialization << vot.region();
+    cv::Mat image = cv::imread(vot.frame());
+    tracker.init(image, initialization);
 
-        // *****************************************
-        // VOT: Call vot_frame to get path of the
-        //      current image frame. If the result is
-        //      null, the sequence is over.
-        // *****************************************
-        const char* imagefile = vot_frame();
-        if (!imagefile) break;
+    while (!vot.end()) {
 
-        // *****************************************
-        // VOT: Report the position of the object
-        //      every frame using vot_report function.
-        // *****************************************
-        vot_report(selection);
+        string imagepath = vot.frame();
+
+        if (imagepath.empty()) break;
+
+        cv::Mat image = cv::imread(imagepath);
+
+        float confidence = 1;
+        cv::Rect2f bbox;
+        confidence = tracker.update(image, bbox);
+        cv::Rect rect = cv::Rect(bbox);
+        vot.report(rect, confidence);
 
     }
 
-    vot_region_release(&selection);
-
-    // *************************************
-    // VOT: Call vot_deinitialize at the end
-    // *************************************
-    vot_quit();
-
-    return 0;
 }
 
