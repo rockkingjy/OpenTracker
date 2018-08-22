@@ -503,7 +503,7 @@ inline void showmatNch(cv::Mat mat, int type)
 }
 
 //TEST==========================================================================
-// Simple test of the structure of mat in opencv;
+// Simple test of the structure of mat in opencv; channel->x->y;
 void opencvTest();
 inline void opencvTest()
 {
@@ -550,6 +550,15 @@ inline void opencvTest()
 		}
 		printf("\n");
 	}
+	printf("\n");
+	printf("%p, %p, %p, %p, %p\n", newdata, 
+			&mat.at<cv::Vec2f>(0, 0)[0], 
+			&mat.at<cv::Vec2f>(0, 0)[1],
+			&mat.at<cv::Vec2f>(0, 1)[0],
+			&mat.at<cv::Vec2f>(1, 0)[0]
+	);
+
+	free(newdata);
 	printf("opencvTest end=======================================\n");
 }
 

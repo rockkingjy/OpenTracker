@@ -224,14 +224,17 @@ int main(int argc, char **argv)
 
     //imshow("Tracking", frame);
     //waitKey(0);
+
+    double timereco = (double)getTickCount();
     ECO ecotracker;
     Rect2f ecobbox(x, y, w, h);
     ecotracker.init(frame, ecobbox);
+    float fpsecoini = getTickFrequency() / ((double)getTickCount() - timereco);
 
     while (frame.data)
     {
         frame.copyTo(frameDraw); // only copy can do the real copy, just equal not.
-        double timereco = (double)getTickCount();
+        timereco = (double)getTickCount();
         bool okeco = ecotracker.update(frame, ecobbox);
         float fpseco = getTickFrequency() / ((double)getTickCount() - timereco);
         if (okeco)
@@ -437,6 +440,7 @@ int main(int argc, char **argv)
          << " AvgPrecision:" << AvgPrecision
          << " AvgIou:" << AvgIou 
          << " SuccessRate:" << SuccessRate
+         << " IniFps:" << fpsecoini
          << " AvgFps:" << AvgFps << std::endl;
     return 0;
 }

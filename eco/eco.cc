@@ -5,6 +5,8 @@ namespace eco
 void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 {
 	printf("\n=========================Init================================\n");
+	double timereco = (double)cv::getTickCount();
+	float fpseco = 0;
 	// 1. Initialize all the parameters.
 	/*
 #ifdef USE_CUDA
@@ -92,15 +94,21 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	for (size_t i = 0; i < filter_size_.size(); ++i) // for each feature
 	{
 		cv::Mat interp1_fs1, interp2_fs1;
-		Interpolator::get_interp_fourier(filter_size_[i], interp1_fs1,
+		Interpolator::get_interp_fourier(filter_size_[i], 
+										 interp1_fs1,
 										 interp2_fs1,
 										 params_.interpolation_bicubic_a);
 		interp1_fs_.push_back(interp1_fs1);
 		interp2_fs_.push_back(interp2_fs1);
 		//imgInfo(interp1_fs1);
+		//imgInfo(interp2_fs1);
 		//showmat2channels(interp1_fs1, 2);
 		//showmat2channels(interp2_fs1, 2);
 	}
+
+	fpseco = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
+	debug("Initialize time 1_1: %f", fpseco);
+	timereco = (double)cv::getTickCount();
 	// Construct spatial regularization filter, refer SRDCF
 	for (size_t i = 0; i < filter_size_.size(); i++) // for each feature
 	{
@@ -111,7 +119,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 		temp_d.convertTo(temp_f, CV_32FC1);
 		reg_filter_.push_back(temp_f);
 		debug("reg_filter_ %lu:", i);
-		showmat1channels(temp_f, 2);
+		showmat2channels(temp_f, 2);
 
 		// Compute the energy of the filter (used for preconditioner)drone_flip
 		cv::Mat_<double> t = temp_d.mul(temp_d); //element-wise multiply
@@ -119,6 +127,10 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 		reg_energy_.push_back(energy);
 		debug("reg_energy_ %lu: %f", i, energy);
 	}
+
+	fpseco = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
+	debug("Initialize time 1_2: %f", fpseco);
+	timereco = (double)cv::getTickCount();
 
 	// scale factor, 5 scales, refer SAMF
 	if (params_.number_of_scales % 2 == 0)
@@ -157,6 +169,10 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 		printf("%lu:%f; ", i, scale_factors_[i]);
 	}
 	printf("\n-------------------------------------------------------------\n");
+	fpseco = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
+	debug("Initialize time 2: %f", fpseco);
+	timereco = (double)cv::getTickCount();
+
 	ECO_FEATS xl, xlw, xlf, xlf_porj;
 
 	// 2. Extract features from the first frame.
@@ -166,7 +182,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 									  params_);
 	debug("xl size: %lu, %lu, %d x %d", xl.size(), xl[0].size(),
 		  xl[0][0].rows, xl[0][0].cols);
-	//assert(0);
+
 	// 3. Multiply the features by the cosine window.
 	xl = do_windows(xl, cos_window_);
 
@@ -182,6 +198,10 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 		debug("xlf feature %lu 's size: %lu, %d x %d", i, xlf[i].size(),
 			  xlf[i][0].rows, xlf[i][0].cols);
 	}
+	fpseco = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
+	debug("Initialize time 3: %f", fpseco);
+	timereco = (double)cv::getTickCount();
+
 	// 6. Initialize projection matrix P.
 	projection_matrix_ = init_projection_matrix(xl, compressed_dim_, feature_dim_); // 32FC2 31x10
 	for (size_t i = 0; i < projection_matrix_.size(); i++)
@@ -196,6 +216,10 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 		debug("xlf_porj feature %lu 's size: %lu, %d x %d", i,
 			  xlf_porj[i].size(), xlf_porj[i][0].rows, xlf_porj[i][0].cols);
 	}
+	fpseco = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
+	debug("Initialize time 4: %f", fpseco);
+	timereco = (double)cv::getTickCount();
+
 	// 8. Initialize and update sample space.
 	sample_update_.init(filter_size_, compressed_dim_, params_.nSamples);
 	sample_update_.update_sample_space_model(xlf_porj);
@@ -213,6 +237,10 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 		hf_inc.push_back(vector<cv::Mat>(xlf_porj[i].size(),
 										 cv::Mat::zeros(xlf_porj[i][0].size(), CV_32FC2)));
 	}
+	fpseco = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
+	debug("Initialize time 5: %f", fpseco);
+	timereco = (double)cv::getTickCount();
+
 	// 11. Train the tracker(train the filter and update the projection matrix).
 	eco_trainer_.train_init(hf,
 							hf_inc,
@@ -225,6 +253,9 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 							proj_energy,
 							params_);
 	eco_trainer_.train_joint();
+	fpseco = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
+	debug("Initialize time 6: %f", fpseco);
+	timereco = (double)cv::getTickCount();
 
 	// 12. Update projection matrix P.
 	projection_matrix_ = eco_trainer_.get_proj();
@@ -240,6 +271,9 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 		  xlf_porj.size(), xlf_porj[0].size(),
 		  xlf_porj[0][0].rows, xlf_porj[0][0].cols);
 	sample_update_.replace_sample(xlf_porj, 0); // put xlf_proj to the smaples_f_[0].
+	fpseco = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
+	debug("Initialize time 7: %f", fpseco);
+	timereco = (double)cv::getTickCount();
 
 	// 14. Update distance matrix of sample space. Find the norm of the reprojected sample
 	float new_sample_norm = FeatureComputeEnergy(xlf_porj);
@@ -257,6 +291,9 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 #ifdef USE_MULTI_THREAD
 	thread_flag_train_ = true;
 #endif
+	fpseco = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
+	debug("Initialize time 8: %f", fpseco);
+	//assert(0);
 	printf("\n==================End of Init===============================\n");
 }
 
@@ -484,7 +521,7 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	}
 
 	localizationtime = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
-	debug("localization time7: %f", localizationtime); 
+	debug("localization time7: %f", localizationtime);
 
 	//**************************************************************************
 	//*****                     Model update
@@ -820,6 +857,7 @@ void ECO::init_features()
 			  feature_size_[i].height, feature_size_[i].width);
 	}
 }
+
 #ifdef USE_CAFFE
 void ECO::read_deep_mean(const string &mean_file)
 {
@@ -854,6 +892,7 @@ void ECO::read_deep_mean(const string &mean_file)
 				cv::mean(params_.cnn_features.fparams.deep_mean_mat));
 }
 #endif
+
 void ECO::yf_gaussian() // real part of (9) in paper C-COT
 {
 	// sig_y is sigma in (9)
@@ -862,9 +901,13 @@ void ECO::yf_gaussian() // real part of (9) in paper C-COT
 				   (params_.output_sigma_factor) *
 				   (float(output_size_) / img_support_size_.width);
 	debug("sig_y:%lf", sig_y);
+
+	double tmp1 = M_PI * sig_y / output_size_;
+	double tmp2 = std::sqrt(2 * M_PI) * sig_y / output_size_; 
 	for (unsigned int i = 0; i < ky_.size(); i++) // for each filter
 	{
 		// 2 dimension version of (9)
+		/*
 		cv::Mat tempy(ky_[i].size(), CV_32FC1);
 		tempy = CV_PI * sig_y * ky_[i] / output_size_;
 		cv::exp(-2 * tempy.mul(tempy), tempy);
@@ -876,11 +919,23 @@ void ECO::yf_gaussian() // real part of (9) in paper C-COT
 		tempx = sqrt(2 * CV_PI) * sig_y / output_size_ * tempx;
 
 		yf_.push_back(cv::Mat(tempy * tempx)); // matrix multiplication
-											   /*
-		showmat1chall(tempy, 2);
-		showmat1chall(tempx, 2);
-		showmat1chall(yf_[i], 2);
-		*/
+*/
+		cv::Mat temp(ky_[i].rows, kx_[i].cols, CV_32FC1);
+		//imgInfo(temp);
+		for(int r = 0; r < temp.rows; r++)
+		{
+			float tempy = tmp1 * ky_[i].at<float>(r, 0);
+			tempy = tmp2 * std::exp(-2.0f * tempy * tempy);
+			for(int c = 0; c < temp.cols; c++)
+			{	
+				float tempx = tmp1 * kx_[i].at<float>(0, c);
+				tempx = tmp2 * std::exp(-2.0f * tempx * tempx);
+				temp.at<float>(r, c) = tempy * tempx;
+			}
+		}
+		yf_.push_back(temp);
+		//imgInfo(yf_[i]);
+		//showmat1channels(yf_[i], 2);
 	}
 }
 
@@ -888,19 +943,30 @@ void ECO::cos_window()
 {
 	for (size_t i = 0; i < feature_size_.size(); i++)
 	{
+		/*
 		cv::Mat hann1t = cv::Mat(cv::Size(feature_size_[i].width + 2, 1), CV_32F, cv::Scalar(0));
 		cv::Mat hann2t = cv::Mat(cv::Size(1, feature_size_[i].height + 2), CV_32F, cv::Scalar(0));
 		for (int i = 0; i < hann1t.cols; i++)
-			hann1t.at<float>(0, i) = 0.5 * (1 - std::cos(2 * 3.14159265358979323846 * i / (hann1t.cols - 1)));
+			hann1t.at<float>(0, i) = 0.5 * (1 - std::cos(2 * M_PI * i / (hann1t.cols - 1)));
 		for (int i = 0; i < hann2t.rows; i++)
-			hann2t.at<float>(i, 0) = 0.5 * (1 - std::cos(2 * 3.14159265358979323846 * i / (hann2t.rows - 1)));
+			hann2t.at<float>(i, 0) = 0.5 * (1 - std::cos(2 * M_PI * i / (hann2t.rows - 1)));
 		cv::Mat hann2d = hann2t * hann1t;
 		cos_window_.push_back(hann2d(cv::Range(1, hann2d.rows - 1),
 									 cv::Range(1, hann2d.cols - 1)));
-		/*
-		showmat1ch(cos_window_[i],2);
-		assert(0);
 		*/
+		cv::Mat temp(feature_size_[i].height, feature_size_[i].width, CV_32FC1);
+		//cv::Mat temp(feature_size_[i].height + 2, feature_size_[i].width + 2, CV_32FC1);
+		for(int r = 0; r < temp.rows; r++)
+		{
+			float tempy = 0.5f * (1 - std::cos(2 * M_PI * (float)(r + 1) / (feature_size_[i].width + 1)));
+			for(int c = 0; c < temp.cols; c++)
+			{	
+				temp.at<float>(r, c) = tempy * 0.5f * (1 - std::cos(2 * (float)(c + 1) * M_PI / (feature_size_[i].height + 1)));
+			}
+		}
+		cos_window_.push_back(temp);
+		//imgInfo(cos_window_[i]);
+		//showmat1channels(cos_window_[i],2);
 	}
 }
 
@@ -924,6 +990,7 @@ ECO_FEATS ECO::interpolate_dft(const ECO_FEATS &xlf, vector<cv::Mat> &interp1_fs
 	}
 	return result;
 }
+
 // Take half of the fourier coefficient.
 ECO_FEATS ECO::compact_fourier_coeff(const ECO_FEATS &xf)
 {
@@ -937,6 +1004,7 @@ ECO_FEATS ECO::compact_fourier_coeff(const ECO_FEATS &xf)
 	}
 	return result;
 }
+
 // Get the full fourier coefficient of xf, using the property X(N-k)=conv(X(k))
 ECO_FEATS ECO::full_fourier_coeff(const ECO_FEATS &xf)
 {

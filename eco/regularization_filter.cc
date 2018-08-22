@@ -13,7 +13,7 @@ cv::Mat get_regularization_filter(cv::Size sz,
 		cv::Size2d reg_scale = cv::Size2d(target_sz.width * 0.5,
 										  target_sz.height * 0.5);
 
-		// construct the regukarization window
+		// construct the regularization window
 		cv::Mat reg_window(sz, CV_64FC1);
 		for (double x = -0.5 * (sz.height - 1), counter1 = 0;
 			 counter1 < sz.height; x += 1, ++counter1)
