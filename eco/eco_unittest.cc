@@ -34,7 +34,10 @@
 #include "gtest/gtest.h"
 #include "ffttools.hpp"
 #include "debug.hpp"
+
+#ifdef USE_FFTW
 #include <fftw3.h>
+#endif
 
 // Frames:119 AvgPrecision:1 AvgIou:0.677676 SuccessRate:0.932773 AvgFps:10.3517
 // Frames:119 AvgPrecision:1 AvgIou:0.727139 SuccessRate:1 AvgFps:25.1474

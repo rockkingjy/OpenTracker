@@ -9,7 +9,7 @@ USE_SIMD=1
 #USE_FFTW=1
 USE_MULTI_THREAD=0
 USE_GTEST=1
-USE_VOT_TRAX=1
+USE_VOT_TRAX=0
 
 CAFFE_PATH=/media/elab/sdd/mycodes/caffe
 CC=gcc
