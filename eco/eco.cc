@@ -13,6 +13,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	cv::cuda::setDevice(params_.gpu_id);
 #endif
 */
+	// don't use opencl to cut the initial build time down
 	cv::ocl::setUseOpenCL(false);
 	// Image infomations
 	imgInfo(im);
@@ -613,8 +614,8 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 		{
 			int area = scores_fs_sum[i].size().area();
 			// debug("area: %d", area);
-			cv::Mat tmp = dft_f(fftshift_f(scores_fs_sum[i], 1, 1, 1), 1); // inverse dft
-			tmp = fftshift_f(tmp, 1, 1, 1);
+			cv::Mat tmp = dft(fftshift(scores_fs_sum[i], 1, 1, 1), 1); // inverse dft
+			tmp = fftshift(tmp, 1, 1, 1);
 			scores_sum.push_back(real(tmp * area)); // spacial domain only contains real part
 		}
 

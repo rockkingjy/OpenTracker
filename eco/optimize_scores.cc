@@ -9,7 +9,7 @@ void OptimizeScores::compute_scores()
 	{
 		int area = scores_fs_[i].size().area();
 		// debug("area: %d", area);
-		cv::Mat tmp = dft_f(fftshift_f(scores_fs_[i], 1, 1, 1), 1);// inverse dft
+		cv::Mat tmp = dft(fftshift(scores_fs_[i], 1, 1, 1), 1);// inverse dft
 		sampled_scores.push_back(real(tmp * area));   	// spacial domain only contains real part
 	}
 

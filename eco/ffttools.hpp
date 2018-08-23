@@ -37,6 +37,7 @@ the use of this software, even if advised of the possibility of such damage.
 #define FFTTOOLS_HPP
 
 #include <opencv2/imgproc/imgproc.hpp>
+#include "debug.hpp"
 /*
 #ifdef USE_CUDA
 #include <opencv2/opencv.hpp>
@@ -54,13 +55,8 @@ the use of this software, even if advised of the possibility of such damage.
 
 namespace eco
 {
-cv::Mat dft_f(const cv::Mat img_org, const bool backwards = false);
-cv::Mat dft_d(const cv::Mat img_org, const bool backwards = false);
-cv::Mat fftshift_f(const cv::Mat org_img,
-				   const bool rowshift = true,
-				   const bool colshift = true,
-				   const bool reverse = 0);
-cv::Mat fftshift_d(const cv::Mat org_img,
+cv::Mat dft(const cv::Mat img_org, const bool backwards = false);
+cv::Mat fftshift(const cv::Mat img_org,
 				   const bool rowshift = true,
 				   const bool colshift = true,
 				   const bool reverse = 0);

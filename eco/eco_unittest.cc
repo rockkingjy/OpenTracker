@@ -41,71 +41,60 @@
 
 namespace
 {
-TEST(ffttoolsTest, dft_f)
+TEST(ffttoolsTest, dft_float)
 {
-  int N = 150;
+  int N = 5;
   cv::Mat_<float> mat_float(N, 2*N, CV_32FC1);
   for (int j = 0; j < mat_float.rows; j++)
     for (int i = 0; i < mat_float.cols; i++)
       mat_float.at<float>(j, i) = i + j * mat_float.cols;
+  showmat1channels(mat_float, 2);
 
   double timer = (double)cv::getTickCount();
   float timedft = 0;
 
-  //showmat1channels(mat_float, 2);
-  cv::Mat res = eco::dft_f(mat_float);
+  cv::Mat res = eco::dft(mat_float)/(mat_float.rows * mat_float.cols);
   //imgInfo(res);
-  //showmat2channels(res, 2);
+  showmat2channels(res, 2);
 
   timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();
-  debug("dft_f time: %f", timedft);
+  debug("dft time: %f", timedft);
 	timer = (double)cv::getTickCount();
 
-  res = eco::dft_f(mat_float, 1);
-  //showmat2channels(res, 2);
+  res = eco::dft(res, 1);
+  showmat2channels(res, 2);
 
   timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();
-  debug("dft_f time: %f", timedft);
-	timer = (double)cv::getTickCount();
-
-  res = eco::dft_f(mat_float, 1);
-  //showmat2channels(res, 2);
-
-  timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();
-  debug("dft_f time: %f", timedft);
-
+  debug("dft time: %f", timedft);
 }
 
-TEST(ffttoolsTest, dft_d)
+TEST(ffttoolsTest, dft_double)
 {
-  cv::Mat_<double> mat_double(10, 10, CV_64FC1);
+  int N = 5;
+  cv::Mat_<double> mat_double(N, 2*N, CV_64FC1);
   for (int j = 0; j < mat_double.rows; j++)
     for (int i = 0; i < mat_double.cols; i++)
       mat_double.at<double>(j, i) = i + j * mat_double.cols;
+  showmat1channels(mat_double, 3);
 
   double timer = (double)cv::getTickCount();
   float timedft = 0;
 
-  //showmat1channels(mat_double, 3);
-  cv::Mat res = eco::dft_d(mat_double);
-  //showmat2channels(res, 3);
-  res = eco::dft_d(mat_double, 1);
-  //showmat2channels(res, 3);
+  cv::Mat res = eco::dft(mat_double)/(mat_double.rows * mat_double.cols);
+  showmat2channels(res, 3);
 
   timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();
   debug("dft_d time: %f", timedft);
+	timer = (double)cv::getTickCount();
 
-  cv::Mat_<double> mat_double2(10, 10, CV_64FC1);
-  for (int j = 0; j < mat_double2.rows; j++)
-    for (int i = 0; i < mat_double2.cols; i++)
-      mat_double2.at<double>(j, i) = i + j * mat_double2.cols;
-  res = eco::dft_d(mat_double2, 1);
+  res = eco::dft(res, 1);
+  showmat2channels(res, 3);
 
   timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();
   debug("dft_d time: %f", timedft);
 }
 /*
-TEST(ffttoolsTest, fftshift_f)
+TEST(ffttoolsTest, fftshift)
 {
   cv::Mat_<float> mat_float(10, 10, CV_32FC1);
   for (int j = 0; j < mat_float.rows; j++)
@@ -115,17 +104,17 @@ TEST(ffttoolsTest, fftshift_f)
 
   showmat1channels(mat_float, 2);
   cv::Mat res;
-  res = eco::fftshift_f(mat_float);
+  res = eco::fftshift(mat_float);
   showmat1channels(res, 2);
 
-  res = eco::dft_f(mat_float, 1);
+  res = eco::dft(mat_float, 1);
   showmat2channels(res, 2);
 
-  res = eco::fftshift_f(res);
+  res = eco::fftshift(res);
   showmat2channels(res, 2);
 }
 
-TEST(ffttoolsTest, fftshift_d)
+TEST(ffttoolsTest, fftshift)
 {
   cv::Mat_<double> mat_double(10, 10, CV_32FC1);
   for (int j = 0; j < mat_double.rows; j++)
@@ -135,13 +124,13 @@ TEST(ffttoolsTest, fftshift_d)
 
   showmat1channels(mat_double, 3);
   cv::Mat res;
-  res = eco::fftshift_d(mat_double);
+  res = eco::fftshift(mat_double);
   showmat1channels(res, 3);
 
   res = eco::dft_d(mat_double, 1);
   showmat2channels(res, 3);
 
-  res = eco::fftshift_d(res);
+  res = eco::fftshift(res);
   showmat2channels(res, 3);
 }
 

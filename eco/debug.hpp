@@ -129,16 +129,16 @@ inline void showmat1channels(cv::Mat mat, int type)
 		}
 		printf("\n");
 	}
-	//printf("End of mat\n");
+	printf("-------------------------End of 1 channel mat\n");
 }
 
 void showmat2channels(cv::Mat mat, int type);
 
 inline void showmat2channels(cv::Mat mat, int type)
 {
-	debug("channels: %d", mat.channels());
 	for (int k = 0; k < mat.channels(); k++)
-	{
+	{	
+		printf("\n");
 		for (int i = 0; i < mat.rows; i++)
 		{
 			for (int j = 0; j < mat.cols; j++)
@@ -162,10 +162,9 @@ inline void showmat2channels(cv::Mat mat, int type)
 			}
 			printf("\n");
 		}
-		printf("\n\n");
-		//break;
+		printf("-------------------------");
 	}
-	printf("End of 2 channel mat\n");
+	printf("End of 2 channels mat\n");
 }
 
 void showmat3channels(cv::Mat mat, int type);

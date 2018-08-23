@@ -1,12 +1,14 @@
 
 #include "ffttools.hpp"
-#include "debug.hpp"
 namespace eco
 {
-// fft float type version;
-cv::Mat dft_f(const cv::Mat img_org, const bool backwards)
+cv::Mat dft(const cv::Mat img_org, const bool backwards)
 {
 	cv::Mat img;
+	int type = img_org.type() & CV_MAT_DEPTH_MASK;
+	//debug("%d", type);//5:float;6:double
+	assert(((type == 5) || (type == 6)) && "error: input mat type error!");
+
 #ifdef USE_FFTW // not finished!!!
 	size_t cols = img_org.cols;
 	size_t rows = img_org.rows;
@@ -21,7 +23,14 @@ cv::Mat dft_f(const cv::Mat img_org, const bool backwards)
 		for (size_t i = 0; i < rows; i++)
 			for (size_t j = 0; j < cols; j++)
 			{
-				in[i * cols + j][0] = img_org.at<float>(i, j);
+				if (type == 5)
+				{
+					in[i * cols + j][0] = img_org.at<float>(i, j);
+				}
+				else if (type == 6)
+				{
+					in[i * cols + j][0] = img_org.at<double>(i, j);
+				}
 			}
 	}
 	else if (img_org.channels() == 2)
@@ -29,25 +38,66 @@ cv::Mat dft_f(const cv::Mat img_org, const bool backwards)
 		for (size_t i = 0; i < rows; i++)
 			for (size_t j = 0; j < cols; j++)
 			{
-				in[i * cols + j][0] = img_org.at<cv::Vec2f>(i, j)[0];
-				in[i * cols + j][1] = img_org.at<cv::Vec2f>(i, j)[1];
+				if (type == 5)
+				{
+					in[i * cols + j][0] = img_org.at<cv::Vec2f>(i, j)[0];
+					in[i * cols + j][1] = img_org.at<cv::Vec2f>(i, j)[1];
+				}
+				else if (type == 6)
+				{
+					in[i * cols + j][0] = img_org.at<cv::Vec2d>(i, j)[0];
+					in[i * cols + j][1] = img_org.at<cv::Vec2d>(i, j)[1];
+				}
 			}
 	}
 	else
 	{
-		printf("error: dft input channels error!\n");
-		assert(0);
+		assert(0 && "error: dft input channels error!");
 	}
 
 	fftw_execute(p);
 	fftw_destroy_plan(p);
-
-	img = cv::Mat(rows, cols, CV_32FC2);
+	/*
+	debug("========");
+	for (size_t i = 0; i < rows; i++)
+	{
+		for (size_t j = 0; j < cols; j++)
+		{
+			printf("%f,", in[i * cols + j][0]);
+		}
+		printf("\n");
+	}
+	for (size_t i = 0; i < rows; i++)
+	{
+		for (size_t j = 0; j < cols; j++)
+		{
+			printf("%f,", out[i * cols + j][0]);
+		}
+		printf("\n");
+	}
+	debug("========");
+*/
+	if (type == 5)
+	{
+		img = cv::Mat(rows, cols, CV_32FC2);
+	}
+	else if (type == 6)
+	{
+		img = cv::Mat(rows, cols, CV_64FC2);
+	}
 	for (size_t i = 0; i < rows; i++)
 		for (size_t j = 0; j < cols; j++)
 		{
-			img.at<cv::Vec2f>(i, j)[0] = out[i * cols + j][0];
-			img.at<cv::Vec2f>(i, j)[1] = out[i * cols + j][1];
+			if (type == 5)
+			{
+				img.at<cv::Vec2f>(i, j)[0] = out[i * cols + j][0];
+				img.at<cv::Vec2f>(i, j)[1] = out[i * cols + j][1];
+			}
+			else if (type == 6)
+			{
+				img.at<cv::Vec2d>(i, j)[0] = out[i * cols + j][0];
+				img.at<cv::Vec2d>(i, j)[1] = out[i * cols + j][1];
+			}
 		}
 
 	fftw_free(in);
@@ -56,136 +106,69 @@ cv::Mat dft_f(const cv::Mat img_org, const bool backwards)
 	img_org.copyTo(img);
 	if (img.channels() == 1)
 	{
-		cv::Mat planes[] = {cv::Mat_<float>(img),
-							cv::Mat_<float>::zeros(img.size())};
-		cv::merge(planes, 2, img);
+		if (type == 5)
+		{
+			cv::Mat planes[] = {cv::Mat_<float>(img),
+								cv::Mat_<float>::zeros(img.size())};
+			cv::merge(planes, 2, img);
+		}
+		else if (type == 6)
+		{
+			cv::Mat planes[] = {cv::Mat_<double>(img),
+								cv::Mat_<double>::zeros(img.size())};
+			cv::merge(planes, 2, img);
+		}
 	}
 	cv::dft(img, img, backwards ? (cv::DFT_INVERSE + cv::DFT_SCALE) : 0);
 #endif
 	return img;
 } // namespace eco
 
-// fft double type version;
-cv::Mat dft_d(const cv::Mat img_org, const bool backwards)
+cv::Mat fftshift(const cv::Mat img_org,
+				 const bool rowshift,
+				 const bool colshift,
+				 const bool reverse)
 {
-	cv::Mat img;
-#ifdef USE_FFTW // not finished!!!
-	size_t cols = img_org.cols;
-	size_t rows = img_org.rows;
-	fftw_complex *in, *out;
-	fftw_plan p;
-	in = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * cols * rows);
-	out = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * cols * rows);
-	p = fftw_plan_dft_2d(rows, cols, in, out, backwards ? FFTW_BACKWARD : FFTW_FORWARD, FFTW_ESTIMATE);
 
-	if (img_org.channels() == 1)
-	{
-		for (size_t i = 0; i < rows; i++)
-			for (size_t j = 0; j < cols; j++)
-			{
-				in[i * cols + j][0] = img_org.at<double>(i, j);
-			}
-	}
-	else if (img_org.channels() == 2)
-	{
-		for (size_t i = 0; i < rows; i++)
-			for (size_t j = 0; j < cols; j++)
-			{
-				in[i * cols + j][0] = img_org.at<cv::Vec2d>(i, j)[0];
-				in[i * cols + j][1] = img_org.at<cv::Vec2d>(i, j)[1];
-			}
-	}
-	else
-	{
-		printf("error: dft input channels error!\n");
-		assert(0);
-	}
-
-	fftw_execute(p);
-	fftw_destroy_plan(p);
-
-	img = cv::Mat(rows, cols, CV_64FC2);
-	for (size_t i = 0; i < rows; i++)
-		for (size_t j = 0; j < cols; j++)
-		{
-			img.at<cv::Vec2d>(i, j)[0] = out[i * cols + j][0];
-			img.at<cv::Vec2d>(i, j)[1] = out[i * cols + j][1];
-		}
-
-	fftw_free(in);
-	fftw_free(out);
-#else
-	img_org.copyTo(img);
-	if (img.channels() == 1)
-	{
-		cv::Mat planes[] = {cv::Mat_<double>(img),
-							cv::Mat_<double>::zeros(img.size())};
-		cv::merge(planes, 2, img);
-	}
-	cv::dft(img, img, backwards ? (cv::DFT_INVERSE + cv::DFT_SCALE) : 0);
-#endif
-	return img;
-}
-// shift half of the org_img, just for float type.
-cv::Mat fftshift_f(const cv::Mat org_img,
-				   const bool rowshift,
-				   const bool colshift,
-				   const bool reverse)
-{
-	cv::Mat temp(org_img.size(), org_img.type());
-
-	if (org_img.empty())
+	if (img_org.empty())
 		return cv::Mat();
+	int type = img_org.type() & CV_MAT_DEPTH_MASK;
+	//debug("%d", type);//5:float;6:double
 
-	int w = org_img.cols, h = org_img.rows;
+	assert(((type == 5) || (type == 6)) && "error: input mat type error!");
+
+	cv::Mat temp(img_org.size(), img_org.type());
+
+	int w = img_org.cols, h = img_org.rows;
 	int rshift = reverse ? h - h / 2 : h / 2,
 		cshift = reverse ? w - w / 2 : w / 2;
 
-	for (int i = 0; i < org_img.rows; i++)
+	for (int i = 0; i < img_org.rows; i++)
 	{
 		int ii = rowshift ? (i + rshift) % h : i;
-		for (int j = 0; j < org_img.cols; j++)
+		for (int j = 0; j < img_org.cols; j++)
 		{
 			int jj = colshift ? (j + cshift) % w : j;
-			if (org_img.channels() == 2)
-				temp.at<cv::Vec<float, 2>>(ii, jj) =
-					org_img.at<cv::Vec<float, 2>>(i, j);
-			else if (org_img.channels() == 1)
-				temp.at<float>(ii, jj) = org_img.at<float>(i, j);
-			else
-				assert("error of image channels.");
-		}
-	}
-	return temp;
-}
-// double type version of fftshift_f();
-cv::Mat fftshift_d(const cv::Mat org_img,
-				   const bool rowshift,
-				   const bool colshift,
-				   const bool reverse)
-{
-	cv::Mat temp(org_img.size(), org_img.type());
-
-	if (org_img.empty())
-		return cv::Mat();
-
-	int w = org_img.cols, h = org_img.rows;
-	int rshift = reverse ? h - h / 2 : h / 2,
-		cshift = reverse ? w - w / 2 : w / 2;
-
-	for (int i = 0; i < org_img.rows; i++)
-	{
-		int ii = rowshift ? (i + rshift) % h : i;
-		for (int j = 0; j < org_img.cols; j++)
-		{
-			int jj = colshift ? (j + cshift) % w : j;
-			if (org_img.channels() == 2)
-				temp.at<cv::Vec<double, 2>>(ii, jj) =
-					org_img.at<cv::Vec<double, 2>>(i, j);
-			else if (org_img.channels() == 1)
-				temp.at<double>(ii, jj) = org_img.at<double>(i, j);
-			else
-				assert("error of image channels.");
+			if (type == 5)
+			{
+				if (img_org.channels() == 2)
+					temp.at<cv::Vec<float, 2>>(ii, jj) =
+						img_org.at<cv::Vec<float, 2>>(i, j);
+				else if (img_org.channels() == 1)
+					temp.at<float>(ii, jj) = img_org.at<float>(i, j);
+				else
+					assert(0 && "error of image channels.");
+			}
+			else if (type == 6)
+			{
+				if (img_org.channels() == 2)
+					temp.at<cv::Vec<double, 2>>(ii, jj) =
+						img_org.at<cv::Vec<double, 2>>(i, j);
+				else if (img_org.channels() == 1)
+					temp.at<double>(ii, jj) = img_org.at<double>(i, j);
+				else
+					assert(0 && "error of image channels.");
+			}
 		}
 	}
 	return temp;
