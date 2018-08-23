@@ -32,18 +32,19 @@
 // Author: wan@google.com (Zhanyong Wan)
 
 #include "gtest/gtest.h"
-#include "../../eco/ffttools.hpp"
+#include "ffttools.hpp"
 #include "debug.hpp"
+#include <fftw3.h>
 
 // Frames:119 AvgPrecision:1 AvgIou:0.677676 SuccessRate:0.932773 AvgFps:10.3517
 // Frames:119 AvgPrecision:1 AvgIou:0.727139 SuccessRate:1 AvgFps:25.1474
 
 namespace
 {
-/*
 TEST(ffttoolsTest, dft_f)
 {
-  cv::Mat_<float> mat_float(10, 10, CV_32FC1);
+  int N = 150;
+  cv::Mat_<float> mat_float(N, 2*N, CV_32FC1);
   for (int j = 0; j < mat_float.rows; j++)
     for (int i = 0; i < mat_float.cols; i++)
       mat_float.at<float>(j, i) = i + j * mat_float.cols;
@@ -53,10 +54,19 @@ TEST(ffttoolsTest, dft_f)
 
   //showmat1channels(mat_float, 2);
   cv::Mat res = eco::dft_f(mat_float);
+  //imgInfo(res);
   //showmat2channels(res, 2);
 
   timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();
   debug("dft_f time: %f", timedft);
+	timer = (double)cv::getTickCount();
+
+  res = eco::dft_f(mat_float, 1);
+  //showmat2channels(res, 2);
+
+  timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();
+  debug("dft_f time: %f", timedft);
+	timer = (double)cv::getTickCount();
 
   res = eco::dft_f(mat_float, 1);
   //showmat2channels(res, 2);
@@ -64,11 +74,6 @@ TEST(ffttoolsTest, dft_f)
   timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();
   debug("dft_f time: %f", timedft);
 
-  res = eco::dft_f(mat_float, 1);
-  //showmat2channels(res, 2);
-
-  timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();
-  debug("dft_f time: %f", timedft);
 }
 
 TEST(ffttoolsTest, dft_d)
@@ -99,7 +104,7 @@ TEST(ffttoolsTest, dft_d)
   timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();
   debug("dft_d time: %f", timedft);
 }
-
+/*
 TEST(ffttoolsTest, fftshift_f)
 {
   cv::Mat_<float> mat_float(10, 10, CV_32FC1);
@@ -267,6 +272,7 @@ TEST(debug, copyTo_clone_Difference)
   copyTo_clone_Difference();
 }
 */
+/*
 TEST(ffttoolsTest, complexDotMultiplication)
 {
   int N = 25;
@@ -346,6 +352,7 @@ TEST(ffttoolsTest, complexDotMultiplicationSIMD)
   //showmat2channels(res, 2);
 }
 #endif
+*/
 /*
 #ifdef USE_CUDA
 TEST(ffttoolsTest, complexDotMultiplicationGPU)

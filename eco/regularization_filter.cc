@@ -26,11 +26,14 @@ cv::Mat get_regularization_filter(cv::Size sz,
 						 std::pow(std::abs(y / reg_scale.width), params.reg_window_power)) +
 					params.reg_window_min;
 			}
-		//debug("%f %f", reg_scale.height, reg_scale.width);
-		//debug("%d %d", sz.height, sz.width);
-		//showmat(reg_window,3);
-		//debug("Channels: %d",reg_window.channels());
-		//assert(0);
+		/* debug
+		debug("%f %f", reg_scale.height, reg_scale.width);
+		debug("%d %d", sz.height, sz.width);
+		debug("Channels: %d",reg_window.channels());
+		imgInfo(reg_window);
+		//showmat1channels(reg_window, 3);
+		debug("%lf, %lf", reg_window.at<double>(46, 23), reg_window.at<double>(143,89));
+		*/
 
 		// compute the DFT and enforce sparsity
 		cv::Mat reg_window_dft = dft_d(reg_window) / sz.area();

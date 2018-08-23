@@ -7,6 +7,52 @@ namespace eco
 cv::Mat dft_f(const cv::Mat img_org, const bool backwards)
 {
 	cv::Mat img;
+#ifdef USE_FFTW // not finished!!!
+	size_t cols = img_org.cols;
+	size_t rows = img_org.rows;
+	fftw_complex *in, *out;
+	fftw_plan p;
+	in = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * cols * rows);
+	out = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * cols * rows);
+	p = fftw_plan_dft_2d(rows, cols, in, out, backwards ? FFTW_BACKWARD : FFTW_FORWARD, FFTW_ESTIMATE);
+
+	if (img_org.channels() == 1)
+	{
+		for (size_t i = 0; i < rows; i++)
+			for (size_t j = 0; j < cols; j++)
+			{
+				in[i * cols + j][0] = img_org.at<float>(i, j);
+			}
+	}
+	else if (img_org.channels() == 2)
+	{
+		for (size_t i = 0; i < rows; i++)
+			for (size_t j = 0; j < cols; j++)
+			{
+				in[i * cols + j][0] = img_org.at<cv::Vec2f>(i, j)[0];
+				in[i * cols + j][1] = img_org.at<cv::Vec2f>(i, j)[1];
+			}
+	}
+	else
+	{
+		printf("error: dft input channels error!\n");
+		assert(0);
+	}
+
+	fftw_execute(p);
+	fftw_destroy_plan(p);
+
+	img = cv::Mat(rows, cols, CV_32FC2);
+	for (size_t i = 0; i < rows; i++)
+		for (size_t j = 0; j < cols; j++)
+		{
+			img.at<cv::Vec2f>(i, j)[0] = out[i * cols + j][0];
+			img.at<cv::Vec2f>(i, j)[1] = out[i * cols + j][1];
+		}
+
+	fftw_free(in);
+	fftw_free(out);
+#else
 	img_org.copyTo(img);
 	if (img.channels() == 1)
 	{
@@ -14,15 +60,61 @@ cv::Mat dft_f(const cv::Mat img_org, const bool backwards)
 							cv::Mat_<float>::zeros(img.size())};
 		cv::merge(planes, 2, img);
 	}
-
 	cv::dft(img, img, backwards ? (cv::DFT_INVERSE + cv::DFT_SCALE) : 0);
-
+#endif
 	return img;
-}
+} // namespace eco
+
 // fft double type version;
 cv::Mat dft_d(const cv::Mat img_org, const bool backwards)
 {
 	cv::Mat img;
+#ifdef USE_FFTW // not finished!!!
+	size_t cols = img_org.cols;
+	size_t rows = img_org.rows;
+	fftw_complex *in, *out;
+	fftw_plan p;
+	in = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * cols * rows);
+	out = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * cols * rows);
+	p = fftw_plan_dft_2d(rows, cols, in, out, backwards ? FFTW_BACKWARD : FFTW_FORWARD, FFTW_ESTIMATE);
+
+	if (img_org.channels() == 1)
+	{
+		for (size_t i = 0; i < rows; i++)
+			for (size_t j = 0; j < cols; j++)
+			{
+				in[i * cols + j][0] = img_org.at<double>(i, j);
+			}
+	}
+	else if (img_org.channels() == 2)
+	{
+		for (size_t i = 0; i < rows; i++)
+			for (size_t j = 0; j < cols; j++)
+			{
+				in[i * cols + j][0] = img_org.at<cv::Vec2d>(i, j)[0];
+				in[i * cols + j][1] = img_org.at<cv::Vec2d>(i, j)[1];
+			}
+	}
+	else
+	{
+		printf("error: dft input channels error!\n");
+		assert(0);
+	}
+
+	fftw_execute(p);
+	fftw_destroy_plan(p);
+
+	img = cv::Mat(rows, cols, CV_64FC2);
+	for (size_t i = 0; i < rows; i++)
+		for (size_t j = 0; j < cols; j++)
+		{
+			img.at<cv::Vec2d>(i, j)[0] = out[i * cols + j][0];
+			img.at<cv::Vec2d>(i, j)[1] = out[i * cols + j][1];
+		}
+
+	fftw_free(in);
+	fftw_free(out);
+#else
 	img_org.copyTo(img);
 	if (img.channels() == 1)
 	{
@@ -30,9 +122,8 @@ cv::Mat dft_d(const cv::Mat img_org, const bool backwards)
 							cv::Mat_<double>::zeros(img.size())};
 		cv::merge(planes, 2, img);
 	}
-
 	cv::dft(img, img, backwards ? (cv::DFT_INVERSE + cv::DFT_SCALE) : 0);
-
+#endif
 	return img;
 }
 // shift half of the org_img, just for float type.
@@ -151,16 +242,16 @@ cv::Mat complexDotMultiplication(const cv::Mat &a, const cv::Mat &b)
 #ifdef USE_SIMD
 cv::Mat complexDotMultiplicationSIMD(const cv::Mat &a, const cv::Mat &b)
 {
-	if(a.rows != b.rows || a.cols != b.cols)
+	if (a.rows != b.rows || a.cols != b.cols)
 	{
 		printf("Error: Mat a and b different size!\n");
 		assert(0);
 	}
 	//debug("type a: %d, b: %d", a.type() & CV_MAT_DEPTH_MASK, b.type() & CV_MAT_DEPTH_MASK);
-	if((a.type() & CV_MAT_DEPTH_MASK) != 5 || (b.type() & CV_MAT_DEPTH_MASK) != 5)
+	if ((a.type() & CV_MAT_DEPTH_MASK) != 5 || (b.type() & CV_MAT_DEPTH_MASK) != 5)
 	{
 		printf("Error: Mat a or b type is not float!\n");
-		assert(0);		
+		assert(0);
 	}
 	int h = a.rows;
 	int w = a.cols;
@@ -170,8 +261,8 @@ cv::Mat complexDotMultiplicationSIMD(const cv::Mat &a, const cv::Mat &b)
 	br = (float *)wrCalloc(h * w, sizeof(float));
 	bi = (float *)wrCalloc(h * w, sizeof(float));
 	rr = (float *)wrCalloc(h * w, sizeof(float));
-	ri = (float *)wrCalloc(h * w, sizeof(float)); 
-/*
+	ri = (float *)wrCalloc(h * w, sizeof(float));
+	/*
 	ar = (float *)alMalloc(h * w * sizeof(float), 16);
 	ai = (float *)alMalloc(h * w * sizeof(float), 16);
 	br = (float *)alMalloc(h * w * sizeof(float), 16);
@@ -179,8 +270,8 @@ cv::Mat complexDotMultiplicationSIMD(const cv::Mat &a, const cv::Mat &b)
 	rr = (float *)alMalloc(h * w * sizeof(float), 16);
 	ri = (float *)alMalloc(h * w * sizeof(float), 16); 
 */
-//	debug("%p, %p, %p, %p, %p, %p", ar, ai, br, bi, rr, ri);
-/*	debug("%p, %p, %p, %p, %p, %p", *(void **)((char *)ar - sizeof(void *)),
+	//	debug("%p, %p, %p, %p, %p, %p", ar, ai, br, bi, rr, ri);
+	/*	debug("%p, %p, %p, %p, %p, %p", *(void **)((char *)ar - sizeof(void *)),
 									*(void **)((char *)ai - sizeof(void *)), 
 									*(void **)((char *)br - sizeof(void *)), 
 									*(void **)((char *)bi - sizeof(void *)), 
@@ -232,9 +323,9 @@ cv::Mat complexDotMultiplicationSIMD(const cv::Mat &a, const cv::Mat &b)
 		printf("Error: b.channels error!\n");
 		assert(0);
 	}
-	
+
 	//(a0+ia1)x(b0+ib1)=(a0b0-a1b1)+i(a0b1+a1b0)
-/*
+	/*
 	for (int i = 0; i < h; i++)
 		for (int j = 0; j < w; j++)
 		{
@@ -242,8 +333,8 @@ cv::Mat complexDotMultiplicationSIMD(const cv::Mat &a, const cv::Mat &b)
 			*(ri + i * w + j) = *(ar + i * w + j) * *(bi + i * w + j) + *(ai + i * w + j) * *(br + i * w + j); 
 		}
 */
-//	#pragma omp parallel for simd 
-/*
+	//	#pragma omp parallel for simd
+	/*
 	for (int i = 0; i < h * w; i++)
 	{
 		*(rr + i) = *(ar + i) * *(br + i) - *(ai + i) * *(bi + i);
@@ -251,26 +342,26 @@ cv::Mat complexDotMultiplicationSIMD(const cv::Mat &a, const cv::Mat &b)
 	}
 */
 	__m128 *_ar, *_ai, *_br, *_bi, *_rr, *_ri;
-	_ar = (__m128*)ar;
-	_ai = (__m128*)ai;
-	_br = (__m128*)br;
-	_bi = (__m128*)bi;
-	_rr = (__m128*)rr;
-	_ri = (__m128*)ri;
+	_ar = (__m128 *)ar;
+	_ai = (__m128 *)ai;
+	_br = (__m128 *)br;
+	_bi = (__m128 *)bi;
+	_rr = (__m128 *)rr;
+	_ri = (__m128 *)ri;
 	//debug("%p, %p", _ar, ++_ar);
 	//assert(0);
 	int i = 0;
-	for (; i < h * w - 4; i+=4)
+	for (; i < h * w - 4; i += 4)
 	{
 		*_rr++ = SUB(MUL(*_ar, *_br), MUL(*_ai, *_bi));
-		*_ri++ = ADD(MUL(*_ar++, *_bi++), MUL(*_ai++, *_br++)); 
-//		*(_rr + j) = SUB(MUL(*(_ar + j), *(_br + j)), MUL(*(_ai + j), *(_bi + j)));
-//		*(_ri + j) = ADD(MUL(*(_ar + j), *(_bi + j)), MUL(*(_ai + j), *(_br + j))); 
+		*_ri++ = ADD(MUL(*_ar++, *_bi++), MUL(*_ai++, *_br++));
+		//		*(_rr + j) = SUB(MUL(*(_ar + j), *(_br + j)), MUL(*(_ai + j), *(_bi + j)));
+		//		*(_ri + j) = ADD(MUL(*(_ar + j), *(_bi + j)), MUL(*(_ai + j), *(_br + j)));
 	}
 	for (; i < h * w; i++)
 	{
 		*(rr + i) = *(ar + i) * *(br + i) - *(ai + i) * *(bi + i);
-		*(ri + i) = *(ar + i) * *(bi + i) + *(ai + i) * *(br + i); 
+		*(ri + i) = *(ar + i) * *(bi + i) + *(ai + i) * *(br + i);
 	}
 
 	cv::Mat res = cv::Mat::zeros(h, w, CV_32FC2);
@@ -287,14 +378,14 @@ cv::Mat complexDotMultiplicationSIMD(const cv::Mat &a, const cv::Mat &b)
 	wrFree(bi);
 	wrFree(rr);
 	wrFree(ri);
-/*
+	/*
 	alFree(ar);
 	alFree(ai);
 	alFree(br);
 	alFree(bi);
 	alFree(rr);
 	alFree(ri);
-*/	
+*/
 	return res;
 }
 #endif

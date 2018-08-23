@@ -13,6 +13,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	cv::cuda::setDevice(params_.gpu_id);
 #endif
 */
+	cv::ocl::setUseOpenCL(false);
 	// Image infomations
 	imgInfo(im);
 	debug("rect: %f, %f, %f, %f", rect.x, rect.y, rect.width, rect.height);
@@ -83,13 +84,10 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 			  ky_[i].size().height, ky_[i].size().width,
 			  kx_[i].size().height, kx_[i].size().width);
 	}
-
 	// Construct the Gaussian label function using Poisson formula
 	yf_gaussian();
-
 	// Construct cosine window
 	cos_window();
-
 	// Compute Fourier series of interpolation function, refer C-COT
 	for (size_t i = 0; i < filter_size_.size(); ++i) // for each feature
 	{
@@ -105,10 +103,6 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 		//showmat2channels(interp1_fs1, 2);
 		//showmat2channels(interp2_fs1, 2);
 	}
-
-	fpseco = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
-	debug("Initialize time 1_1: %f", fpseco);
-	timereco = (double)cv::getTickCount();
 	// Construct spatial regularization filter, refer SRDCF
 	for (size_t i = 0; i < filter_size_.size(); i++) // for each feature
 	{
@@ -119,7 +113,8 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 		temp_d.convertTo(temp_f, CV_32FC1);
 		reg_filter_.push_back(temp_f);
 		debug("reg_filter_ %lu:", i);
-		showmat2channels(temp_f, 2);
+		imgInfo(temp_f);
+		showmat1channels(temp_f, 2);
 
 		// Compute the energy of the filter (used for preconditioner)drone_flip
 		cv::Mat_<double> t = temp_d.mul(temp_d); //element-wise multiply
@@ -127,10 +122,6 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 		reg_energy_.push_back(energy);
 		debug("reg_energy_ %lu: %f", i, energy);
 	}
-
-	fpseco = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
-	debug("Initialize time 1_2: %f", fpseco);
-	timereco = (double)cv::getTickCount();
 
 	// scale factor, 5 scales, refer SAMF
 	if (params_.number_of_scales % 2 == 0)
@@ -169,10 +160,6 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 		printf("%lu:%f; ", i, scale_factors_[i]);
 	}
 	printf("\n-------------------------------------------------------------\n");
-	fpseco = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
-	debug("Initialize time 2: %f", fpseco);
-	timereco = (double)cv::getTickCount();
-
 	ECO_FEATS xl, xlw, xlf, xlf_porj;
 
 	// 2. Extract features from the first frame.
@@ -198,9 +185,6 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 		debug("xlf feature %lu 's size: %lu, %d x %d", i, xlf[i].size(),
 			  xlf[i][0].rows, xlf[i][0].cols);
 	}
-	fpseco = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
-	debug("Initialize time 3: %f", fpseco);
-	timereco = (double)cv::getTickCount();
 
 	// 6. Initialize projection matrix P.
 	projection_matrix_ = init_projection_matrix(xl, compressed_dim_, feature_dim_); // 32FC2 31x10
@@ -216,9 +200,6 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 		debug("xlf_porj feature %lu 's size: %lu, %d x %d", i,
 			  xlf_porj[i].size(), xlf_porj[i][0].rows, xlf_porj[i][0].cols);
 	}
-	fpseco = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
-	debug("Initialize time 4: %f", fpseco);
-	timereco = (double)cv::getTickCount();
 
 	// 8. Initialize and update sample space.
 	sample_update_.init(filter_size_, compressed_dim_, params_.nSamples);
@@ -238,7 +219,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 										 cv::Mat::zeros(xlf_porj[i][0].size(), CV_32FC2)));
 	}
 	fpseco = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
-	debug("Initialize time 5: %f", fpseco);
+	debug("Initialize time 1: %f", fpseco);
 	timereco = (double)cv::getTickCount();
 
 	// 11. Train the tracker(train the filter and update the projection matrix).
@@ -254,7 +235,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 							params_);
 	eco_trainer_.train_joint();
 	fpseco = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
-	debug("Initialize time 6: %f", fpseco);
+	debug("Initialize time 2: %f", fpseco);
 	timereco = (double)cv::getTickCount();
 
 	// 12. Update projection matrix P.
@@ -271,9 +252,6 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 		  xlf_porj.size(), xlf_porj[0].size(),
 		  xlf_porj[0][0].rows, xlf_porj[0][0].cols);
 	sample_update_.replace_sample(xlf_porj, 0); // put xlf_proj to the smaples_f_[0].
-	fpseco = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
-	debug("Initialize time 7: %f", fpseco);
-	timereco = (double)cv::getTickCount();
 
 	// 14. Update distance matrix of sample space. Find the norm of the reprojected sample
 	float new_sample_norm = FeatureComputeEnergy(xlf_porj);
@@ -292,7 +270,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	thread_flag_train_ = true;
 #endif
 	fpseco = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
-	debug("Initialize time 8: %f", fpseco);
+	debug("Initialize time end: %f", fpseco);
 	//assert(0);
 	printf("\n==================End of Init===============================\n");
 }
@@ -591,11 +569,12 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 		eco_trainer_.train_filter(sample_update_.get_samples(),
 								  sample_update_.get_prior_weights(),
 								  sample_energy_); // #6 x slower#
+		
+		float t2 = ((double)cv::getTickCount() - t1) / cv::getTickFrequency();
+		debug("update train time: %f", t2);
 #endif
 		frames_since_last_train_ = 0;
 
-		float t2 = ((double)cv::getTickCount() - t1) / cv::getTickFrequency();
-		debug("update train time: %f==============", t2);
 	}
 	else
 	{

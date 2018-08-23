@@ -6,7 +6,8 @@ USE_BOOST=0
 USE_SIMD=1
 #USE_OPENMP=1
 #USE_EIGEN=1
-USE_MULTI_THREAD=1
+#USE_FFTW=0
+USE_MULTI_THREAD=0
 USE_GTEST=1
 USE_VOT_TRAX=1
 
@@ -69,6 +70,11 @@ endif
 
 #ifeq ($(USE_EIGEN), 1)
 #CXXFLAGS+= -DUSE_EIGEN -I/usr/include/eigen3
+#endif
+
+#ifeq ($(USE_FFTW), 1)
+#CXXFLAGS+= -DUSE_FFTW
+#LDFLAGS+= -lfftw3
 #endif
 
 ifeq ($(USE_MULTI_THREAD), 1)

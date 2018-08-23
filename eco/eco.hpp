@@ -5,6 +5,7 @@
 #include <string>
 #include <math.h>
 #include <opencv2/core.hpp>
+#include <opencv2/core/ocl.hpp>
 
 #ifdef USE_CAFFE
 #include <caffe/caffe.hpp>

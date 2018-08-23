@@ -48,6 +48,10 @@ the use of this software, even if advised of the possibility of such damage.
 #include "wrappers.hpp"
 #endif
 
+#ifdef USE_FFTW
+#include <fftw3.h>
+#endif
+
 namespace eco
 {
 cv::Mat dft_f(const cv::Mat img_org, const bool backwards = false);
