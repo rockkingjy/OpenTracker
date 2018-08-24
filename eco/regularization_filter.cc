@@ -39,7 +39,6 @@ cv::Mat get_regularization_filter(cv::Size sz,
 		cv::Mat reg_window_dft = dft(reg_window) / sz.area();
 		cv::Mat reg_win_abs(sz, CV_64FC1);
 		reg_win_abs = magnitude(reg_window_dft);
-
 		double minv = 0.0, maxv = 0.0;
 		cv::minMaxLoc(reg_win_abs, &minv, &maxv);
 		// set to zero while the element smaller than threshold
@@ -47,20 +46,20 @@ cv::Mat get_regularization_filter(cv::Size sz,
 			for (size_t j = 0; j < (size_t)reg_window_dft.cols; j++)
 			{
 				if (reg_win_abs.at<double>(i, j) < (params.reg_sparsity_threshold * maxv))
-					reg_window_dft.at<cv::Vec<double, 2>>(i, j) = cv::Vec<double, 2>(0, 0);
+					reg_window_dft.at<cv::Vec<double, 2>>(i, j) = cv::Vec<double, 2>(0.0, 0.0);
 			}
+		/* debug
+		showmat2channels(reg_window_dft, 3);
+		debug("%lf, %lf", reg_window_dft.at<cv::Vec<double, 2>>(0, 0)[0], reg_window_dft.at<cv::Vec<double, 2>>(0,1)[0]);
+		*/
 
 		// do the inverse transform, correct window minimum
 		cv::Mat reg_window_sparse = real(dft(reg_window_dft, true));
+		//showmat1channels(reg_window_sparse, 3);
 		cv::minMaxLoc(reg_window_sparse, &minv, &maxv);
-		debug("%lf, %lf, %lf, %d", minv, maxv, params.reg_window_min, sz.area());
+		//debug("%lf, %lf, %lf, %d", minv, maxv, params.reg_window_min, sz.area());
 		reg_window_dft.at<double>(0, 0) = reg_window_dft.at<double>(0, 0) - sz.area() * minv + params.reg_window_min;
 		reg_window_dft = fftshift(reg_window_dft);
-
-		//showmat2ch(reg_window_dft,3);
-		//debug("Channels: %d",reg_window_dft.channels());
-		//debug("%lf", minv);
-		//assert(0);
 
 		// find the regularization filter by removing the zeros
 		cv::Mat tmp;

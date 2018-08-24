@@ -550,7 +550,6 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	bool train_tracker = frames_since_last_train_ >= (size_t)params_.train_gap;
 	if (train_tracker)
 	{
-		double t1 = (double)cv::getTickCount();
 		//debug("%lu %lu", sample_energy_.size(), FeautreComputePower2(xlf_proj).size());
 		sample_energy_ = sample_energy_ * (1 - params_.learning_rate) +
 						 FeautreComputePower2(xlf_proj) * params_.learning_rate;
@@ -567,6 +566,7 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 			exit(-1);
 		}
 #else
+		double t1 = (double)cv::getTickCount();
 		eco_trainer_.train_filter(sample_update_.get_samples(),
 								  sample_update_.get_prior_weights(),
 								  sample_energy_); // #6 x slower#

@@ -284,11 +284,11 @@ vector<cv::Mat> FeatureExtractor::get_hog_features_simd(const vector<cv::Mat> im
 		cv::Mat featuresMap = cv::Mat(cv::Size(wb, hb), CV_32FC(nDim - 1));
 		//debug();
 		// cv: ch->row->col; matlab: col->row->ch;
-		for (int i = 0; i < hb; i++)
-			for (int j = 0; j < wb; j++)
-				for (int l = 0; l < nDim - 1; l++)
+		for (int i = 0; i < hb; i++) // for each row
+			for (int j = 0; j < wb; j++) // for each col
+				for (int l = 0; l < nDim - 1; l++) // for each channel
 				{
-					featuresMap.at<cv::Vec<float,31>>(j, i)[l] = *(H + l * hb * wb + i * wb + j);
+					featuresMap.at<cv::Vec<float,31>>(i, j)[l] = *(H + l * hb * wb + j * hb + i);
 				}
 		hog_feats.push_back(featuresMap);
 		wrFree(I); wrFree(M); wrFree(O); wrFree(H); 

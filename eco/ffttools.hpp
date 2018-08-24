@@ -108,7 +108,7 @@ inline void rot90(cv::Mat &matImage, int rotflag)
 	}
 	else if (rotflag != 0) // 0: keep the same
 	{
-		assert("Unknown rotation flag");
+		assert(0 && "Unknown rotation flag");
 	}
 }
 
