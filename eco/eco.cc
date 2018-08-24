@@ -219,9 +219,6 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 		hf_inc.push_back(vector<cv::Mat>(xlf_porj[i].size(),
 										 cv::Mat::zeros(xlf_porj[i][0].size(), CV_32FC2)));
 	}
-	fpseco = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
-	debug("Initialize time 1: %f", fpseco);
-	timereco = (double)cv::getTickCount();
 
 	// 11. Train the tracker(train the filter and update the projection matrix).
 	eco_trainer_.train_init(hf,
@@ -234,6 +231,10 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 							reg_energy_,
 							proj_energy,
 							params_);
+	fpseco = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
+	debug("Initialize time 1: %f", fpseco);
+	timereco = (double)cv::getTickCount();
+
 	eco_trainer_.train_joint();
 	fpseco = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
 	debug("Initialize time 2: %f", fpseco);
