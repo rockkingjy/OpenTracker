@@ -60,19 +60,19 @@ endif
 ifeq ($(USE_SIMD), 1)
 CXXFLAGS+= -DUSE_SIMD -msse4
 HEADERS+= $(wildcard eco/hog/*.hpp)
-OBJS+= eco/hog/gradientMex.o
+OBJS+= eco/gradient.o
 endif
 
 ifeq ($(USE_SIMD), 2)
 CXXFLAGS+= -DUSE_SIMD -DUSE_NEON -ffast-math -flto -march=armv8-a+crypto -mcpu=cortex-a57+crypto 
 HEADERS+= $(wildcard eco/hog/*.hpp)
-OBJS+= eco/hog/gradientMex.o
+OBJS+= eco/gradient.o
 endif
 
 ifeq ($(USE_SIMD), 3)
 CXXFLAGS+= -DUSE_SIMD -DUSE_NEON -ffast-math -flto -mfpu=neon
 HEADERS+= $(wildcard eco/hog/*.hpp)
-OBJS+= eco/hog/gradientMex.o
+OBJS+= eco/gradient.o
 endif
 
 ifeq ($(USE_MULTI_THREAD), 1)
