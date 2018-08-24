@@ -187,7 +187,7 @@ cv::Mat magnitude(const cv::Mat img)
 	else if (planes.size() == 2)
 		cv::magnitude(planes[0], planes[1], res);
 	else
-		assert(0);
+		assert(0 && "error: img size error!");
 	return res;
 }
 // complex element-wise multiplication for 32Float type
@@ -493,7 +493,7 @@ cv::Mat complexMatrixMultiplication(const cv::Mat &a, const cv::Mat &b)
 		return a;
 
 	if (a.cols != b.rows)
-		assert("Unmatched Size");
+		assert(0 && "error: a and b size unmatched!");
 
 	cv::Mat res(a.rows, b.cols, CV_32FC2);
 	for (size_t i = 0; i < (size_t)res.rows; i++)
@@ -532,7 +532,7 @@ cv::Mat complexConvolution(const cv::Mat a_input,
 	}
 	else if (a_input.channels() > 2)
 	{
-		assert("error of a_input's channel dimensions");
+		assert(0 && "error: a_input's channel dimensions error!");
 	}
 
 	if (b_input.channels() == 1)
@@ -545,7 +545,7 @@ cv::Mat complexConvolution(const cv::Mat a_input,
 	}
 	else if (b_input.channels() > 2)
 	{
-		assert("error of b_input's channel dimensions");
+		assert(0 && "error: b_input's channel dimensions error!");
 	}
 	// padding with zeros
 	a = cv::Mat::zeros(a_input.rows + b_input.rows - 1,

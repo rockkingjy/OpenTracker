@@ -56,8 +56,7 @@ cv::Mat Interpolator::cubic_spline_fourier(cv::Mat f, float a)
 {
 	if (f.empty())
 	{
-		debug("error: input mat is empty!");
-		assert(0);
+		assert(0 && "error: input mat is empty!");
 	}
 /*
 	cv::Mat bf(f.size(), CV_32FC1),

@@ -112,7 +112,7 @@ makeeco:
 .PHONY: cleanroot
 
 cleanroot:
-	rm *.o
+	rm *.o inputs/*.o *.bin
 
 clean:
 	rm -rf */*/*.o */*.o *.o */*.bin *.bin *.so */*.so

@@ -297,7 +297,7 @@ TEST(ffttoolsTest, complexDotMultiplication)
   timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();
   debug("complexDotMultiplicationCPU time: %f", timedft);
   //showmat2channels(res, 2);
-
+  
   // complexDotMultiplicationSIMD
 #ifdef USE_SIMD
   res = eco::complexDotMultiplicationSIMD(mat_float, mat_float1);
@@ -312,6 +312,7 @@ TEST(ffttoolsTest, complexDotMultiplication)
   debug("complexDotMultiplicationSIMD time: %f", timedft);
   //showmat2channels(res, 2);
 #endif
+
 /*
 #ifdef USE_CUDA
   cv::cuda::setDevice(0);

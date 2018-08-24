@@ -687,7 +687,6 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 		if (c == 27)
 		{
 			cvDestroyWindow("OpenTracker");
-			assert(0);
 		}
 		//cv::waitKey(0);
 	}

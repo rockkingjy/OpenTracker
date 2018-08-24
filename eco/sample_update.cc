@@ -172,7 +172,7 @@ void SampleUpdate::update_sample_space_model(const ECO_FEATS &new_train_sample)
 			cv::minMaxLoc(real(duplicate), &existing_samples_min_dist, 0, &closest_exist_sample_pair);
 
 			if (closest_exist_sample_pair.x == closest_exist_sample_pair.y)
-				assert("distance matrix diagonal filled wrongly ");
+				assert(0 && "error: distance matrix diagonal filled wrongly.");
 
 			if (new_sample_min_dist < existing_samples_min_dist)
 			{
@@ -318,7 +318,7 @@ void SampleUpdate::update_distance_matrix(cv::Mat &gram_vector, float new_sample
 	else
 	{
 		if (alpha1 == 0 || alpha2 == 0)
-			assert("alpha1 or alpha2 = 0");
+			assert(0 && "error: alpha1 or alpha2 equals 0");
 
 		// Two existing samples are merged and the new sample fills the empty
 		COMPLEX norm_id1 = gram_matrix_.at<COMPLEX>(id1, id1);

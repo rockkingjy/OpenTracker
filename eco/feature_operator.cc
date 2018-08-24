@@ -281,7 +281,7 @@ ECO_FEATS FeatureVectorMultiply(const ECO_FEATS &x,
 								const bool _conj)
 {
 	if (x.size() != y.size())
-		assert("Feature and Vector Size Unmatched!");
+		assert(0 && "Feature and Vector Size Unmatched!");
 
 	ECO_FEATS res;
 	for (size_t i = 0; i < x.size(); i++)
@@ -304,7 +304,7 @@ ECO_FEATS FeatureDotMultiply(const ECO_FEATS &a, const ECO_FEATS &b)
 {
 	ECO_FEATS res;
 	if (a.size() != b.size())
-		assert("Unamtched feature size");
+		assert(0 && "Unamtched feature size");
 
 	for (size_t i = 0; i < a.size(); i++)
 	{
@@ -322,7 +322,7 @@ ECO_FEATS FeatureDotDivide(const ECO_FEATS a, const ECO_FEATS b)
 	ECO_FEATS res;
 
 	if (a.size() != b.size())
-		assert("Unamtched feature size");
+		assert(0 && "Unamtched feature size");
 
 	for (size_t i = 0; i < a.size(); i++)
 	{

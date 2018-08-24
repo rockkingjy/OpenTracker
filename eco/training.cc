@@ -216,16 +216,14 @@ EcoTrain::joint_fp EcoTrain::pcg_eco_joint(const ECO_FEATS &init_samplef_proj,
 
 		if (pq <= 0 || pq > INT_MAX)
 		{
-			assert("GC condition is not matched");
-			break;
+			assert(0 && "error: GC condition is not matched");
 		}
 		else
 			alpha = rho / pq; // standard alpha
 
 		if (alpha <= 0 || alpha > INT_MAX)
 		{
-			assert("GC condition alpha is not matched");
-			break;
+			assert(0 && "GC condition alpha is not matched");
 		}
 
 		x = x + p * alpha;
@@ -233,7 +231,6 @@ EcoTrain::joint_fp EcoTrain::pcg_eco_joint(const ECO_FEATS &init_samplef_proj,
 		if (ii < (size_t)maxit)
 			r = r - q * alpha;
 	}
-
 	return x;
 }
 // This is the left-hand-side operation in Conjugate Gradient
@@ -549,16 +546,14 @@ ECO_FEATS EcoTrain::pcg_eco_filter(const vector<ECO_FEATS> &samplesf,
 		if (pq <= 0 || (std::abs(pq) > INT_MAX) ||
 			(pq == NAN) || std::isnan(pq))
 		{
-			assert("GC condition is not matched");
-			break;
+			assert(0 && "error: GC condition is not matched");
 		}
 		else
 			alpha = rho / pq; // standard alpha
 
 		if ((std::abs(alpha) > INT_MAX) || (alpha == NAN) || std::isnan(alpha))
 		{
-			assert("GC condition alpha is not matched");
-			break;
+			assert(0 && "GC condition alpha is not matched");
 		}
 		// Save old r if not using FR formula for beta
 		r_prev = r;
