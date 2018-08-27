@@ -194,6 +194,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 		debug("projection_matrix %lu 's size: %d x %d", i,
 			  projection_matrix_[i].rows, projection_matrix_[i].cols);
 	}
+
 	// 7. Do the feature reduction for each feature.
 	xlf_porj = FeatureProjection(xlf, projection_matrix_);
 	for (size_t i = 0; i < xlf.size(); i++)
@@ -231,14 +232,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 							reg_energy_,
 							proj_energy,
 							params_);
-	fpseco = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
-	debug("Initialize time 1: %f", fpseco);
-	timereco = (double)cv::getTickCount();
-
 	eco_trainer_.train_joint();
-	fpseco = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
-	debug("Initialize time 2: %f", fpseco);
-	timereco = (double)cv::getTickCount();
 
 	// 12. Update projection matrix P.
 	projection_matrix_ = eco_trainer_.get_proj();
@@ -272,7 +266,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	thread_flag_train_ = true;
 #endif
 	fpseco = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
-	debug("Initialize time end: %f", fpseco);
+	debug("Initialize time: %f", fpseco);
 	//assert(0);
 	printf("\n==================End of Init===============================\n");
 }
@@ -1033,7 +1027,8 @@ ECO_FEATS ECO::shift_sample(ECO_FEATS &xf,
 
 	for (size_t i = 0; i < xf.size(); ++i) // for each feature
 	{
-		cv::Mat shift_exp_y(ky[i].size(), CV_32FC2), shift_exp_x(kx[i].size(), CV_32FC2);
+		cv::Mat shift_exp_y(ky[i].size(), CV_32FC2);
+		cv::Mat shift_exp_x(kx[i].size(), CV_32FC2);
 		for (size_t j = 0; j < (size_t)ky[i].rows; j++)
 		{
 			shift_exp_y.at<COMPLEX>(j, 0) = COMPLEX(cos(shift.y * ky[i].at<float>(j, 0)), sin(shift.y * ky[i].at<float>(j, 0)));

@@ -28,19 +28,18 @@ class EcoTrain
 		float rho;
 	};
 	// the right and left side of the equation (18) of suppl. paper ECO
-	typedef struct rl_out
+	struct ECO_EQ
 	{
-		rl_out() {}
-		rl_out(ECO_FEATS pup_part, std::vector<cv::Mat> plow_part) : up_part(pup_part), low_part(plow_part) {}
+		ECO_EQ() {}
+		ECO_EQ(ECO_FEATS up_part, std::vector<cv::Mat> low_part) : up_part_(up_part), low_part_(low_part) {}
 
-		ECO_FEATS up_part;			   // this is f + delta(f)
-		std::vector<cv::Mat> low_part; // this is delta(P)
+		ECO_FEATS up_part_;			    // this is f + delta(f)
+		std::vector<cv::Mat> low_part_; // this is delta(P)
 
-		rl_out operator+(const rl_out data);
-		rl_out operator-(const rl_out data);
-		rl_out operator*(const float scale);
-
-	} joint_out, joint_fp;
+		ECO_EQ operator+(const ECO_EQ data);
+		ECO_EQ operator-(const ECO_EQ data);
+		ECO_EQ operator*(const float scale);
+	};
 
 	void train_init(const ECO_FEATS hf,
 					const ECO_FEATS hf_inc,
@@ -56,16 +55,16 @@ class EcoTrain
 	// Filter training and Projection updating(for the 1st Frame)==============
 	void train_joint();
 
-	joint_fp pcg_eco_joint(const ECO_FEATS &init_samplef_proj,
+	ECO_EQ pcg_eco_joint(const ECO_FEATS &init_samplef_proj,
 						   const vector<cv::Mat> &reg_filter,
 						   const ECO_FEATS &init_samplef,
 						   const vector<cv::Mat> &init_samplesf_H,
 						   const ECO_FEATS &init_hf,
-						   const joint_out &rhs_samplef,
-						   const joint_out &diag_M, // preconditionor
-						   const joint_fp &hf);
+						   const ECO_EQ &rhs_samplef,
+						   const ECO_EQ &diag_M, // preconditionor
+						   const ECO_EQ &hf);
 
-	joint_out lhs_operation_joint(const joint_fp &hf,
+	ECO_EQ lhs_operation_joint(const ECO_EQ &hf,
 								  const ECO_FEATS &samplesf,
 								  const vector<cv::Mat> &reg_filter,
 								  const ECO_FEATS &init_samplef,
@@ -88,8 +87,8 @@ class EcoTrain
 								   const vector<cv::Mat> &reg_filter,
 								   const vector<float> &sample_weights);
 	// joint structure basic operation================================
-	joint_out jointDotDivision(const joint_out &a, const joint_out &b);
-	float inner_product_joint(const joint_out &a, const joint_out &b);
+	ECO_EQ jointDotDivision(const ECO_EQ &a, const ECO_EQ &b);
+	float inner_product_joint(const ECO_EQ &a, const ECO_EQ &b);
 	float inner_product_filter(const ECO_FEATS &a, const ECO_FEATS &b);
 	vector<cv::Mat> get_proj() const { return projection_matrix_; }
 	ECO_FEATS get_hf() const { return hf_; }
