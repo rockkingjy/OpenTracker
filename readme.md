@@ -338,8 +338,16 @@ make -j`nproc`
 ## Run all trackers
 **ATTENTION!** Make sure that the parameter settings in `makefile` and `eco/makefile` are the same, else it will be errors!
 
-# How to use the API of the trackers / how to merge the trackers into your code?
-To use the API of the trackers is really simple, just two steps.
+# How to use the API of the ECO tracker?
+To use the API of the trackers is really simple, just two steps. Examples in folder `\example`.
+1. Install OpenTracker/eco:
+```
+cd eco
+make -j`nproc`
+sudo make install
+```
+
+2. Using the API:
 
 Two most important API are given, take ECO for example:
 ```
@@ -366,7 +374,18 @@ Then, update the tracker for each `frame`:
 ```
 it will update the bonding box to `ecobbox`, and that is the result.
 
-For GOTURN is a bit more complicate(not too much), check file `trackerscompare.cpp` for the examples.
+**Attention** If you use multi_thead for trainig ECO tracker, you need to add this at the end of the main function in case of error:
+```
+#ifdef USE_MULTI_THREAD
+    void *status;
+    int rc = pthread_join(ecotracker.thread_train_, &status);
+    if (rc)
+    {
+        cout << "Error:unable to join," << rc << std::endl;
+        exit(-1);
+    }
+#endif
+```
 
 # References 
 --------------------------------

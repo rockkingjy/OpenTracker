@@ -3,20 +3,15 @@ USE_CUDA=0
 USE_SIMD=1
 USE_MULTI_THREAD=1
 USE_FFTW=0
-
 OPENPOSE=0
 
 CAFFE_PATH=/media/elab/sdd/mycodes/caffe
-
 CC=gcc
 CXX=g++
 
 LDFLAGS= `pkg-config --libs opencv` -lstdc++ -lm
-
 CXXFLAGS= -g -Wall `pkg-config --cflags opencv` -lstdc++ -lm -std=c++0x -O3
-
 HEADERS = $(wildcard *.h) *.hpp $(wildcard kcf/*.h) $(wildcard eco/*.h)
-
 OBJS=kcf/fhog.o \
 	kcf/kcftracker.o \
 	eco/ffttools.o \
@@ -31,6 +26,7 @@ OBJS=kcf/fhog.o \
 	eco/eco.o \
 	inputs/readdatasets.o inputs/readvideo.o \
 	trackerscompare.o 
+TARGET_LIB = libopentracker.so
 
 
 ifeq ($(USE_CAFFE), 1)
@@ -111,6 +107,9 @@ endif
 makeeco:
 	cd eco && make -j`nproc`
 
+makeexample:
+	cd example && make 
+
 .PHONY: clean
 .PHONY: cleanroot
 
@@ -120,3 +119,14 @@ cleanroot:
 clean:
 	rm -rf */*/*.o */*.o *.o */*.bin *.bin *.so */*.so
 
+.PHONY: install
+install: eco/$(TARGET_LIB)
+	mkdir -p /usr/local/include/opentracker
+	cp eco/$(TARGET_LIB) /usr/local/lib
+	cp eco/*.hpp /usr/local/include/opentracker
+	cp eco/*.h /usr/local/include/opentracker
+
+.PHONY: uninstall
+uninstall: eco/$(TARGET_LIB)
+	rm -f -r /usr/local/include/opentracker
+	rm -f /usr/local/lib/$(TARGET_LIB)

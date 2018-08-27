@@ -7,7 +7,6 @@ USE_MULTI_THREAD=1
 USE_FFTW=0
 #USE_OPENMP=1
 #USE_EIGEN=1
-
 USE_GTEST=1
 USE_VOT_TRAX=0
 
@@ -22,11 +21,9 @@ ARCH= -gencode arch=compute_30,code=sm_30 \
 
 LDFLAGS= `pkg-config --libs opencv` -lstdc++ -lm 
 # -O3 double the speed!!!!!!!!!
-CXXFLAGS = -g -Wall `pkg-config --cflags opencv` -lstdc++ -lm -std=c++0x -O3 
+CXXFLAGS = -g -Wall `pkg-config --cflags opencv` -lstdc++ -lm -std=c++0x -O3 -fPIC 
 HEADERS = $(wildcard *.h) $(wildcard *.hpp)
-
-TARGET_LIB = libeco.so
-
+TARGET_LIB = libopentracker.so
 OBJS = ffttools.o fhog.o interpolator.o optimize_scores.o \
 		regularization_filter.o feature_extractor.o feature_operator.o  \
 		training.o sample_update.o eco.o metrics.o 
@@ -90,7 +87,7 @@ CXXFLAGS+= -ltrax
 LDFLAGS+= -ltrax 
 endif
 
-ALL+= runecotracker.bin
+ALL+= runecotracker.bin $(TARGET_LIB)
 ifeq ($(USE_GTEST), 1) 
 	ALL+= eco_unittest.bin 
 endif
@@ -157,7 +154,18 @@ cvgputest.bin : cvgputest.o
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
 
 #==============
-.PHONY: clean
-
+.PHONY: clean 
 clean:
 	rm -rf ./.d *.o *.bin *.so *.a */*.o */*.bin
+
+.PHONY: install
+install: $(TARGET_LIB)
+	mkdir -p /usr/local/include/opentracker
+	cp $(TARGET_LIB) /usr/local/lib
+	cp *.hpp /usr/local/include/opentracker
+	cp *.h /usr/local/include/opentracker
+
+.PHONY: uninstall
+uninstall: $(TARGET_LIB)
+	rm -f -r /usr/local/include/opentracker
+	rm -f /usr/local/lib/$(TARGET_LIB)
