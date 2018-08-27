@@ -29,6 +29,8 @@ Or, **if you have problems with the implementation of a complicate cutting-edge 
 
 **Attention!** OpenTracker is **NOT** designed just for tracking human beings as the demo images, it can track **everything**, even some special points!
 
+**2018/08/27 -- New features** Support ECO API.
+
 **2018/08/24 -- New features** Now ECO runs "almost" real-time on Raspberry Pi 3!
 
 **2018/08/24 -- New features** Support FFTW.
