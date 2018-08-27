@@ -1,15 +1,17 @@
 # How to use the API of the ECO tracker?
 To use the API of the trackers is really simple, just two steps.
 
-1. Install OpenTracker/eco:
+1. Install ECO tracker:
+
+In folder `OpenTracker/eco/`:
 ```
-cd eco
 make -j`nproc`
 sudo make install
 ```
 
 2. Using the API:
-Build by makefile:
+
+Build by makefile (in folder `OpenTracker/example/`):
 ```
 make
  ./run_eco_example.bin 

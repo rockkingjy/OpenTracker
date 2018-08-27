@@ -108,7 +108,7 @@ With quick start, you can have a quick first taste of this repository, without a
 OpenCV 3.0 Install on Ubuntu check this [[Tutorial](https://www.learnopencv.com/install-opencv3-on-ubuntu/)].
 
 ## Quick Run KCF and DSST Tracker:
-In `eco/runecotracker.cc`, make sure to choose the dataset `Demo`:
+In file `eco/runecotracker.cc`, make sure to choose the dataset `Demo`:
 ``` 
     string databaseType = databaseTypes[0];
 ```
