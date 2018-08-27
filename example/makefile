@@ -6,7 +6,6 @@ CXXFLAGS = -Wall -std=c++0x
 
 ifeq ($(USE_MULTI_THREAD), 1)
 CXXFLAGS+= -DUSE_MULTI_THREAD
-LDFLAGS+= -pthread
 endif
 
 all: run_eco_example.bin

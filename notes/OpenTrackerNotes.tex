@@ -1117,6 +1117,7 @@ The Intel Intrinsics Guide: \url{https://software.intel.com/sites/landingpage/In
 \section{Some tips of transfer from matlab to $c++$}
 \begin{itemize}
 	\item \textbf{malloc()} does not initialize the memory allocated, while \textbf{calloc()} initializes the memory to 0.
+	\item Use -O3 in $makefile$ to compile will speed-up the calculation. 
 	\item In opencv, color order: BGR, in matlab: RGB.
 	\item In opencv, $mat.at<Type>(row, col)[channel]$;
 	\item In opencv mat, the data store in this order(row-major): $channel -> x-> y$, while in matlab(col-major): $y->x->channel$. For example:
