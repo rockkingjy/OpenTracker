@@ -4,7 +4,7 @@ namespace eco
 {
 void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 {
-	printf("\n=========================Init================================\n");
+	debug("=========================Init================================");
 	double timereco = (double)cv::getTickCount();
 	float fpseco = 0;
 	// 1. Initialize all the parameters.
@@ -114,8 +114,8 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 		temp_d.convertTo(temp_f, CV_32FC1);
 		reg_filter_.push_back(temp_f);
 		debug("reg_filter_ %lu:", i);
-		imgInfo(temp_f);
-		showmat1channels(temp_f, 2);
+		//imgInfo(temp_f);
+		//showmat1channels(temp_f, 2);
 
 		// Compute the energy of the filter (used for preconditioner)drone_flip
 		cv::Mat_<double> t = temp_d.mul(temp_d); //element-wise multiply
@@ -156,11 +156,13 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	debug("scalefactor min: %f max: %f", params_.min_scale_factor,
 		  params_.max_scale_factor);
 	debug("scale_factors_:");
+	/*
 	for (size_t i = 0; i < params_.number_of_scales; i++)
 	{
 		printf("%lu:%f; ", i, scale_factors_[i]);
 	}
-	printf("\n-------------------------------------------------------------\n");
+	*/
+	debug("-------------------------------------------------------------");
 	ECO_FEATS xl, xlw, xlf, xlf_porj;
 
 	// 2. Extract features from the first frame.
@@ -268,12 +270,12 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	fpseco = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
 	debug("Initialize time: %f", fpseco);
 	//assert(0);
-	printf("\n==================End of Init===============================\n");
+	debug("==================End of Init===============================");
 }
 
 void ECO::reset(cv::Mat &im, const cv::Rect2f &rect)
 {
-	printf("\n==================Reset Tracker=============================\n");
+	debug("==================Reset Tracker=============================");
 	// 1. Initialize all the parameters.
 	// Image infomations
 	imgInfo(im);
@@ -390,7 +392,7 @@ void ECO::reset(cv::Mat &im, const cv::Rect2f &rect)
 #ifdef USE_MULTI_THREAD
 	thread_flag_train_ = true;
 #endif
-	printf("\n=====================End of Reset============================\n");
+	debug("=====================End of Reset============================");
 }
 
 bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)

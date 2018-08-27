@@ -14,7 +14,6 @@
 
 #include <assert.h>
 #include <stdio.h>
-#define debug(a, args...) printf("%s(%s:%d) " a "\n", __func__, __FILE__, __LINE__, ##args)
 
 // compute x and y gradients for just one column (uses sse)
 void grad1(float *I, float *Gx, float *Gy, int h, int w, int x);

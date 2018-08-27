@@ -21,7 +21,6 @@ int main(int argc, char **argv)
     ifstream *groundtruth;
     ostringstream osfile;
     path = "../sequences/Crossing";
-    // some of the dataset has '\t' as the delimiter, change it to ','.
     fstream gt(path + "/groundtruth_rect.txt");
     string tmp;
     size_t index = 1;
@@ -52,13 +51,12 @@ int main(int argc, char **argv)
     w = atof(s.c_str());
     getline(*groundtruth, s);
     h = atof(s.c_str());
-    cout << f << " " << x << " " << y << " " << w << " " << h << " " << endl;
-    // Read images in a folder
+    cout << "Bounding box:" << x << " " << y << " " << w << " " << h << " " << endl;
+    // Read images in the folder
     osfile << path << "/img/" << setw(4) << setfill('0') << f << ".jpg";
     cout << osfile.str() << endl;
-
+    // Ini bounding box and frame
     Rect2f bboxGroundtruth(x, y, w, h);
-
     cv::Mat frame = cv::imread(osfile.str().c_str(), CV_LOAD_IMAGE_UNCHANGED);
     cv::Mat frameDraw;
     frame.copyTo(frameDraw);
@@ -75,7 +73,6 @@ int main(int argc, char **argv)
     Rect2f ecobbox(x, y, w, h);
     ecotracker.init(frame, ecobbox);
     //===============================================================    
-
 
     while (frame.data)
     {
@@ -125,7 +122,7 @@ int main(int argc, char **argv)
         //cout << f << " " << x << " " << y << " " << w << " " << h << " " << isLost << endl;
         // Read images in a folder
         osfile << path << "/img/" << setw(4) << setfill('0') << f << ".jpg";
-        //cout << osfile.str() << endl;
+        cout << osfile.str() << endl;
 
         bboxGroundtruth.x = x;
         bboxGroundtruth.y = y;

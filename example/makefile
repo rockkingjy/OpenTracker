@@ -1,31 +1,26 @@
 
 USE_MULTI_THREAD=1
 
-CC=gcc
-CXX=g++
-
-LDFLAGS= `pkg-config --libs opencv` -lstdc++ -lm -lopentracker
-# -O3 double the speed!!!!!!!!!
-CXXFLAGS = -g -Wall `pkg-config --cflags opencv` -lstdc++ -lm -std=c++0x -O3 -fPIC
-HEADERS = eco.hpp
+LDFLAGS= `pkg-config --libs opencv` -lstdc++ -lopentracker
+CXXFLAGS = -Wall -std=c++0x
 
 ifeq ($(USE_MULTI_THREAD), 1)
 CXXFLAGS+= -DUSE_MULTI_THREAD
 LDFLAGS+= -pthread
 endif
 
-all: runecotracker.bin
+all: run_eco_example.bin
 
-runecotracker.bin: runecotracker.o
+run_eco_example.bin: run_eco_example.o
 	$(CC) -o $@ $^ $(LDFLAGS) 
 
-%.o: %.c $(HEADERS)
+%.o: %.c
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-%.o: %.cc $(HEADERS)
+%.o: %.cc
 	$(CXX) -c -o $@ $< $(CXXFLAGS)
 
-%.o: %.cpp $(HEADERS)
+%.o: %.cpp
 	$(CXX) -c -o $@ $< $(CXXFLAGS)
 
 .PHONY: clean

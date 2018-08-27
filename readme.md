@@ -374,7 +374,7 @@ Then, update the tracker for each `frame`:
 ```
 it will update the bonding box to `ecobbox`, and that is the result.
 
-**Attention** If you use multi_thead for trainig ECO tracker, you need to add this at the end of the main function in case of error:
+**Attention:** If you use multi_thead for trainig ECO tracker, you need to add this at the end of the main function in case of error:
 ```
 #ifdef USE_MULTI_THREAD
     void *status;

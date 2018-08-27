@@ -47,13 +47,14 @@ void SampleUpdate::init(const std::vector<cv::Size> &filter,
 			  samples_f_[nSamples_ - 1][j][feature_dim[j] - 1].rows,
 			  samples_f_[nSamples_ - 1][j][feature_dim[j] - 1].cols);
 	}
-	//showmat1chall(real(distance_matrix_), 2);
+	/*
 	debug("prior_weights_ size: %lu ", prior_weights_.size());
 	for (size_t j = 0; j < (size_t)prior_weights_.size(); j++)
 	{
 		printf("%f ", prior_weights_[j]);
 	}
 	printf("\n");
+	*/
 }
 
 void SampleUpdate::reset(const std::vector<cv::Size> &filter,
