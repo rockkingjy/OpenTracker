@@ -11,12 +11,12 @@
 #include <caffe/caffe.hpp>
 #include <caffe/util/io.hpp>
 #endif
-
+/*
 #ifdef USE_CUDA
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/cuda.hpp>
 #endif 
-
+*/
 #ifdef USE_MULTI_THREAD
 #include <pthread.h>
 #include <unistd.h>

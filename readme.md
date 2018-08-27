@@ -138,9 +138,11 @@ In `makefile`, make sure change to:
 ```
 USE_CAFFE=0
 USE_CUDA=0
-USE_BOOST=0
 USE_SIMD=0
+USE_MULTI_THREAD=0
+USE_FFTW=0
 USE_GTEST=0
+USE_VOT_TRAX=0
 ```
 and in `eco/runecotracker.cc`, make sure to choose the dataset `Demo`:
 ``` 
@@ -219,7 +221,7 @@ If you don't want to compile with Caffe, that means you cannot use Deep features
 If you don't want to compile with CUDA, that means you cannot use Deep features, set in **eco/makefile**: `USE_CUDA=0`.
 
 ### Compile with Caffe
-If you want to compile with Caffe, set in **makefile** and **eco/makefile**: `USE_CAFFE=1`, and set the according caffe path of your system in **eco/makefile**:
+If you want to compile with Caffe, set in **makefile** and **eco/makefile**: `USE_CAFFE=1 USE_CUDA=1`, and set the according caffe path of your system in **eco/makefile**:
 ```
 CAFFE_PATH=<YOUR_CAFFE_PATH>
 ```
@@ -256,7 +258,13 @@ If you are using ARM like Rasberrypi 3, in `eco\makefile`, set:
 USE_SIMD=3
 ```
 
-### Speed-up with GPU
+### Speed-up with multi-thread
+In `eco\makefile`, set:
+```
+USE_MULTI_THREAD=1
+```
+
+### Speed-up with GPU (not yet implemented)
 If you have a GPU, it can speed-up with gpu.
 
 First don't forget to install Opencv with CUDA supported:
@@ -326,6 +334,9 @@ make -j`nproc`
 ```
 ./classification.bin   /media/elab/sdd/caffe/models/bvlc_reference_caffenet/deploy.prototxt   /media/elab/sdd/caffe/models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel   /media/elab/sdd/caffe/data/ilsvrc12/imagenet_mean.binaryproto   /media/elab/sdd/caffe/data/ilsvrc12/synset_words.txt   /media/elab/sdd/caffe/examples/images/cat.jpg
 ```
+
+## Run all trackers
+**ATTENTION!** Make sure that the parameter settings in `makefile` and `eco/makefile` are the same, else it will be errors!
 
 # How to use the API of the trackers / how to merge the trackers into your code?
 To use the API of the trackers is really simple, just two steps.

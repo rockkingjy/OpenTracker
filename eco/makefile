@@ -1,14 +1,14 @@
 USE_CAFFE=0
 USE_CUDA=0
-USE_BOOST=0
 #0:no-simd;1:sse-Intel;2:neon-TX2;3:neon-Raspberrypi3
 #(comment should not in the same line as the parameter)
 USE_SIMD=1
+USE_MULTI_THREAD=1
+USE_FFTW=0
 #USE_OPENMP=1
 #USE_EIGEN=1
-USE_FFTW=0
-USE_MULTI_THREAD=1
-USE_GTEST=0
+
+USE_GTEST=1
 USE_VOT_TRAX=0
 
 CAFFE_PATH=/media/elab/sdd/mycodes/caffe
@@ -33,19 +33,15 @@ OBJS = ffttools.o fhog.o interpolator.o optimize_scores.o \
 
 ifeq ($(USE_CAFFE), 1)
 CXXFLAGS+= -DUSE_CAFFE
-LDFLAGS+= -L$(CAFFE_PATH)/build/lib -lcaffe -lglog  -lprotobuf 
+LDFLAGS+= -L$(CAFFE_PATH)/build/lib -lcaffe -lglog  #-lprotobuf 
 CXXFLAGS+= -I$(CAFFE_PATH)/build/include/ -I$(CAFFE_PATH)/include/ 
+LDFLAGS+= -lboost_system -lboost_filesystem -lboost_regex
 endif
 
 ifeq ($(USE_CUDA), 1)
 CXXFLAGS+= -DUSE_CUDA
 LDFLAGS+= -L/usr/local/cuda/lib64 -lcuda -lcudart -lcublas -lcurand -lcudnn 
 CXXFLAGS+= -I/usr/local/cuda/include/ 
-endif
-
-ifeq ($(USE_BOOST), 1)
-CXXFLAGS+= -DUSE_BOOST
-LDFLAGS+= -lboost_system -lboost_filesystem -lboost_regex
 endif
 
 ifeq ($(USE_SIMD), 1)
@@ -63,6 +59,16 @@ CXXFLAGS+= -DUSE_SIMD -DUSE_NEON -ffast-math -flto -mfpu=neon
 OBJS+= gradient.o
 endif
 
+ifeq ($(USE_MULTI_THREAD), 1)
+CXXFLAGS+= -DUSE_MULTI_THREAD
+LDFLAGS+= -pthread
+endif
+
+ifeq ($(USE_FFTW), 1)
+CXXFLAGS+= -DUSE_FFTW
+LDFLAGS+= -lfftw3
+endif
+
 #ifeq ($(USE_OPENMP), 1)
 #CXXFLAGS+= -DUSE_OPENMP -fopenmp
 #LDFLAGS+= -fopenmp
@@ -71,16 +77,6 @@ endif
 #ifeq ($(USE_EIGEN), 1)
 #CXXFLAGS+= -DUSE_EIGEN -I/usr/include/eigen3
 #endif
-
-ifeq ($(USE_FFTW), 1)
-CXXFLAGS+= -DUSE_FFTW
-LDFLAGS+= -lfftw3
-endif
-
-ifeq ($(USE_MULTI_THREAD), 1)
-CXXFLAGS+= -DUSE_MULTI_THREAD
-LDFLAGS+= -pthread
-endif
 
 ifeq ($(USE_GTEST), 1)
 GTEST_DIR = ../googletest
@@ -93,7 +89,6 @@ ifeq ($(USE_VOT_TRAX), 1)
 CXXFLAGS+= -ltrax
 LDFLAGS+= -ltrax 
 endif
-
 
 ALL+= runecotracker.bin
 ifeq ($(USE_GTEST), 1) 
