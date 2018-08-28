@@ -103,7 +103,7 @@ Included                | Method(single thread)   | FPS(scale=1) | FPS(scale=7)
 
 ## Speed Analysis
 <p align="center">
-    <img src="images/speedanalysis.png", width="480">
+    <img src="images/speedanalysis.png", width="">
 </p>
 
 # Quick start
