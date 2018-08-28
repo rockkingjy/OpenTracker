@@ -31,7 +31,7 @@ Two most important API are given, take ECO for example:
     ecotracker.init(frame, ecobbox, threshhold);
     ecotracker.update(frame, ecobbox);
 ```
-`init` is for initialization of the tracker by the first `frame`, the bounding box `ecobbox` and the `threshhold` for correct tracking given.
+`init` is for initialization of the tracker by the first `frame`, the bounding box `ecobbox` and the `parameters` of eco tracker given.
 
 `update` is for update for the `frame` now, and update the result to `ecobbox`(so you can read the result from `ecobbox` directly).
 
@@ -41,8 +41,9 @@ First, trackers should be created and initialized with grounding truth bonding b
 ```
     eco::ECO ecotracker;
     Rect2f ecobbox(bboxGroundtruth.x, bboxGroundtruth.y, bboxGroundtruth.width, bboxGroundtruth.height);
-    float threshhold = 0.1f;
-    ecotracker.init(frame, ecobbox, threshhold);
+    eco::EcoParameters parameters;
+    parameters.max_score_threshhold = 0.2; // you can also change other parameters
+    ecotracker.init(frame, ecobbox, parameters);
 ```
 here, `ecobbox` is the bondding box for the first frame.
 

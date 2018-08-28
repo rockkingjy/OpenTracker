@@ -5,6 +5,7 @@
 #include <opencv2/opencv.hpp>
 
 #include "eco.hpp"
+#include "parameters.hpp"
 #include "metrics.hpp"
 #include "debug.hpp"
 
@@ -16,7 +17,7 @@ int main(int argc, char **argv)
 {
     // Database settings
     string databaseTypes[5] = {"Demo","VOT-2017", "TB-2015", "TLP", "UAV123"};
-    string databaseType = databaseTypes[1];//4];
+    string databaseType = databaseTypes[0];//4];
     // Read from the images ====================================================
     std::vector<float> CenterError;
     std::vector<float> Iou;
@@ -228,8 +229,9 @@ int main(int argc, char **argv)
     double timereco = (double)getTickCount();
     ECO ecotracker;
     Rect2f ecobbox(x, y, w, h);
-    float threshhold = 0.1f;
-    ecotracker.init(frame, ecobbox, threshhold);
+    eco::EcoParameters parameters;
+    parameters.max_score_threshhold = 0.2;
+    ecotracker.init(frame, ecobbox, parameters);
     float fpsecoini = getTickFrequency() / ((double)getTickCount() - timereco);
 
     while (frame.data)

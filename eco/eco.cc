@@ -2,7 +2,7 @@
 
 namespace eco
 {
-void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const float threshhold)
+void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters paramters)
 {
 	debug("=========================Init================================");
 	double timereco = (double)cv::getTickCount();
@@ -19,7 +19,10 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const float threshhold)
 	imgInfo(im);
 	debug("rect: %f, %f, %f, %f", rect.x, rect.y, rect.width, rect.height);
 
-	params_.max_score_threshhold = threshhold;
+	// Read in all the parameters
+	init_parameters(paramters);
+	printf("max_score_threshhold: %f\n", params_.max_score_threshhold);
+
 	// Get the ini position
 	pos_.x = rect.x + (rect.width - 1.0) / 2.0;
 	pos_.y = rect.y + (rect.height - 1.0) / 2.0;
@@ -713,6 +716,61 @@ void *ECO::thread_train(void *params)
 	pthread_exit(NULL);
 }
 #endif
+
+void ECO::init_parameters(const eco::EcoParameters parameters)
+{
+	params_.useDeepFeature = parameters.useDeepFeature;
+	params_.useHogFeature = parameters.useHogFeature;
+	params_.useCnFeature = parameters.useCnFeature;
+
+	params_.max_score_threshhold = parameters.max_score_threshhold;
+	// img sample parameters
+	params_.search_area_scale = parameters.search_area_scale;
+	params_.min_image_sample_size = parameters.min_image_sample_size;
+	params_.max_image_sample_size = parameters.max_image_sample_size;
+	// Detection parameters
+	params_.refinement_iterations = parameters.refinement_iterations;
+	params_.newton_iterations = parameters.newton_iterations;
+	params_.clamp_position = parameters.clamp_position;
+	// Learning parameters
+	params_.output_sigma_factor = parameters.output_sigma_factor;
+	params_.learning_rate = parameters.learning_rate;
+	params_.nSamples = parameters.nSamples;
+	params_.lt_size = parameters.lt_size;
+	params_.train_gap = parameters.train_gap;
+	params_.skip_after_frame = parameters.skip_after_frame;
+	params_.use_detection_sample = parameters.use_detection_sample;
+	// Factorized convolution parameters
+	params_.use_projection_matrix = parameters.use_projection_matrix;
+	params_.update_projection_matrix = parameters.update_projection_matrix;
+	params_.projection_reg = parameters.projection_reg;
+
+	params_.use_sample_merge = parameters.use_sample_merge;
+
+	params_.CG_iter = parameters.CG_iter;
+	params_.init_CG_iter = parameters.init_CG_iter;
+	params_.init_GN_iter = parameters.init_GN_iter;
+	params_.CG_use_FR = parameters.CG_use_FR;
+	params_.pCG_standard_alpha = parameters.pCG_standard_alpha;
+	params_.CG_forgetting_rate = parameters.CG_forgetting_rate;
+	params_.precond_data_param = parameters.precond_data_param;
+	params_.precond_reg_param = parameters.precond_reg_param;
+	params_.precond_proj_param = parameters.precond_proj_param;
+
+	params_.use_reg_window = parameters.use_reg_window;
+	params_.reg_window_min = parameters.reg_window_min;
+	params_.reg_window_edge = parameters.reg_window_edge;
+	params_.reg_sparsity_threshold = parameters.reg_sparsity_threshold;
+
+	params_.interpolation_bicubic_a = parameters.interpolation_bicubic_a;
+	params_.interpolation_centering = parameters.interpolation_centering;
+	params_.interpolation_windowing = parameters.interpolation_windowing;
+
+	params_.number_of_scales = parameters.number_of_scales;
+	params_.scale_step = parameters.scale_step;
+
+	params_.use_scale_filter = parameters.use_scale_filter;
+}
 
 void ECO::init_features()
 {

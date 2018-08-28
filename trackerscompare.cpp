@@ -1,6 +1,7 @@
 
 #include "kcf/kcftracker.hpp"
 #include "eco/eco.hpp"
+#include "eco/parameters.hpp"
 
 #ifdef USE_CAFFE
 #include "goturn/network/regressor.h"
@@ -125,8 +126,9 @@ int main(int argc, char **argv)
     // Create ECO trakcer;
     eco::ECO ecotracker;
     Rect2f ecobbox(bboxGroundtruth.x, bboxGroundtruth.y, bboxGroundtruth.width, bboxGroundtruth.height);
-    float threshhold = 0.1f;
-    ecotracker.init(frame, ecobbox, threshhold);
+    eco::EcoParameters parameters;
+    parameters.max_score_threshhold = 0.2;
+    ecotracker.init(frame, ecobbox, parameters);
 
     while (frame.data)
     {
