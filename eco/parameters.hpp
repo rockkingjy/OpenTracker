@@ -87,6 +87,8 @@ struct EcoParameters
 	bool useHogFeature = true;
 	bool useCnFeature = false; // Not used yet, add later.......
 
+	float max_score_threshhold = 0.1;
+
 	// img sample parameters
 	string search_area_shape = "square"; // The shape of the samples
 	float search_area_scale = 4.0;		 // The scaling of the target size to get the search area

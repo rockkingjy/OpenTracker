@@ -10,7 +10,7 @@ CC=gcc
 CXX=g++
 
 LDFLAGS= `pkg-config --libs opencv` -lstdc++ -lm
-CXXFLAGS= -g -Wall `pkg-config --cflags opencv` -lstdc++ -lm -std=c++0x -O3
+CXXFLAGS= -g -Wall `pkg-config --cflags opencv` -lstdc++ -lm -std=c++0x -O3 -fPIC 
 HEADERS = $(wildcard *.h) *.hpp $(wildcard kcf/*.h) $(wildcard eco/*.h)
 OBJS=kcf/fhog.o \
 	kcf/kcftracker.o \
@@ -46,26 +46,18 @@ LDFLAGS+= -L/usr/local/cuda/lib64 -lcuda -lcudart -lcublas -lcurand -lcudnn
 CXXFLAGS+= -I/usr/local/cuda/include/ 
 endif
 
-ifeq ($(OPENPOSE), 1) 
-LDFLAGS+=-lpthread -lopenpose -lgflags
-OBJS+=inputs/openpose.o
-endif
-
 ifeq ($(USE_SIMD), 1)
 CXXFLAGS+= -DUSE_SIMD -msse4
-HEADERS+= $(wildcard eco/hog/*.hpp)
 OBJS+= eco/gradient.o
 endif
 
 ifeq ($(USE_SIMD), 2)
 CXXFLAGS+= -DUSE_SIMD -DUSE_NEON -ffast-math -flto -march=armv8-a+crypto -mcpu=cortex-a57+crypto 
-HEADERS+= $(wildcard eco/hog/*.hpp)
 OBJS+= eco/gradient.o
 endif
 
 ifeq ($(USE_SIMD), 3)
 CXXFLAGS+= -DUSE_SIMD -DUSE_NEON -ffast-math -flto -mfpu=neon
-HEADERS+= $(wildcard eco/hog/*.hpp)
 OBJS+= eco/gradient.o
 endif
 
@@ -77,6 +69,11 @@ endif
 ifeq ($(USE_FFTW), 1)
 CXXFLAGS+= -DUSE_FFTW
 LDFLAGS+= -lfftw3
+endif
+
+ifeq ($(OPENPOSE), 1) 
+LDFLAGS+=-lpthread -lopenpose -lgflags
+OBJS+=inputs/openpose.o
 endif
 
 ALL+= makekcf makeeco trackerscompare.bin

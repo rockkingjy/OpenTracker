@@ -4,19 +4,18 @@ namespace eco{
 void OptimizeScores::compute_scores()
 {
 	std::vector<cv::Mat> sampled_scores;
-	// Do inverse fft to the scores in the Fourier domain back to the spacial domain
-	for (size_t i = 0; i < scores_fs_.size(); ++i)
+	// Do inverse fft to the scores in the Fourier domain back to spacial domain
+	for (size_t i = 0; i < scores_fs_.size(); ++i) // for each scale
 	{
 		int area = scores_fs_[i].size().area();
-		// debug("area: %d", area);
 		cv::Mat tmp = dft(fftshift(scores_fs_[i], 1, 1, 1), 1);// inverse dft
-		sampled_scores.push_back(real(tmp * area));   	// spacial domain only contains real part
+		sampled_scores.push_back(real(tmp * area)); // spacial domain only contains real part
 	}
 
 	// to store the position of maximum value of response
 	std::vector<int> row, col; 
-	std::vector<float> 	init_max_score;
-	for (size_t i = 0; i < scores_fs_.size(); ++i)
+	std::vector<float> 	init_max_score; // inialized max score
+	for (size_t i = 0; i < scores_fs_.size(); ++i) // for each scale
 	{
 		cv::Point pos;
 		double maxValue = 0, minValue = 0;
@@ -54,7 +53,8 @@ void OptimizeScores::compute_scores()
 	std::vector<cv::Mat> exp_iky, exp_ikx;
 	for (unsigned int i = 0; i < scores_fs_.size(); ++i)
 	{
-		cv::Mat tempy(1, h, CV_32FC2), tempx(w, 1, CV_32FC2);
+		cv::Mat tempy(1, h, CV_32FC2);
+		cv::Mat tempx(w, 1, CV_32FC2);
 		for (int y = 0; y < h; ++y)
 			tempy.at<cv::Vec<float, 2>>(0, y) = cv::Vec<float, 2>(cos(ky[y] * max_pos_y[i]), sin(ky[y] * max_pos_y[i]));
 		for (int x = 0; x < w; ++x)
@@ -63,8 +63,10 @@ void OptimizeScores::compute_scores()
 		exp_ikx.push_back(tempx);
 	}
 
-	cv::Mat kyMat(1, h, CV_32FC1, &ky[0]), kxMat(w, 1, CV_32FC1, &kx[0]);
-	cv::Mat ky2Mat(1, h, CV_32FC1, &ky2[0]), kx2Mat(w, 1, CV_32FC1, &kx2[0]);
+	cv::Mat kyMat(1, h, CV_32FC1, &ky[0]);
+	cv::Mat ky2Mat(1, h, CV_32FC1, &ky2[0]);
+	cv::Mat kxMat(w, 1, CV_32FC1, &kx[0]);
+	cv::Mat kx2Mat(w, 1, CV_32FC1, &kx2[0]);
 
 	for (int ite = 0; ite < iterations_; ++ite)
 	{
@@ -133,6 +135,7 @@ void OptimizeScores::compute_scores()
 	// Find the scale with the maximum response 
 	std::vector<float>::iterator pos = max_element(max_score.begin(), max_score.end());
 	scale_ind_ = pos - max_score.begin();
+	max_score_ = *pos;
 
 	// Scale the coordinate system to output_sz
 	disp_row_ = (fmod(max_pos_y[scale_ind_] + CV_PI, CV_PI * 2.0) - CV_PI) / (CV_PI * 2.0) * h;

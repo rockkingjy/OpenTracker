@@ -33,7 +33,7 @@ Or, **if you have problems with the implementation of a complicate cutting-edge 
 
 **2018/08/24 -- New features** Now ECO runs "almost" real-time on Raspberry Pi 3!
 
-**2018/08/24 -- New features** Support FFTW.
+**2018/08/24 -- New features** Support [FFTW](http://www.fftw.org/).
 
 **2018/08/13 -- New features** Speed up by multi-thread.
 

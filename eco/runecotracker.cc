@@ -16,7 +16,7 @@ int main(int argc, char **argv)
 {
     // Database settings
     string databaseTypes[5] = {"Demo","VOT-2017", "TB-2015", "TLP", "UAV123"};
-    string databaseType = databaseTypes[0];//4];
+    string databaseType = databaseTypes[1];//4];
     // Read from the images ====================================================
     std::vector<float> CenterError;
     std::vector<float> Iou;
@@ -75,7 +75,7 @@ int main(int argc, char **argv)
     }
     else if (databaseType == "VOT-2017")
     {
-        string folderVOT = "girl"; //"iceskater1";//"road";//"drone1";//"iceskater1";//"girl"; //"road";//"bag";////"helicopter";
+        string folderVOT = "drone1";//"iceskater1";//"road";//"bag";//"helicopter";
         path = "/media/elab/sdd/data/VOT/vot2017/" + folderVOT;
         // Read the groundtruth bbox
         groundtruth = new ifstream("/media/elab/sdd/data/VOT/vot2017/" + folderVOT + "/groundtruth.txt");
@@ -228,7 +228,8 @@ int main(int argc, char **argv)
     double timereco = (double)getTickCount();
     ECO ecotracker;
     Rect2f ecobbox(x, y, w, h);
-    ecotracker.init(frame, ecobbox);
+    float threshhold = 0.1f;
+    ecotracker.init(frame, ecobbox, threshhold);
     float fpsecoini = getTickFrequency() / ((double)getTickCount() - timereco);
 
     while (frame.data)
@@ -245,6 +246,7 @@ int main(int argc, char **argv)
         {
             putText(frameDraw, "ECO tracking failure detected", cv::Point(100, 80), FONT_HERSHEY_SIMPLEX,
                     0.75, Scalar(255, 0, 255), 2);
+            //waitKey(0);
         }
 
         // Draw ground truth box
@@ -289,7 +291,7 @@ int main(int argc, char **argv)
         if (c == 27)
         {
             cvDestroyWindow("OpenTracker");
-            return 0;
+            exit(1);
         }
         waitKey(1);
         // Read next image======================================================

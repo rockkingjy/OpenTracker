@@ -2,7 +2,7 @@
 
 namespace eco
 {
-void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
+void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const float threshhold)
 {
 	debug("=========================Init================================");
 	double timereco = (double)cv::getTickCount();
@@ -19,6 +19,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	imgInfo(im);
 	debug("rect: %f, %f, %f, %f", rect.x, rect.y, rect.width, rect.height);
 
+	params_.max_score_threshhold = threshhold;
 	// Get the ini position
 	pos_.x = rect.x + (rect.width - 1.0) / 2.0;
 	pos_.y = rect.y + (rect.height - 1.0) / 2.0;
@@ -93,7 +94,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect)
 	for (size_t i = 0; i < filter_size_.size(); ++i) // for each feature
 	{
 		cv::Mat interp1_fs1, interp2_fs1;
-		Interpolator::get_interp_fourier(filter_size_[i], 
+		Interpolator::get_interp_fourier(filter_size_[i],
 										 interp1_fs1,
 										 interp2_fs1,
 										 params_.interpolation_bicubic_a);
@@ -382,7 +383,7 @@ void ECO::reset(cv::Mat &im, const cv::Rect2f &rect)
 	sample_update_.set_gram_matrix(0, 0, 2 * new_sample_norm);
 
 	// 15. Update filter f.
-	hf_full_ = full_fourier_coeff(eco_trainer_.get_hf()); //
+	hf_full_ = full_fourier_coeff(eco_trainer_.get_hf());
 	for (size_t i = 0; i < hf_full_.size(); i++)
 	{
 		debug("hf_full_: %lu, %lu, %d x %d", i, hf_full_[i].size(),
@@ -445,42 +446,36 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 
 	// 6: Compute the scores in Fourier domain for different scales of target
 	vector<cv::Mat> scores_fs_sum;
-	for (size_t i = 0; i < scale_factors_.size(); i++)
+	for (size_t i = 0; i < scale_factors_.size(); i++) // for each scale
 		scores_fs_sum.push_back(cv::Mat::zeros(filter_size_[output_index_], CV_32FC2));
-	//debug("scores_fs_sum: %lu, %d x %d", scores_fs_sum.size(), scores_fs_sum[0].rows, scores_fs_sum[0].cols);
-
 	for (size_t i = 0; i < xtf_proj.size(); i++) // for each feature
 	{
 		int pad = (filter_size_[output_index_].height - xtf_proj[i][0].rows) / 2;
-		cv::Rect temp_roi = cv::Rect(pad, pad,
-									 xtf_proj[i][0].cols, xtf_proj[i][0].rows);
-
-		for (size_t j = 0; j < xtf_proj[i].size(); j++) // for each dimension of the feature
+		cv::Rect temp_roi = cv::Rect(pad, pad, xtf_proj[i][0].cols, xtf_proj[i][0].rows); // get the roi
+		for (size_t j = 0; j < xtf_proj[i].size(); j++)									  // for dimension x scale
 		{
-			// debug("%lu, %lu", j, j / hf_full_[i].size());
-			scores_fs_sum[j / hf_full_[i].size()](temp_roi) +=
-				complexDotMultiplication(xtf_proj[i][j],
-										 hf_full_[i][j % hf_full_[i].size()]);
+			size_t k1 = j / hf_full_[i].size(); // for each scale
+			size_t k2 = j % hf_full_[i].size(); // for each dimension of scale
+			//debug("%lu, %lu, %lu, %lu", i, j, k1, k2);
+			scores_fs_sum[k1](temp_roi) += complexDotMultiplication(xtf_proj[i][j], hf_full_[i][k2]);
 		}
 	}
+	//debug("scores_fs_sum: %lu, %d x %d", scores_fs_sum.size(), scores_fs_sum[0].rows, scores_fs_sum[0].cols);
 	localizationtime = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
 	debug("localization time6: %f", localizationtime);
 	timereco = (double)cv::getTickCount();
 
-	// 7: Calculate score by inverse DFT:
-
+	// 7: Calculate score by inverse DFT and
 	// 8: Optimize the continuous score function with Newton's method.
 	OptimizeScores scores(scores_fs_sum, params_.newton_iterations);
 	scores.compute_scores();
-
 	// Compute the translation vector in pixel-coordinates and round to the closest integer pixel.
 	int scale_change_factor = scores.get_scale_ind();
 	float resize_scores_width = (img_support_size_.width / output_size_) * currentScaleFactor_ * scale_factors_[scale_change_factor];
 	float resize_scores_height = (img_support_size_.height / output_size_) * currentScaleFactor_ * scale_factors_[scale_change_factor];
 	float dx = scores.get_disp_col() * resize_scores_width;
 	float dy = scores.get_disp_row() * resize_scores_height;
-	//debug("scale_change_factor:%d, get_disp_col: %f, get_disp_row: %f, dx: %f, dy: %f",
-	//	  scale_change_factor, scores.get_disp_col(), scores.get_disp_row(), dx, dy);
+	//debug("scale_change_factor:%d, get_disp_col: %f, get_disp_row: %f, dx: %f, dy: %f", scale_change_factor, scores.get_disp_col(), scores.get_disp_row(), dx, dy);
 
 	// 9: Update position and scale
 	pos_ = cv::Point2f(sample_pos) + cv::Point2f(dx, dy);
@@ -567,12 +562,11 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 		eco_trainer_.train_filter(sample_update_.get_samples(),
 								  sample_update_.get_prior_weights(),
 								  sample_energy_); // #6 x slower#
-		
+
 		float t2 = ((double)cv::getTickCount() - t1) / cv::getTickFrequency();
 		debug("update train time: %f", t2);
 #endif
 		frames_since_last_train_ = 0;
-
 	}
 	else
 	{
@@ -587,14 +581,6 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	updatetime = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
 	debug("update time: %f", updatetime);
 	//debug("FPS: %f", 1.0f / (localizationtime + updatetime));
-	//*****************************************************************************
-	//*****                    			Return
-	//******************************************************************************
-	roi.width = base_target_size_.width * currentScaleFactor_;
-	roi.height = base_target_size_.height * currentScaleFactor_;
-	roi.x = pos_.x - roi.width / 2;
-	roi.y = pos_.y - roi.height / 2;
-	//debug("roi:%f, %f, %f, %f", roi.x, roi.y, roi.width, roi.height);
 	//**************************************************************************
 	//*****                       Visualization
 	//**************************************************************************
@@ -677,16 +663,40 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 		cv::circle(resframe, sample_pos, 5, cv::Scalar(0, 255, 225));
 
 		cv::imshow("OpenTracker", resframe);
+
+		if (scores.get_max_score() < params_.max_score_threshhold)
+		{
+			cvWaitKey(0);
+		}
+
 		int c = cvWaitKey(1);
 		if (c != -1)
 			c = c % 256;
 		if (c == 27)
 		{
 			cvDestroyWindow("OpenTracker");
+			exit(1);
 		}
 		//cv::waitKey(0);
 	}
-	return true;
+	//**************************************************************************
+	//*****                    			Return
+	//**************************************************************************
+	roi.width = base_target_size_.width * currentScaleFactor_;
+	roi.height = base_target_size_.height * currentScaleFactor_;
+	roi.x = pos_.x - roi.width / 2;
+	roi.y = pos_.y - roi.height / 2;
+	//debug("roi:%f, %f, %f, %f", roi.x, roi.y, roi.width, roi.height);
+
+	printf("max_score: %f\n", scores.get_max_score());
+	if (scores.get_max_score() >= params_.max_score_threshhold)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 #ifdef USE_MULTI_THREAD
@@ -879,7 +889,7 @@ void ECO::yf_gaussian() // real part of (9) in paper C-COT
 	debug("sig_y:%lf", sig_y);
 
 	double tmp1 = M_PI * sig_y / output_size_;
-	double tmp2 = std::sqrt(2 * M_PI) * sig_y / output_size_; 
+	double tmp2 = std::sqrt(2 * M_PI) * sig_y / output_size_;
 	for (unsigned int i = 0; i < ky_.size(); i++) // for each filter
 	{
 		// 2 dimension version of (9)
@@ -898,12 +908,12 @@ void ECO::yf_gaussian() // real part of (9) in paper C-COT
 */
 		cv::Mat temp(ky_[i].rows, kx_[i].cols, CV_32FC1);
 		//imgInfo(temp);
-		for(int r = 0; r < temp.rows; r++)
+		for (int r = 0; r < temp.rows; r++)
 		{
 			float tempy = tmp1 * ky_[i].at<float>(r, 0);
 			tempy = tmp2 * std::exp(-2.0f * tempy * tempy);
-			for(int c = 0; c < temp.cols; c++)
-			{	
+			for (int c = 0; c < temp.cols; c++)
+			{
 				float tempx = tmp1 * kx_[i].at<float>(0, c);
 				tempx = tmp2 * std::exp(-2.0f * tempx * tempx);
 				temp.at<float>(r, c) = tempy * tempx;
@@ -932,11 +942,11 @@ void ECO::cos_window()
 		*/
 		cv::Mat temp(feature_size_[i].height, feature_size_[i].width, CV_32FC1);
 		//cv::Mat temp(feature_size_[i].height + 2, feature_size_[i].width + 2, CV_32FC1);
-		for(int r = 0; r < temp.rows; r++)
+		for (int r = 0; r < temp.rows; r++)
 		{
 			float tempy = 0.5f * (1 - std::cos(2 * M_PI * (float)(r + 1) / (feature_size_[i].width + 1)));
-			for(int c = 0; c < temp.cols; c++)
-			{	
+			for (int c = 0; c < temp.cols; c++)
+			{
 				temp.at<float>(r, c) = tempy * 0.5f * (1 - std::cos(2 * (float)(c + 1) * M_PI / (feature_size_[i].height + 1)));
 			}
 		}

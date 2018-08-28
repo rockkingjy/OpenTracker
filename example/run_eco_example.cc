@@ -71,7 +71,8 @@ int main(int argc, char **argv)
     // Initialize ECO tracker========================================
     ECO ecotracker;
     Rect2f ecobbox(x, y, w, h);
-    ecotracker.init(frame, ecobbox);
+    float threshhold = 0.1f;
+    ecotracker.init(frame, ecobbox, threshhold);
     //===============================================================    
 
     while (frame.data)

@@ -41,7 +41,7 @@ class ECO
 	ECO() {};
 	virtual ~ECO() {}
 
-	void init(cv::Mat &im, const cv::Rect2f &rect); 
+	void init(cv::Mat &im, const cv::Rect2f &rect, const float threshhold); 
 
 	bool update(const cv::Mat &frame, cv::Rect2f& roi);
 

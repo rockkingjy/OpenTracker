@@ -22,6 +22,7 @@ class OptimizeScores
 	inline int get_scale_ind() const { return scale_ind_; }
 	inline float get_disp_row() const { return disp_row_; }
 	inline float get_disp_col() const { return disp_col_; }
+	inline float get_max_score() const { return max_score_; }
 
   private:
 	std::vector<cv::Mat> scores_fs_;
@@ -30,6 +31,7 @@ class OptimizeScores
 	int scale_ind_;
 	float disp_row_;
 	float disp_col_;
+	float max_score_;
 };
 } // namespace eco
 #endif
