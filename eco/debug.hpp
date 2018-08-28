@@ -13,8 +13,8 @@
 
 #include <opencv2/opencv.hpp>
 
-#define getName(var) #var
-
+namespace eco
+{
 #define debug(a, args...) //printf("%s(%s:%d) " a "\n", __func__, __FILE__, __LINE__, ##args)
 #define ddebug(a, args...) //printf("%s(%s:%d) " a "\n", __func__, __FILE__, __LINE__, ##args)
 
@@ -616,5 +616,5 @@ inline void copyTo_clone_Difference()
 	std::cout << mat1 << std::endl; // it has a new address with new value
 	std::cout << mat2 << std::endl; // it has a old address with old value
 }
-
+}
 #endif

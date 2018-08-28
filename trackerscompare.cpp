@@ -127,7 +127,7 @@ int main(int argc, char **argv)
     eco::ECO ecotracker;
     Rect2f ecobbox(bboxGroundtruth.x, bboxGroundtruth.y, bboxGroundtruth.width, bboxGroundtruth.height);
     eco::EcoParameters parameters;
-    parameters.max_score_threshhold = 0.2;
+    //parameters.max_score_threshhold = 0.2;
     ecotracker.init(frame, ecobbox, parameters);
 
     while (frame.data)

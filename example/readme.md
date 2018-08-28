@@ -42,7 +42,7 @@ First, trackers should be created and initialized with grounding truth bonding b
     eco::ECO ecotracker;
     Rect2f ecobbox(bboxGroundtruth.x, bboxGroundtruth.y, bboxGroundtruth.width, bboxGroundtruth.height);
     eco::EcoParameters parameters;
-    parameters.max_score_threshhold = 0.2; // you can also change other parameters, check file: eco/parameters.hpp
+    parameters.max_score_threshhold = 0.15; // you can also change other parameters, check file: eco/parameters.hpp
     ecotracker.init(frame, ecobbox, parameters);
 ```
 here, `ecobbox` is the bondding box for the first frame.
