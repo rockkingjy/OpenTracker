@@ -101,6 +101,11 @@ Included                | Method(single thread)   | FPS(scale=1) | FPS(scale=7)
 :ballot_box_with_check: | NEON(Raspberrypi)       | ~24:cherries:| ~7.5
 :hammer:                | GPU                     | :hammer:     | :hammer:
 
+## Speed Analysis
+<p align="center">
+    <img src="images/speedanalysis.png", width="480">
+</p>
+
 # Quick start
 --------------------------------
 With quick start, you can have a quick first taste of this repository, without any panic. No need to install Caffe, CUDA etc. (**But of course you have to install OpenCV 3.0 first**).
