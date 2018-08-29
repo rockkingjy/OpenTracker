@@ -396,14 +396,11 @@ EcoTrain::ECO_EQ EcoTrain::lhs_operation_joint(const ECO_EQ &hf,
 //************************************************************************
 //      			Only filter training(for tracker update)
 //************************************************************************
-
 void EcoTrain::train_filter(const vector<ECO_FEATS> &samplesf,
 							const vector<float> &sample_weights,
 							const ECO_FEATS &sample_energy)
 {
-	double t1 = (double)cv::getTickCount();
-
-	//1:  Construct the right hand side vector
+	//1: Construct the right hand side vector
 	// sum up all the samples with the weights.
 	ECO_FEATS rhs_samplef = samplesf[0] * sample_weights[0];
 	for (size_t i = 1; i < samplesf.size(); i++)
@@ -412,10 +409,6 @@ void EcoTrain::train_filter(const vector<ECO_FEATS> &samplesf,
 					  rhs_samplef;
 	}
 	rhs_samplef = FeatureVectorMultiply(rhs_samplef, yf_, 1); //A^H * y
-
-	float t2 = ((double)cv::getTickCount() - t1) / cv::getTickFrequency();
-	debug("update train time1: %f", t2);
-	t1 = (double)cv::getTickCount();
 
 	//2: Construct preconditioner
 	ECO_FEATS diag_M;
@@ -442,10 +435,6 @@ void EcoTrain::train_filter(const vector<ECO_FEATS> &samplesf,
 		diag_M.push_back(temp_vec);
 	}
 
-	t2 = ((double)cv::getTickCount() - t1) / cv::getTickFrequency();
-	debug("update train time2: %f", t2);
-	t1 = (double)cv::getTickCount();
-
 	//3: do conjugate gradient, get the filter updated
 	hf_ = pcg_eco_filter(samplesf,
 						 reg_filter_,
@@ -453,9 +442,6 @@ void EcoTrain::train_filter(const vector<ECO_FEATS> &samplesf,
 						 rhs_samplef,
 						 diag_M,
 						 hf_);
-
-	t2 = ((double)cv::getTickCount() - t1) / cv::getTickFrequency();
-	debug("update train time3: %f", t2);
 }
 // This is a modified version of Matlab's pcg function
 ECO_FEATS EcoTrain::pcg_eco_filter(const vector<ECO_FEATS> &samplesf,
@@ -465,8 +451,6 @@ ECO_FEATS EcoTrain::pcg_eco_filter(const vector<ECO_FEATS> &samplesf,
 								   const ECO_FEATS &diag_M,
 								   const ECO_FEATS &hf)
 {
-	double t1 = (double)cv::getTickCount();
-
 	int maxit = params_.CG_iter; // max iteration of conjugate gradient
 	bool existM1 = true;		 // exist preconditoner
 	if (diag_M.empty())
@@ -498,10 +482,6 @@ ECO_FEATS EcoTrain::pcg_eco_filter(const vector<ECO_FEATS> &samplesf,
 										reg_filter,
 										sample_weights);
 	ECO_FEATS r = rhs_samplef - Ax;
-
-	float t2 = ((double)cv::getTickCount() - t1) / cv::getTickFrequency();
-	debug("update train time3_1: %f", t2);
-	t1 = (double)cv::getTickCount();
 
 	for (size_t ii = 0; ii < (size_t)maxit; ii++)
 	{
@@ -568,9 +548,6 @@ ECO_FEATS EcoTrain::pcg_eco_filter(const vector<ECO_FEATS> &samplesf,
 	state_.rho = rho;
 	state_.r_prev = r_prev;
 
-	t2 = ((double)cv::getTickCount() - t1) / cv::getTickFrequency();
-	debug("update train time3_2: %f", t2);
-
 	return x;
 }
 // This is the left-hand-side operation in Conjugate Gradient
@@ -579,8 +556,6 @@ ECO_FEATS EcoTrain::lhs_operation_filter(const ECO_FEATS &hf,
 										 const vector<cv::Mat> &reg_filter,
 										 const vector<float> &sample_weights)
 {
-	double t1 = (double)cv::getTickCount();
-
 	int num_features = hf.size();
 	vector<cv::Size> filter_sz;
 	for (size_t i = 0; i < (size_t)num_features; i++)
@@ -593,10 +568,6 @@ ECO_FEATS EcoTrain::lhs_operation_filter(const ECO_FEATS &hf,
 		max_element(filter_sz.begin(), filter_sz.end(), SizeCompare);
 	size_t k1 = pos - filter_sz.begin(); // index
 	cv::Size output_sz = cv::Size(2 * pos->width - 1, pos->height);
-
-	float t2 = ((double)cv::getTickCount() - t1) / cv::getTickFrequency();
-	debug("update train time3_1_1: %f", t2);
-	t1 = (double)cv::getTickCount();
 
 	//2: sum over all features for each sample: A * f  #SLOW#-------------------
 	//  update train time3_1_2: 0.004456
@@ -638,10 +609,6 @@ ECO_FEATS EcoTrain::lhs_operation_filter(const ECO_FEATS &hf,
 	// sh: 30 x 25 x 13
 //	debug("sh: %lu x %d x %d", sh.size(), sh[0].rows, sh[0].cols);
 
-	t2 = ((double)cv::getTickCount() - t1) / cv::getTickFrequency();
-	debug("update train time3_1_2: %f", t2);
-	t1 = (double)cv::getTickCount();
-
 	//3: multiply with the transpose : A^H * A * f  #SLOW#---------------------
 	// update train time3_1_3: 0.004738
 	ECO_FEATS hf_out;
@@ -672,9 +639,6 @@ ECO_FEATS EcoTrain::lhs_operation_filter(const ECO_FEATS &hf,
 			  hf_out[i][0].rows, hf_out[i][0].cols);
 	}
 */
-	t2 = ((double)cv::getTickCount() - t1) / cv::getTickFrequency();
-	debug("update train time3_1_3: %f", t2);
-	t1 = (double)cv::getTickCount();
 
 	//4: compute the operation corresponding to the regularization term--------
 	for (size_t i = 0; i < (size_t)num_features; i++) // for each feature
@@ -703,10 +667,6 @@ ECO_FEATS EcoTrain::lhs_operation_filter(const ECO_FEATS &hf,
 	// 1 x 10 x 25 x 13
 //	debug("hf_out: %lu x %lu x %d x %d", hf_out.size(), hf_out[0].size(),
 //		  hf_out[0][0].rows, hf_out[0][0].cols);
-
-	t2 = ((double)cv::getTickCount() - t1) / cv::getTickFrequency();
-	debug("update train time3_1_4: %f", t2);
-	t1 = (double)cv::getTickCount();
 	return hf_out;
 }
 

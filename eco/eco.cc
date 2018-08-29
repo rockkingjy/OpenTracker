@@ -404,9 +404,6 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	//**************************************************************************
 	//*****                     Localization
 	//**************************************************************************
-	double timereco = (double)cv::getTickCount();
-	float localizationtime = 0, updatetime = 0;
-
 	cv::Point sample_pos = cv::Point(pos_);
 	vector<float> samples_scales;
 	for (size_t i = 0; i < scale_factors_.size(); ++i)
@@ -417,35 +414,20 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	// 1: Extract features at multiple resolutions
 	ECO_FEATS xt = feature_extractor_.extractor(frame, sample_pos, samples_scales, params_);
 	//debug("xt size: %lu, %lu, %d x %d", xt.size(), xt[0].size(), xt[0][0].rows, xt[0][0].cols);
-	localizationtime = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
-	debug("localization time1: %f", localizationtime);
-	timereco = (double)cv::getTickCount();
 
 	// 2:  project sample
 	ECO_FEATS xt_proj = FeatureProjectionMultScale(xt, projection_matrix_);
 	//debug("xt_proj size: %lu, %lu, %d x %d", xt_proj.size(), xt_proj[0].size(), xt_proj[0][0].rows, xt_proj[0][0].cols);
-	localizationtime = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
-	debug("localization time2: %f", localizationtime);
-	timereco = (double)cv::getTickCount();
 
 	// 3: Do windowing of features
 	xt_proj = do_windows(xt_proj, cos_window_);
-	localizationtime = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
-	debug("localization time3: %f", localizationtime);
-	timereco = (double)cv::getTickCount();
 
 	// 4: Compute the fourier series
 	ECO_FEATS xtf_proj = do_dft(xt_proj);
-	localizationtime = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
-	debug("localization time4: %f", localizationtime);
-	timereco = (double)cv::getTickCount();
 
 	// 5: Interpolate features to the continuous domain
 	xtf_proj = interpolate_dft(xtf_proj, interp1_fs_, interp2_fs_);
 	//debug("xtf_proj size: %lu, %lu, %d x %d", xtf_proj.size(), xtf_proj[0].size(), xtf_proj[0][0].rows, xtf_proj[0][0].cols);
-	localizationtime = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
-	debug("localization time5: %f", localizationtime);
-	timereco = (double)cv::getTickCount();
 
 	// 6: Compute the scores in Fourier domain for different scales of target
 	vector<cv::Mat> scores_fs_sum;
@@ -464,9 +446,6 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 		}
 	}
 	//debug("scores_fs_sum: %lu, %d x %d", scores_fs_sum.size(), scores_fs_sum[0].rows, scores_fs_sum[0].cols);
-	localizationtime = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
-	debug("localization time6: %f", localizationtime);
-	timereco = (double)cv::getTickCount();
 
 	// 7: Calculate score by inverse DFT and
 	// 8: Optimize the continuous score function with Newton's method.
@@ -493,14 +472,9 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	{
 		currentScaleFactor_ = params_.max_scale_factor;
 	}
-
-	localizationtime = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
-	debug("localization time7: %f", localizationtime);
-
 	//**************************************************************************
 	//*****                     Model update
 	//**************************************************************************
-	timereco = (double)cv::getTickCount();
 	// 1: Get the sample calculated in localization
 	ECO_FEATS xlf_proj;
 	for (size_t i = 0; i < xtf_proj.size(); ++i)
@@ -561,13 +535,9 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 			exit(-1);
 		}
 #else
-		double t1 = (double)cv::getTickCount();
 		eco_trainer_.train_filter(sample_update_.get_samples(),
 								  sample_update_.get_prior_weights(),
 								  sample_energy_); // #6 x slower#
-
-		float t2 = ((double)cv::getTickCount() - t1) / cv::getTickFrequency();
-		debug("update train time: %f", t2);
 #endif
 		frames_since_last_train_ = 0;
 	}
@@ -580,10 +550,6 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 
 	// 6: Update filter f.
 	hf_full_ = full_fourier_coeff(eco_trainer_.get_hf());
-
-	updatetime = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
-	debug("update time: %f", updatetime);
-	//debug("FPS: %f", 1.0f / (localizationtime + updatetime));
 	//**************************************************************************
 	//*****                       Visualization
 	//**************************************************************************
@@ -705,13 +671,13 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 #ifdef USE_MULTI_THREAD
 void *ECO::thread_train(void *params)
 {
-	debug("thread running");
+	//debug("thread running");
 	ECO *eco = (ECO *)params;
 	eco->thread_flag_train_ = false;
 	eco->eco_trainer_.train_filter(eco->sample_update_.get_samples(),
 								   eco->sample_update_.get_prior_weights(),
 								   eco->sample_energy_);
-	debug("thread end");
+	//debug("thread end");
 	eco->thread_flag_train_ = true;
 	pthread_exit(NULL);
 }
