@@ -62,6 +62,8 @@ class FeatureExtractor
 #endif
 
   private:
+	EcoParameters params_;
+
 	HogFeatures hog_features_;
 	int hog_feat_ind_ = -1;
 	vector<cv::Mat> hog_feat_maps_;

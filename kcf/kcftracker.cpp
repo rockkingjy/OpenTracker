@@ -94,8 +94,8 @@ namespace kcf
 KCFTracker::KCFTracker(bool hog, bool fixed_window, bool multiscale, bool lab, bool dsst)
 {
     // Parameters equal in all cases
-    detect_thresh_kcf = 0; //0.2;
-    detect_thresh_dsst = 0;
+    detect_thresh_kcf = 0.13;
+    detect_thresh_dsst = 0.15;
     lambda = 0.0001;
     padding = 2.5;
     output_sigma_factor = 0.125; //0.1

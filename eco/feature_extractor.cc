@@ -6,6 +6,7 @@ ECO_FEATS FeatureExtractor::extractor(const cv::Mat image,
 									  const vector<float> scales,
 									  const EcoParameters &params)
 {
+	params_ = params;
 	int num_features = 0, num_scales = scales.size();
 #ifdef USE_CAFFE
 	cv::Mat new_deep_mean_mat;
@@ -186,8 +187,8 @@ vector<cv::Mat> FeatureExtractor::get_hog_features_simd(const vector<cv::Mat> im
 		h = ims[k].rows;
 		w = ims[k].cols;
 		d = ims[k].channels();
-		binSize = 6;
-		nOrients = 9;
+		binSize = params_.hog_features.fparams.cell_size;//6;
+		nOrients = params_.hog_features.fparams.nOrients; //9;
 		softBin = -1;
 		nDim = useHog == 0 ? nOrients : 
 						(useHog == 1 ? nOrients * 4 : nOrients * 3 + 5);

@@ -223,7 +223,7 @@ int main(int argc, char **argv)
         line(frameDraw, cv::Point(x4, y4), cv::Point(x1, y1), Scalar(0, 0, 0), 2, 1);
     }
 
-    //imshow("Tracking", frame);
+    //imshow("OpenTracker", frameDraw);
     //waitKey(0);
 
     double timereco = (double)getTickCount();
@@ -250,7 +250,7 @@ int main(int argc, char **argv)
                     0.75, Scalar(255, 0, 255), 2);
             //waitKey(0);
         }
-
+/*
         // Draw ground truth box
         if (databaseType == "Demo")
         {
@@ -275,12 +275,12 @@ int main(int argc, char **argv)
             line(frameDraw, cv::Point(x3, y3), cv::Point(x4, y4), Scalar(0, 0, 0), 2, 1);
             line(frameDraw, cv::Point(x4, y4), cv::Point(x1, y1), Scalar(0, 0, 0), 2, 1);
         }
-
+*/
         // Display FPS on frameDraw
         ostringstream os; 
         os << float(fpseco); 
         putText(frameDraw, "FPS: " + os.str(), Point(100, 30), FONT_HERSHEY_SIMPLEX,
-                0.75, Scalar(0, 225, 0), 2);
+                0.75, Scalar(255, 0, 255), 2);
 
         if (DEBUG == 0)
         {

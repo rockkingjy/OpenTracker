@@ -4,9 +4,11 @@ namespace eco
 {
 void SampleUpdate::init(const std::vector<cv::Size> &filter,
 						const std::vector<int> &feature_dim,
-						const size_t max_samples)
+						const size_t nSamples,
+			  			const float learning_rate)
 {
-	nSamples_ = max_samples;
+	nSamples_ = nSamples;
+	learning_rate_ = learning_rate;
 	// distance matrix initialization
 	distance_matrix_.create(cv::Size(nSamples_, nSamples_), CV_32FC2);
 	gram_matrix_.create(cv::Size(nSamples_, nSamples_), CV_32FC2);
@@ -59,9 +61,11 @@ void SampleUpdate::init(const std::vector<cv::Size> &filter,
 
 void SampleUpdate::reset(const std::vector<cv::Size> &filter,
 						 const std::vector<int> &feature_dim,
-						 const size_t max_samples)
+						 const size_t nSamples,
+			  			 const float learning_rate)
 {
-	nSamples_ = max_samples;
+	nSamples_ = nSamples;
+	learning_rate_ = learning_rate;
 	// Reset distance matrix to INF
 	for (size_t i = 0; i < (size_t)distance_matrix_.rows; i++)
 	{

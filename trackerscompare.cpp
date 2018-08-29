@@ -127,7 +127,7 @@ int main(int argc, char **argv)
     eco::ECO ecotracker;
     Rect2f ecobbox(bboxGroundtruth.x, bboxGroundtruth.y, bboxGroundtruth.width, bboxGroundtruth.height);
     eco::EcoParameters parameters;
-    //parameters.max_score_threshhold = 0.2;
+    //parameters.max_score_threshhold = 0.1;
     ecotracker.init(frame, ecobbox, parameters);
 
     while (frame.data)
@@ -172,7 +172,7 @@ int main(int argc, char **argv)
         }
         else
         {
-            putText(frameDraw, "DSST tracking failure detected", cv::Point(10, 100), FONT_HERSHEY_SIMPLEX,
+            putText(frameDraw, "DSST tracking failure detected", cv::Point(10, 110), FONT_HERSHEY_SIMPLEX,
                     0.75, Scalar(0, 0, 255), 2);
         }
 #ifdef USE_CAFFE
@@ -194,7 +194,7 @@ int main(int argc, char **argv)
         }
         else
         {
-            putText(frameDraw, "ECO tracking failure detected", cv::Point(10, 30), FONT_HERSHEY_SIMPLEX,
+            putText(frameDraw, "ECO tracking failure detected", cv::Point(10, 140), FONT_HERSHEY_SIMPLEX,
                     0.75, Scalar(255, 0, 255), 2);
         }
 
@@ -205,7 +205,7 @@ int main(int argc, char **argv)
         ostringstream os;
         os << float(fpseco);
         putText(frameDraw, "FPS: " + os.str(), Point(100, 30), FONT_HERSHEY_SIMPLEX,
-                0.75, Scalar(0, 225, 0), 2);
+                0.75, Scalar(255, 0, 255), 2);
 
         // Draw the label of trackers
         putText(frameDraw, "Opencv ", cv::Point(frameDraw.cols - 180, 50), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(255, 0, 0), 2);

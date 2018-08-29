@@ -210,7 +210,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters par
 	}
 
 	// 8. Initialize and update sample space.
-	sample_update_.init(filter_size_, compressed_dim_, params_.nSamples);
+	sample_update_.init(filter_size_, compressed_dim_, params_.nSamples, params_.learning_rate);
 	sample_update_.update_sample_space_model(xlf_porj);
 
 	// 9. Calculate sample energy and projection map energy.
@@ -338,7 +338,7 @@ void ECO::reset(cv::Mat &im, const cv::Rect2f &rect)
 	}
 	// 8. Initialize and update sample space.
 	// The distance matrix, kernel matrix and prior weight are also updated
-	sample_update_.reset(filter_size_, compressed_dim_, params_.nSamples);
+	sample_update_.reset(filter_size_, compressed_dim_, params_.nSamples, params_.learning_rate);
 	sample_update_.update_sample_space_model(xlf_porj);
 
 	// 9. Calculate sample energy and projection map energy.

@@ -4,7 +4,6 @@
 #include <numeric>
 #include <vector>
 
-//#include <opencv2/features2d/features2d.hpp>
 #include <opencv2/opencv.hpp>
 
 #include "parameters.hpp"
@@ -23,11 +22,13 @@ class SampleUpdate
 
 	void init(const std::vector<cv::Size> &filter,
 			  const std::vector<int> &feature_dim,
-			  const size_t max_samples);
+			  const size_t nSamples,
+			  const float learning_rate);
 	
 	void reset(const std::vector<cv::Size> &filter,
 			  const std::vector<int> &feature_dim,
-			  const size_t max_samples);
+			  const size_t nSamples,
+			  const float learning_rate);
 
 	void update_sample_space_model(const ECO_FEATS &new_train_sample); 
 
@@ -103,7 +104,7 @@ class SampleUpdate
 
 	size_t nSamples_ = 50;
 
-	const float learning_rate_ = 0.009;
+	float learning_rate_ = 0.009;
 
 	const float minmum_sample_weight_ = 0.0036;
 
