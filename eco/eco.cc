@@ -657,7 +657,7 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	roi.y = pos_.y - roi.height / 2;
 	//debug("roi:%f, %f, %f, %f", roi.x, roi.y, roi.width, roi.height);
 
-	printf("max_score: %f\n", scores.get_max_score());
+	//printf("max_score: %f\n", scores.get_max_score());
 	if (scores.get_max_score() >= params_.max_score_threshhold)
 	{
 		return true;

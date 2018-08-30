@@ -8,7 +8,7 @@ USE_FFTW=0
 #USE_OPENMP=1
 #USE_EIGEN=1
 USE_GTEST=1
-USE_VOT_TRAX=0
+USE_VOT_TRAX=1
 
 CAFFE_PATH=/media/elab/sdd/mycodes/caffe
 CC=gcc
@@ -23,7 +23,7 @@ LDFLAGS= `pkg-config --libs opencv` -lstdc++ -lm
 # -O3 double the speed!!!!!!!!!
 CXXFLAGS = -g -Wall `pkg-config --cflags opencv` -lstdc++ -lm -std=c++0x -O3 -fPIC 
 HEADERS = $(wildcard *.h) $(wildcard *.hpp)
-TARGET_LIB = libopentracker.so
+TARGET_LIB = libecotracker.so
 OBJS = ffttools.o fhog.o interpolator.o optimize_scores.o \
 		regularization_filter.o feature_extractor.o feature_operator.o  \
 		training.o sample_update.o eco.o metrics.o 
@@ -161,11 +161,12 @@ clean:
 .PHONY: install
 install: $(TARGET_LIB)
 	mkdir -p /usr/local/include/opentracker
+	mkdir -p /usr/local/include/opentracker/eco
 	cp $(TARGET_LIB) /usr/local/lib
-	cp *.hpp /usr/local/include/opentracker
-	cp *.h /usr/local/include/opentracker
+	cp *.hpp /usr/local/include/opentracker/eco
+	cp *.h /usr/local/include/opentracker/eco
 
 .PHONY: uninstall
 uninstall: $(TARGET_LIB)
-	rm -f -r /usr/local/include/opentracker
+	rm -f -r /usr/local/include/opentracker/eco
 	rm -f /usr/local/lib/$(TARGET_LIB)

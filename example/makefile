@@ -9,9 +9,9 @@ CXXFLAGS+= -DUSE_MULTI_THREAD
 LDFLAGS+= -pthread
 endif
 
-all: run_eco_example.bin
+all: run_opentracker_example.bin
 
-run_eco_example.bin: run_eco_example.o
+run_opentracker_example.bin: run_opentracker_example.o
 	$(CC) -o $@ $^ $(LDFLAGS) 
 
 %.o: %.c

@@ -345,7 +345,7 @@ make -j`nproc`
 ## Run all trackers
 **ATTENTION!** Make sure that the parameter settings in `makefile` and `eco/makefile` are the same, else it will be errors!
 
-# How to use the API of the ECO tracker?
+# How to use the API of the OpenTracker?
 To use the API of the trackers is really simple, just two steps. Check `example/readme.md`.
 
 # References 

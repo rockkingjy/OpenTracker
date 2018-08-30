@@ -24,8 +24,7 @@ OBJS=kcf/fhog.o \
 	eco/training.o \
 	eco/sample_update.o \
 	eco/eco.o \
-	inputs/readdatasets.o inputs/readvideo.o \
-	trackerscompare.o 
+	inputs/readdatasets.o inputs/readvideo.o
 TARGET_LIB = libopentracker.so
 
 
@@ -76,14 +75,14 @@ LDFLAGS+=-lpthread -lopenpose -lgflags
 OBJS+=inputs/openpose.o
 endif
 
-ALL+= makekcf makeeco trackerscompare.bin
+ALL+= makekcf makeeco trackerscompare.bin  $(TARGET_LIB)
 ifeq ($(USE_CAFFE), 1) 
 	ALL+= makegoturn 
 endif
 
 all: $(ALL)
 
-trackerscompare.bin: $(OBJS)
+trackerscompare.bin: $(OBJS) trackerscompare.o 
 	$(CC) -o $@ $^ $(LDFLAGS) 
 
 %.o: %.c $(HEADERS)
@@ -92,6 +91,8 @@ trackerscompare.bin: $(OBJS)
 %.o: %.cpp $(HEADERS)
 	$(CXX) -c -o $@ $< $(CXXFLAGS)
 
+$(TARGET_LIB): $(OBJS)
+	$(CC) ${LDFLAGS} -shared -o $@ $^
 
 makekcf:
 	cd kcf && make -j`nproc`
@@ -117,13 +118,18 @@ clean:
 	rm -rf */*/*.o */*.o *.o */*.bin *.bin *.so */*.so
 
 .PHONY: install
-install: eco/$(TARGET_LIB)
+install: $(TARGET_LIB)
 	mkdir -p /usr/local/include/opentracker
-	cp eco/$(TARGET_LIB) /usr/local/lib
-	cp eco/*.hpp /usr/local/include/opentracker
-	cp eco/*.h /usr/local/include/opentracker
+	mkdir -p /usr/local/include/opentracker/eco
+	mkdir -p /usr/local/include/opentracker/kcf
+	cp $(TARGET_LIB) /usr/local/lib
+	mkdir -p /usr/local/include/opentracker/eco
+	mkdir -p /usr/local/include/opentracker/kcf
+	cp eco/*.hpp /usr/local/include/opentracker/eco
+	cp eco/*.h /usr/local/include/opentracker/eco
+	cp kcf/*.hpp /usr/local/include/opentracker/kcf
 
 .PHONY: uninstall
-uninstall: eco/$(TARGET_LIB)
+uninstall: $(TARGET_LIB)
 	rm -f -r /usr/local/include/opentracker
 	rm -f /usr/local/lib/$(TARGET_LIB)

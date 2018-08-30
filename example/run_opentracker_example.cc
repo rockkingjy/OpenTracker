@@ -3,8 +3,9 @@
 #include <string>
 #include <opencv2/opencv.hpp>
 
-#include "opentracker/eco.hpp"
-#include "opentracker/parameters.hpp"
+#include "opentracker/eco/eco.hpp"
+#include "opentracker/eco/parameters.hpp"
+#include "opentracker/kcf/kcftracker.hpp"
 
 using namespace std;
 using namespace cv;
@@ -75,16 +76,24 @@ int main(int argc, char **argv)
     eco::EcoParameters parameters;
     parameters.max_score_threshhold = 0.15;
     ecotracker.init(frame, ecobbox, parameters);
-    //===============================================================    
+    // Initialize KCF tracker========================================  
+    bool HOG = true, FIXEDWINDOW = true, MULTISCALE = true, LAB = true, DSST = false; //LAB color space features
+    kcf::KCFTracker kcftracker(HOG, FIXEDWINDOW, MULTISCALE, LAB, DSST);
+    Rect2d kcfbbox((int)bboxGroundtruth.x, (int)bboxGroundtruth.y, (int)bboxGroundtruth.width, (int)bboxGroundtruth.height);
+    kcftracker.init(frame, kcfbbox);
+    // Initialize DSST tracker========================================  
+    DSST = true;
+    kcf::KCFTracker dssttracker(HOG, FIXEDWINDOW, MULTISCALE, LAB, DSST);
+    Rect2d dsstbbox((int)bboxGroundtruth.x, (int)bboxGroundtruth.y, (int)bboxGroundtruth.width, (int)bboxGroundtruth.height);
+    dssttracker.init(frame, dsstbbox);
+    //===============================================================   
 
     while (frame.data)
     {
         frame.copyTo(frameDraw); 
         
-        // Update eco tracker=======================================
+        // Update ECO tracker=======================================
         bool okeco = ecotracker.update(frame, ecobbox);
-        //==========================================================
-
         if (okeco)
         {
             rectangle(frameDraw, ecobbox, Scalar(255, 0, 255), 2, 1); //blue
@@ -93,6 +102,30 @@ int main(int argc, char **argv)
         {
             putText(frameDraw, "ECO tracking failure detected", cv::Point(100, 80), FONT_HERSHEY_SIMPLEX,
                     0.75, Scalar(255, 0, 255), 2);
+        }
+        
+        // Update KCF tracker=======================================
+        bool okkcf = kcftracker.update(frame, kcfbbox);
+        if (okkcf)
+        {
+            rectangle(frameDraw, kcfbbox, Scalar(0, 255, 0), 2, 1);
+        }
+        else
+        {
+            putText(frameDraw, "Kcf tracking failure detected", cv::Point(10, 80), FONT_HERSHEY_SIMPLEX,
+                    0.75, Scalar(0, 255, 0), 2);
+        }
+        
+        // Update DSST tracker=======================================
+        bool okdsst = dssttracker.update(frame, dsstbbox);
+        if (okdsst)
+        {
+            rectangle(frameDraw, dsstbbox, Scalar(0, 0, 255), 2, 1);
+        }
+        else
+        {
+            putText(frameDraw, "DSST tracking failure detected", cv::Point(10, 100), FONT_HERSHEY_SIMPLEX,
+                    0.75, Scalar(0, 0, 255), 2);
         }
 
         // Draw ground truth box

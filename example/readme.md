@@ -1,9 +1,9 @@
-# How to use the API of the ECO tracker?
+# How to use the API of OpenTracker?
 To use the API of the trackers is really simple, just two steps.
 
-1. Install ECO tracker:
+1. Install OpenTracker:
 
-In folder `OpenTracker/eco/`:
+In folder `OpenTracker/`:
 ```
 make -j`nproc`
 sudo make install
@@ -65,3 +65,5 @@ it will update the bonding box to `ecobbox`, and that is the result.
     }
 #endif
 ```
+
+For other trackers, almost the same as ECO tracker, check file `OpneTracker/example/run_opentracker_example.cc` for details.
