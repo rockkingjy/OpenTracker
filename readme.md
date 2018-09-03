@@ -191,7 +191,7 @@ make
 ## Quick Run (almost) all the tracker:
 ```
 git clone https://github.com/rockkingjy/OpenTracker
-cd OpenTracker/kcf
+cd OpenTracker
 make 
 ./trackerscompare.bin
 ```

@@ -446,5 +446,7 @@ int main(int argc, char **argv)
          << " SuccessRate:" << SuccessRate
          << " IniFps:" << fpsecoini
          << " AvgFps:" << AvgFps << std::endl;
+
+    delete groundtruth;
     return 0;
 }
