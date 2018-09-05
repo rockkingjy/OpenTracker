@@ -169,6 +169,10 @@ int main(int argc, char **argv)
         {
             break;
         }
+        if(f%10==0)
+        {
+            ecotracker.init(frame, bboxGroundtruth, parameters);
+        }
     }
     
     // If use multi_thread for train the tracker, add this to 

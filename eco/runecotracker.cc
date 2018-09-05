@@ -423,9 +423,9 @@ int main(int argc, char **argv)
 /*
         if(f%10==0)
         {
-            ecotracker.reset(frame, bboxGroundtruth);
+            ecotracker.init(frame, bboxGroundtruth, parameters);
         }
-*/      
+*/
     }
 #ifdef USE_MULTI_THREAD
     void *status;

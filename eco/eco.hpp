@@ -44,8 +44,6 @@ class ECO
 	void init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters paramters); 
 
 	bool update(const cv::Mat &frame, cv::Rect2f& roi);
-
-	void reset(cv::Mat &im, const cv::Rect2f &rect); 
 	
 	void init_parameters(const eco::EcoParameters parameters);
 
@@ -110,6 +108,7 @@ class ECO
 	ECO_FEATS 			sample_energy_;
 	ECO_FEATS 			hf_full_;
 
+	bool				first_time_run_flag_ = true;
 #ifdef USE_MULTI_THREAD
 	bool 				thread_flag_train_;
   public:
