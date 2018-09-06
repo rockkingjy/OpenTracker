@@ -41,11 +41,11 @@ class ECO
 	ECO() {};
 	virtual ~ECO() {}
 
-	void init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters paramters); 
+	void init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters &paramters); 
 
-	bool update(const cv::Mat &frame, cv::Rect2f& roi);
+	bool update(const cv::Mat &frame, cv::Rect2f &roi);
 	
-	void init_parameters(const eco::EcoParameters parameters);
+	void init_parameters(const eco::EcoParameters &parameters);
 
 	void init_features(); 
 #ifdef USE_CAFFE

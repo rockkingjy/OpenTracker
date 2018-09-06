@@ -12,10 +12,11 @@
 #include <ctime>
 
 #include <opencv2/opencv.hpp>
+#include "parameters.hpp"
 
 namespace eco
 {
-#define debug(a, args...) //printf("%s(%s:%d) " a "\n", __func__, __FILE__, __LINE__, ##args)
+#define debug(a, args...) printf("%s(%s:%d) " a "\n", __func__, __FILE__, __LINE__, ##args)
 #define ddebug(a, args...) //printf("%s(%s:%d) " a "\n", __func__, __FILE__, __LINE__, ##args)
 
 using namespace std;
@@ -92,6 +93,26 @@ inline void imgInfo(cv::Mat mat)
 
 	debug("%s %d x %d", r.c_str(), mat.rows, mat.cols);
 	//return r;
+}
+
+void printECO_FEATS(ECO_FEATS a);
+inline void printECO_FEATS(ECO_FEATS a)
+{
+	imgInfo(a[0][0]);
+	for (size_t i = 0; i < a.size(); i++)
+	{
+		debug("%lu, %lu, %d x %d", i, a[i].size(), a[i][0].rows, a[i][0].cols);
+	}
+}
+
+void printVector_Mat(std::vector<cv::Mat> a);
+inline void printVector_Mat(std::vector<cv::Mat> a)
+{
+	imgInfo(a[0]);
+	for (size_t i = 0; i < a.size(); i++)
+	{
+		debug("%lu, %lu, %d x %d", i, a.size(), a[i].rows, a[i].cols);
+	}
 }
 
 void printMaxmin();

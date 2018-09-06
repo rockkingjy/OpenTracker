@@ -277,7 +277,7 @@ std::vector<cv::Mat> FeatureVectorization(const ECO_FEATS &x)
 }
 
 ECO_FEATS FeatureVectorMultiply(const ECO_FEATS &x,
-								const std::vector<cv::Mat> y,
+								const std::vector<cv::Mat> &y,
 								const bool _conj)
 {
 	if (x.size() != y.size())
@@ -304,7 +304,7 @@ ECO_FEATS FeatureDotMultiply(const ECO_FEATS &a, const ECO_FEATS &b)
 {
 	ECO_FEATS res;
 	if (a.size() != b.size())
-		assert(0 && "Unamtched feature size");
+		assert(0 && "Unmatched feature size!");
 
 	for (size_t i = 0; i < a.size(); i++)
 	{
@@ -317,12 +317,11 @@ ECO_FEATS FeatureDotMultiply(const ECO_FEATS &a, const ECO_FEATS &b)
 	}
 	return res;
 }
-ECO_FEATS FeatureDotDivide(const ECO_FEATS a, const ECO_FEATS b)
+ECO_FEATS FeatureDotDivide(const ECO_FEATS &a, const ECO_FEATS &b)
 {
 	ECO_FEATS res;
-
 	if (a.size() != b.size())
-		assert(0 && "Unamtched feature size");
+		assert(0 && "Unmatched feature size!");
 
 	for (size_t i = 0; i < a.size(); i++)
 	{

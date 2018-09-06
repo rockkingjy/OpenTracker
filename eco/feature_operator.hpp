@@ -38,7 +38,7 @@ extern std::vector<T> operator-(const std::vector<T> &a,
 }
 
 template <typename T>
-extern std::vector<T> operator*(const std::vector<T> &a, float scale)
+extern std::vector<T> operator*(const std::vector<T> &a, const float scale)
 {
 	std::vector<T> result;
 	for (unsigned int i = 0; i < a.size(); ++i)
@@ -69,11 +69,11 @@ extern std::vector<cv::Mat> FeatureComputeScores(const ECO_FEATS &x,
 extern std::vector<cv::Mat> FeatureVectorization(const ECO_FEATS &x);
 
 extern ECO_FEATS FeatureVectorMultiply(const ECO_FEATS &x,
-									   const std::vector<cv::Mat> y,
+									   const std::vector<cv::Mat> &y,
 									   const bool _conj = 0); // feature * yf
 
 extern ECO_FEATS FeatureDotMultiply(const ECO_FEATS &a, const ECO_FEATS &b);
-extern ECO_FEATS FeatureDotDivide(const ECO_FEATS data1, const ECO_FEATS data2);
+extern ECO_FEATS FeatureDotDivide(const ECO_FEATS &a, const ECO_FEATS &b);
 } // namespace eco
 
 #endif

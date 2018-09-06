@@ -13,6 +13,7 @@
 #include "recttools.hpp"
 #include "parameters.hpp"
 #include "feature_operator.hpp"
+#include "debug.hpp"
 
 namespace eco
 {
@@ -41,15 +42,15 @@ class EcoTrain
 		ECO_EQ operator*(const float scale);
 	};
 
-	void train_init(const ECO_FEATS hf,
-					const ECO_FEATS hf_inc,
-					const vector<cv::Mat> proj_matrix,
-					const ECO_FEATS xlf,
-					const vector<cv::Mat> yf,
-					const vector<cv::Mat> reg_filter,
-					const ECO_FEATS sample_energy,
-					const vector<float> reg_energy,
-					const vector<cv::Mat> proj_energy,
+	void train_init(const ECO_FEATS &hf,
+					const ECO_FEATS &hf_inc,
+					const vector<cv::Mat> &proj_matrix,
+					const ECO_FEATS &xlf,
+					const vector<cv::Mat> &yf,
+					const vector<cv::Mat> &reg_filter,
+					const ECO_FEATS &sample_energy,
+					const vector<float> &reg_energy,
+					const vector<cv::Mat> &proj_energy,
 					const EcoParameters &params);
 
 	// Filter training and Projection updating(for the 1st Frame)==============

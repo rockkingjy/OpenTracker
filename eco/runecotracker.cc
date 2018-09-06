@@ -432,7 +432,7 @@ int main(int argc, char **argv)
     int rc = pthread_join(ecotracker.thread_train_, &status);
     if (rc)
     {
-         cout << "Error:unable to join," << rc << std::endl;
+         cout << "Error:unable to join!" << rc << std::endl;
          exit(-1);
     }
 #endif

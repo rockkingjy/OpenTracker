@@ -2,7 +2,7 @@
 
 namespace eco
 {
-void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters paramters)
+void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters &paramters)
 {
 	debug("=========================Init================================");
 	double timereco = (double)cv::getTickCount();
@@ -39,7 +39,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters par
 		currentScaleFactor_ = 1.0;
 	debug("currentscale:%f", currentScaleFactor_);
 
-	if(first_time_run_flag_ == true)
+	if (first_time_run_flag_ == true)
 	{
 		// target size at the initial scale
 		base_target_size_ = cv::Size2f(rect.size().width / currentScaleFactor_, rect.size().height / currentScaleFactor_);
@@ -147,14 +147,15 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters par
 						 std::ceil(
 							 std::log(
 								 std::fmax(5 / (float)img_support_size_.width,
-										   5 / (float)img_support_size_.height)) / std::log(params_.scale_step)));
+										   5 / (float)img_support_size_.height)) /
+							 std::log(params_.scale_step)));
 			params_.max_scale_factor = //10;
 				std::pow(params_.scale_step,
 						 std::floor(
 							 std::log(
 								 std::fmin(im.cols / (float)base_target_size_.width,
-								 im.rows / (float)base_target_size_.height)) /
-									 std::log(params_.scale_step)));
+										   im.rows / (float)base_target_size_.height)) /
+							 std::log(params_.scale_step)));
 		}
 		debug("scale: min:%d, max:%d", scalemin, scalemax);
 		debug("scalefactor min: %f max: %f", params_.min_scale_factor, params_.max_scale_factor);
@@ -167,15 +168,11 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters par
 		*/
 	}
 	debug("-------------------------------------------------------------");
-	ECO_FEATS xl, xlw, xlf, xlf_porj;
+	ECO_FEATS xl, xlf, xlf_porj;
 
 	// 2. Extract features from the first frame.
-	xl = feature_extractor_.extractor(im,
-									  pos_,
-									  vector<float>(1, currentScaleFactor_),
-									  params_);
-	debug("xl size: %lu, %lu, %d x %d", xl.size(), xl[0].size(),
-		  xl[0][0].rows, xl[0][0].cols);
+	xl = feature_extractor_.extractor(im, pos_, vector<float>(1, currentScaleFactor_), params_);
+	debug("xl size: %lu, %lu, %d x %d", xl.size(), xl[0].size(), xl[0][0].rows, xl[0][0].cols);
 
 	// 3. Multiply the features by the cosine window.
 	xl = do_windows(xl, cos_window_);
@@ -189,24 +186,21 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters par
 	xlf = compact_fourier_coeff(xlf); // take half of the cols
 	for (size_t i = 0; i < xlf.size(); i++)
 	{
-		debug("xlf feature %lu 's size: %lu, %d x %d", i, xlf[i].size(),
-			  xlf[i][0].rows, xlf[i][0].cols);
+		debug("xlf feature %lu 's size: %lu, %d x %d", i, xlf[i].size(), xlf[i][0].rows, xlf[i][0].cols);
 	}
 
 	// 6. Initialize projection matrix P.
 	projection_matrix_ = init_projection_matrix(xl, compressed_dim_, feature_dim_); // 32FC2 31x10
 	for (size_t i = 0; i < projection_matrix_.size(); i++)
 	{
-		debug("projection_matrix %lu 's size: %d x %d", i,
-			  projection_matrix_[i].rows, projection_matrix_[i].cols);
+		debug("projection_matrix %lu 's size: %d x %d", i, projection_matrix_[i].rows, projection_matrix_[i].cols);
 	}
 
 	// 7. Do the feature reduction for each feature.
 	xlf_porj = FeatureProjection(xlf, projection_matrix_);
 	for (size_t i = 0; i < xlf.size(); i++)
 	{
-		debug("xlf_porj feature %lu 's size: %lu, %d x %d", i,
-			  xlf_porj[i].size(), xlf_porj[i][0].rows, xlf_porj[i][0].cols);
+		debug("xlf_porj feature %lu 's size: %lu, %d x %d", i, xlf_porj[i].size(), xlf_porj[i][0].rows, xlf_porj[i][0].cols);
 	}
 
 	// 8. Initialize and update sample space.
@@ -216,17 +210,26 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters par
 	// 9. Calculate sample energy and projection map energy.
 	sample_energy_ = FeautreComputePower2(xlf_porj);
 	vector<cv::Mat> proj_energy = project_mat_energy(projection_matrix_, yf_);
+	for (size_t i = 0; i < sample_energy_.size(); i++)
+	{
+		debug("sample_energy_: %lu, %lu, %d x %d", i, sample_energy_[i].size(), sample_energy_[i][0].rows, sample_energy_[i][0].cols);
+	}
+	for (size_t i = 0; i < proj_energy.size(); i++)
+	{
+		debug("proj_energy: %lu, %lu, %d x %d", i, proj_energy.size(), proj_energy[i].rows, proj_energy[i].cols);
+	}
 
 	// 10. Initialize filter and it's derivative.
 	ECO_FEATS hf, hf_inc;
-	for (size_t i = 0; i < xlf.size(); i++) // for each feature
+	for (size_t i = 0; i < xlf_porj.size(); i++) // for each feature
 	{
-		hf.push_back(vector<cv::Mat>(xlf_porj[i].size(),
-									 cv::Mat::zeros(xlf_porj[i][0].size(), CV_32FC2)));
-		hf_inc.push_back(vector<cv::Mat>(xlf_porj[i].size(),
-										 cv::Mat::zeros(xlf_porj[i][0].size(), CV_32FC2)));
+		hf.push_back(vector<cv::Mat>(xlf_porj[i].size(), cv::Mat::zeros(xlf_porj[i][0].size(), CV_32FC2)));
+		hf_inc.push_back(vector<cv::Mat>(xlf_porj[i].size(), cv::Mat::zeros(xlf_porj[i][0].size(), CV_32FC2)));
 	}
-
+	for (size_t i = 0; i < hf.size(); i++)
+	{
+		debug("hf: %lu, %lu, %d x %d", i, hf[i].size(), hf[i][0].rows, hf[i][0].cols);
+	}
 	// 11. Train the tracker(train the filter and update the projection matrix).
 	eco_trainer_.train_init(hf,
 							hf_inc,
@@ -239,7 +242,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters par
 							proj_energy,
 							params_);
 	eco_trainer_.train_joint();
-
+	//assert(0);
 	// 12. Update projection matrix P.
 	projection_matrix_ = eco_trainer_.get_proj();
 	for (size_t i = 0; i < projection_matrix_.size(); ++i)
@@ -250,9 +253,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters par
 	}
 	// 13. Re-project the sample and update the sample space.
 	xlf_porj = FeatureProjection(xlf, projection_matrix_);
-	debug("xlf_porj size: %lu, %lu, %d x %d",
-		  xlf_porj.size(), xlf_porj[0].size(),
-		  xlf_porj[0][0].rows, xlf_porj[0][0].cols);
+	debug("xlf_porj size: %lu, %lu, %d x %d", xlf_porj.size(), xlf_porj[0].size(), xlf_porj[0][0].rows, xlf_porj[0][0].cols);
 	sample_update_.replace_sample(xlf_porj, 0); // put xlf_proj to the smaples_f_[0].
 
 	// 14. Update distance matrix of sample space. Find the norm of the reprojected sample
@@ -261,6 +262,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters par
 
 	// 15. Update filter f.
 	hf_full_ = full_fourier_coeff(eco_trainer_.get_hf());
+
 	for (size_t i = 0; i < hf_full_.size(); i++)
 	{
 		debug("hf_full_: %lu, %lu, %d x %d", i, hf_full_[i].size(),
@@ -273,11 +275,12 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters par
 #endif
 	fpseco = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
 	debug("Initialize time: %f", fpseco);
-	if(first_time_run_flag_ == true)
+	if (first_time_run_flag_ == true)
 	{
 		first_time_run_flag_ = false;
 	}
 	//assert(0);
+
 	debug("==================End of Init===============================");
 }
 
@@ -565,7 +568,7 @@ void *ECO::thread_train(void *params)
 }
 #endif
 
-void ECO::init_parameters(const eco::EcoParameters parameters)
+void ECO::init_parameters(const eco::EcoParameters &parameters)
 {
 	params_.useDeepFeature = parameters.useDeepFeature;
 	params_.useHogFeature = parameters.useHogFeature;
@@ -813,7 +816,6 @@ void ECO::yf_gaussian() // real part of (9) in paper C-COT
 		yf_.push_back(cv::Mat(tempy * tempx)); // matrix multiplication
 */
 		cv::Mat temp(ky_[i].rows, kx_[i].cols, CV_32FC1);
-		//imgInfo(temp);
 		for (int r = 0; r < temp.rows; r++)
 		{
 			float tempy = tmp1 * ky_[i].at<float>(r, 0);
@@ -826,7 +828,8 @@ void ECO::yf_gaussian() // real part of (9) in paper C-COT
 			}
 		}
 		yf_.push_back(temp);
-		//imgInfo(yf_[i]);
+		debug("yf_:%d", i);
+		imgInfo(yf_[i]);
 		//showmat1channels(yf_[i], 2);
 	}
 }

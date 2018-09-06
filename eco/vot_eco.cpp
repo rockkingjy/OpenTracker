@@ -44,30 +44,29 @@
 #define VOT_RECTANGLE
 #include "vot.h"
 
-
-int main( int argc, char** argv) {
-
-    eco::ECO tracker;
+int main(int argc, char **argv)
+{
     VOT vot;
-
+    eco::ECO tracker;
     cv::Rect initialization;
     initialization << vot.region();
     cv::Mat image = cv::imread(vot.frame());
     eco::EcoParameters parameters;
     parameters.learning_rate = 0.01;
     parameters.projection_reg = 5e-7;
-    parameters.init_CG_iter = 10*20;
+    parameters.init_CG_iter = 10 * 20;
     parameters.CG_forgetting_rate = 60;
     parameters.reg_window_edge = 4e-3;
     parameters.reg_sparsity_threshold = 0.15;
-    
+
     tracker.init(image, initialization, parameters);
 
-    while (!vot.end()) {
-
+    while (!vot.end())
+    {
         string imagepath = vot.frame();
 
-        if (imagepath.empty()) break;
+        if (imagepath.empty())
+            break;
 
         cv::Mat image = cv::imread(imagepath);
 
@@ -76,8 +75,14 @@ int main( int argc, char** argv) {
         confidence = tracker.update(image, bbox);
         cv::Rect rect = cv::Rect(bbox);
         vot.report(rect, confidence);
-
     }
-
+#ifdef USE_MULTI_THREAD
+    void *status;
+    int rc = pthread_join(tracker.thread_train_, &status);
+    if (rc)
+    {
+        cout << "Error:unable to join!" << rc << std::endl;
+        exit(-1);
+    }
+#endif
 }
-
