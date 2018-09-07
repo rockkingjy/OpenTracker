@@ -8,7 +8,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters &pa
 	double timereco = (double)cv::getTickCount();
 	float fpseco = 0;
 	// 0. Clean all the parameters.
-	pos_.x = 0; 
+	pos_.x = 0;
 	pos_.y = 0;
 	frames_since_last_train_ = 0;
 	output_size_ = 0;
@@ -158,31 +158,18 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters &pa
 	}
 
 	// Set conjugate gradient uptions
-	CgOpts init_CG_opts;
-	CgOpts CG_opts;
-	init_CG_opts.CG_use_FR = true;
-	init_CG_opts.tol = 1e-6;
-	init_CG_opts.CG_standard_alpha = true;
-	init_CG_opts.debug = params_.debug;
-	CG_opts.CG_use_FR = params_.CG_use_FR;
-	CG_opts.tol = 1e-6;
-	CG_opts.CG_standard_alpha = params_.CG_standard_alpha;
-	CG_opts.debug = params_.debug;
-	if (params_.CG_forgetting_rate == INF || params_.learning_rate >= 1)
-	{
-		CG_opts.init_forget_factor = 0;
-	}
-	else
-	{
-		CG_opts.init_forget_factor = std::pow(1.0f - params_.learning_rate, params_.CG_forgetting_rate);
-	}
+	params_.CG_opts.CG_use_FR = true;
+	params_.CG_opts.tol = 1e-6;
+	params_.CG_opts.CG_standard_alpha = true;
+	params_.CG_opts.debug = params_.debug;
+	params_.CG_opts.init_forget_factor = 1;
 	if (params_.update_projection_matrix)
 	{
-		init_CG_opts.maxit = std::ceil(params_.init_CG_iter / params_.init_GN_iter);
+		params_.CG_opts.maxit = std::ceil(params_.init_CG_iter / params_.init_GN_iter);
 	}
 	else
 	{
-		CG_opts.maxit = params_.init_CG_iter;
+		params_.CG_opts.maxit = params_.init_CG_iter;
 	}
 
 	// scale factor, 5 scales, refer SAMF
@@ -449,6 +436,22 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 */
 	// 4: Train the tracker every Nsth frame, Ns in ECO paper
 	bool train_tracker = frames_since_last_train_ >= (size_t)params_.train_gap;
+
+	// Set conjugate gradient uptions
+	params_.CG_opts.CG_use_FR = params_.CG_use_FR;
+	params_.CG_opts.tol = 1e-6;
+	params_.CG_opts.CG_standard_alpha = params_.CG_standard_alpha;
+	params_.CG_opts.debug = params_.debug;
+	if (params_.CG_forgetting_rate == INF || params_.learning_rate >= 1)
+	{
+		params_.CG_opts.init_forget_factor = 0;
+	}
+	else
+	{
+		params_.CG_opts.init_forget_factor = std::pow(1.0f - params_.learning_rate, params_.CG_forgetting_rate);
+	}
+	params_.CG_opts.maxit = params_.CG_iter;
+
 	if (train_tracker)
 	{
 		//debug("%lu %lu", sample_energy_.size(), FeautreComputePower2(xlf_proj).size());

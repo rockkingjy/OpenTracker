@@ -90,6 +90,8 @@ struct EcoParameters
 #endif
 	HogFeatures hog_features;
 
+	CgOpts CG_opts;
+
 	// Features
 	bool useDeepFeature = false;
 	bool useHogFeature = true;

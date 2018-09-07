@@ -40,11 +40,11 @@ void EcoTrain::train_joint()
 	{
 		lf_ind.push_back(hf_[i][0].rows * (hf_[i][0].cols - 1));
 	}
-	// debug: 
+	// debug:
 	for (size_t i = 0; i < lf_ind.size(); i++)
 	{
 		debug("lf_ind:%lu, %lu, %d", i, lf_ind.size(), lf_ind[i]);
-	}	
+	}
 
 	// Construct stuff for the proj matrix part
 	ECO_FEATS init_samplesf = xlf_;
@@ -125,14 +125,14 @@ void EcoTrain::train_joint()
 			cv::Mat fyf_vec_T = fyf_vec[i].t();
 			cv::Mat l1 = complexMatrixMultiplication(init_samplesf_H[i],
 													 fyf_vec_T);
-			cv::Mat col = init_samplesf_H[i].colRange(lf_ind[i], 
+			cv::Mat col = init_samplesf_H[i].colRange(lf_ind[i],
 													  init_samplesf_H[i].cols);
 			cv::Mat row = fyf_vec_T.rowRange(lf_ind[i], fyf_vec_T.rows);
 			//31 x 25, 25 x 10
 			//debug("col, row:");imgInfo(col);imgInfo(row);
 			cv::Mat l2 = complexMatrixMultiplication(col, row);
 			cv::Mat temp = real2complex(2 * real(l1 - l2)) -
-				   		   params_.projection_reg * projection_matrix_[i];
+						   params_.projection_reg * projection_matrix_[i];
 			rhs_samplef2.push_back(temp);
 		}
 		ECO_EQ rhs_samplef(rhs_samplef1, rhs_samplef2);
@@ -166,7 +166,7 @@ void EcoTrain::train_joint()
 		// Make the filter symmetric(avoid roundoff errors)
 		FilterSymmetrize(outFP.up_part_);
 		hf_ = outFP.up_part_; // update the filter f
-		
+
 		// Add to the projection matrix
 		projection_matrix_ = projection_matrix_ + outFP.low_part_; // update P
 	}
@@ -181,15 +181,15 @@ EcoTrain::ECO_EQ EcoTrain::pcg_eco_joint(const ECO_FEATS &init_samplef_proj,
 										 const ECO_EQ &diag_M,
 										 const ECO_EQ &hf)
 {
-	int maxit = params_.init_CG_iter / params_.init_GN_iter;
-	bool existM1 = true; // exist preconditoner
+	int maxit = params_.CG_opts.maxit;
+	bool existM1 = true;
 	if (diag_M.low_part_.empty())
-		existM1 = false; // no preconditioner
-
+	{
+		existM1 = false;
+	}
 	ECO_EQ x = hf; // initialization of CG
 
-	// Load the CG state
-	ECO_EQ p, r_perv;
+	ECO_EQ p, r_prev;
 	float rho = 1, rho1, alpha, beta;
 
 	// calculate A(x)
@@ -199,32 +199,53 @@ EcoTrain::ECO_EQ EcoTrain::pcg_eco_joint(const ECO_FEATS &init_samplef_proj,
 									init_samplef,
 									init_samplesf_H,
 									init_hf);
-	ECO_EQ r = rhs_samplef; // rhs_samplef is const
+	ECO_EQ r = rhs_samplef; // rhs_samplef is const, needs to seperate to 2
 	r = r - Ax;
 
 	for (size_t ii = 0; ii < (size_t)maxit; ii++)
 	{
 		ECO_EQ y, z;
 		if (existM1) // exist preconditioner
+		{
 			y = jointDotDivision(r, diag_M);
+		}
 		else
+		{
 			y = r;
-
+		}
 		z = y;
 
 		rho1 = rho;
 		rho = inner_product_joint(r, z);
+		if ((rho == 0) || (std::abs(rho) >= INT_MAX) || std::isnan(rho))
+		{
+			break;
+		}
 
 		if (ii == 0 && p.low_part_.empty())
+		{
 			p = z;
+		}
 		else
 		{
-			beta = rho / rho1; // Use Fletcher-Reeves
+			if (params_.CG_opts.CG_use_FR) // Use Fletcher-Reeves
+			{
+				beta = rho / rho1;
+			}
+			else // Use Polak-Ribiere
+			{
+				float rho2 = inner_product_joint(r_prev, z);
+				beta = (rho - rho2) / rho1;
+			}
+			if ((beta == 0) || (std::abs(beta) >= INT_MAX) || std::isnan(beta))
+			{	
+				break;
+			}
 			beta = cv::max(0.0f, beta);
 			p = z + p * beta;
 		}
 		ECO_EQ q = lhs_operation_joint(p,
-									   init_samplef_proj, 
+									   init_samplef_proj,
 									   reg_filter,
 									   init_samplef,
 									   init_samplesf_H,
@@ -232,18 +253,33 @@ EcoTrain::ECO_EQ EcoTrain::pcg_eco_joint(const ECO_FEATS &init_samplef_proj,
 
 		float pq = inner_product_joint(p, q);
 
-		if (pq <= 0 || pq > INT_MAX)
+		if (pq <= 0 || (std::abs(pq) > INT_MAX) || std::isnan(pq))
 		{
 			assert(0 && "error: GC condition is not matched");
 		}
 		else
-			alpha = rho / pq; // standard alpha
-
-		if (alpha <= 0 || alpha > INT_MAX)
+		{
+			if (params_.CG_opts.CG_standard_alpha)
+			{
+				alpha = rho / pq; // standard alpha
+			}
+			else
+			{
+				alpha = inner_product_joint(p, r) / pq;
+			}
+		}
+		if ((std::abs(alpha) > INT_MAX) || std::isnan(alpha))
 		{
 			assert(0 && "GC condition alpha is not matched");
 		}
+		
+		// Save old r if not using FR formula for beta
+		if (!params_.CG_opts.CG_use_FR) // Use Polak-Ribiere
+		{
+			r_prev = r;
+		}
 
+		// form new iterate
 		x = x + p * alpha;
 
 		if (ii < (size_t)maxit)
@@ -467,29 +503,32 @@ ECO_FEATS EcoTrain::pcg_eco_filter(const vector<ECO_FEATS> &samplesf,
 								   const ECO_FEATS &diag_M,
 								   const ECO_FEATS &hf)
 {
-	int maxit = params_.CG_iter; // max iteration of conjugate gradient
-	bool existM1 = true;		 // exist preconditoner
+	int maxit = params_.CG_opts.maxit;
+	bool existM1 = true;
 	if (diag_M.empty())
-		existM1 = false; // no preconditioner
-
+	{
+		existM1 = false;
+	}
 	ECO_FEATS x = hf; // initialization of CG
 
 	// Load the CG state
 	ECO_FEATS p, r_prev;
 	float rho = 1, rho1, alpha, beta;
+/*
 	for (size_t i = 0; i < hf.size(); ++i)
 	{
 		r_prev.push_back(vector<cv::Mat>(hf[i].size(),
 										 cv::Mat::zeros(hf[i][0].size(), CV_32FC2)));
 	}
-
+*/
 	if (!state_.p.empty())
 	{
-		float init_forget_factor = std::pow(1.0f - params_.learning_rate,
-											params_.CG_forgetting_rate);
 		p = state_.p;
-		rho = state_.rho / init_forget_factor;
-		r_prev = state_.r_prev;
+		rho = state_.rho / params_.CG_opts.init_forget_factor;
+		if (!params_.CG_opts.CG_use_FR) // Use Polak-Ribiere
+		{
+			state_.r_prev = r_prev;
+		}
 	}
 
 	// calculate A(x)
@@ -503,31 +542,41 @@ ECO_FEATS EcoTrain::pcg_eco_filter(const vector<ECO_FEATS> &samplesf,
 	{
 		ECO_FEATS y, z;
 		if (existM1) // exist preconditioner
+		{
 			y = FeatureDotDivide(r, diag_M);
+		}
 		else
+		{
 			y = r;
-
+		}
 		z = y;
 
 		rho1 = rho;
 		rho = inner_product_filter(r, z);
-		if ((rho == 0) || (std::abs(rho) >= INT_MAX) ||
-			(rho == NAN) || std::isnan(rho))
+		if ((rho == 0) || (std::abs(rho) >= INT_MAX) || std::isnan(rho))
 		{
 			break;
 		}
 
 		if (ii == 0 && p.empty())
+		{
 			p = z;
+		}
 		else
 		{
-			float rho2 = inner_product_filter(r_prev, z);
-			beta = (rho - rho2) / rho1; // Use Polak-Ribiere
-
-			if ((beta == 0) || (std::abs(beta) >= INT_MAX) ||
-				(beta == NAN) || std::isnan(beta))
+			if (params_.CG_opts.CG_use_FR) // Use Fletcher-Reeves
+			{
+				beta = rho / rho1;
+			}
+			else // Use Polak-Ribiere
+			{
+				float rho2 = inner_product_filter(r_prev, z);
+				beta = (rho - rho2) / rho1;
+			}
+			if ((beta == 0) || (std::abs(beta) >= INT_MAX) || std::isnan(beta))
+			{	
 				break;
-
+			}
 			beta = cv::max(0.0f, beta);
 			p = z + p * beta;
 		}
@@ -539,20 +588,31 @@ ECO_FEATS EcoTrain::pcg_eco_filter(const vector<ECO_FEATS> &samplesf,
 
 		float pq = inner_product_filter(p, q);
 
-		if (pq <= 0 || (std::abs(pq) > INT_MAX) ||
-			(pq == NAN) || std::isnan(pq))
+		if (pq <= 0 || (std::abs(pq) > INT_MAX) || std::isnan(pq))
 		{
 			assert(0 && "error: GC condition is not matched");
 		}
 		else
-			alpha = rho / pq; // standard alpha
-
-		if ((std::abs(alpha) > INT_MAX) || (alpha == NAN) || std::isnan(alpha))
+		{
+			if (params_.CG_opts.CG_standard_alpha)
+			{
+				alpha = rho / pq; // standard alpha
+			}
+			else
+			{
+				alpha = inner_product_filter(p, r) / pq;
+			}
+		}
+		if ((std::abs(alpha) > INT_MAX) || std::isnan(alpha))
 		{
 			assert(0 && "GC condition alpha is not matched");
 		}
+
 		// Save old r if not using FR formula for beta
-		r_prev = r;
+		if (!params_.CG_opts.CG_use_FR) // Use Polak-Ribiere
+		{
+			r_prev = r;
+		}
 		// form new iterate
 		x = x + p * alpha;
 
@@ -562,8 +622,10 @@ ECO_FEATS EcoTrain::pcg_eco_filter(const vector<ECO_FEATS> &samplesf,
 
 	state_.p = p;
 	state_.rho = rho;
-	state_.r_prev = r_prev;
-
+	if (!params_.CG_opts.CG_use_FR) // Use Polak-Ribiere
+	{
+		state_.r_prev = r_prev;
+	}
 	return x;
 }
 // This is the left-hand-side operation in Conjugate Gradient
