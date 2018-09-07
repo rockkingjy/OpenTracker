@@ -10,8 +10,6 @@
 #include <vector>
 #include <string>
 
-#define DEBUG 0
-
 #define INF 0x7f800000 //0x7fffffff
 
 using std::string;
@@ -75,6 +73,16 @@ struct HogFeatures
 	cv::Size data_sz_block0;
 };
 
+struct CgOpts 
+{
+	bool debug;
+	bool CG_use_FR;
+	float tol;
+	bool CG_standard_alpha;
+	float init_forget_factor;
+	int maxit;
+};
+
 struct EcoParameters
 {
 #ifdef USE_CAFFE
@@ -126,7 +134,7 @@ struct EcoParameters
 	int init_CG_iter = 10 * 15; // The total number of Conjugate Gradient iterations used in the first frame
 	int init_GN_iter = 10; // The number of Gauss-Newton iterations used in the first frame(only if the projection matrix is updated)
 	bool CG_use_FR = false; // Use the Fletcher-Reeves(true) or Polak-Ribiere(false) formula in the Conjugate Gradient
-	bool pCG_standard_alpha = true;  // Use the standard formula for computing the step length in Conjugate Gradient
+	bool CG_standard_alpha = true;  // Use the standard formula for computing the step length in Conjugate Gradient
 	int CG_forgetting_rate = 50; // Forgetting rate of the last conjugate direction
 	float precond_data_param = 0.75; // Weight of the data term in the preconditioner
 	float precond_reg_param = 0.25; // Weight of the regularization term in the preconditioner
@@ -166,6 +174,8 @@ struct EcoParameters
 	string s_num_compressed_dim = "MAX";	 // Number of compressed feature dimensions in the scale filter
 	float lambda = 1e-2;					 // Scale filter regularization
 	float do_poly_interp = true;			 // Do 2nd order polynomial interpolation to obtain more accurate scale
+
+	bool debug = 0; // to show heatmap or not
 
 	// GPU
 	bool use_gpu = true; // whether Caffe use gpu or not

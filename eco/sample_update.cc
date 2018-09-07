@@ -5,17 +5,25 @@ namespace eco
 void SampleUpdate::init(const std::vector<cv::Size> &filter,
 						const std::vector<int> &feature_dim,
 						const size_t nSamples,
-			  			const float learning_rate,
-						const bool first_time_run_flag)
+						const float learning_rate)
 {
+	distance_matrix_.release();
+	gram_matrix_.release();
 	nSamples_ = nSamples;
 	learning_rate_ = learning_rate;
+	sample_weight_.clear();
+	samples_f_.clear();
+	num_training_samples_ = 0;
+	prior_weights_.clear();
+	new_sample_.clear();
+	merged_sample_.clear();
+	new_sample_id_ = -1;
+	merged_sample_id_ = -1;
+
 	// distance matrix initialization
-	if(first_time_run_flag == true)
-	{
-		distance_matrix_.create(cv::Size(nSamples_, nSamples_), CV_32FC2);
-		gram_matrix_.create(cv::Size(nSamples_, nSamples_), CV_32FC2);
-	}
+	distance_matrix_.create(cv::Size(nSamples_, nSamples_), CV_32FC2);
+	gram_matrix_.create(cv::Size(nSamples_, nSamples_), CV_32FC2);
+
 	// initialization to INF
 	for (size_t i = 0; i < (size_t)distance_matrix_.rows; i++)
 	{
@@ -26,10 +34,8 @@ void SampleUpdate::init(const std::vector<cv::Size> &filter,
 		}
 	}
 	// Samples memory initialization
-	if(first_time_run_flag == false)
-	{
-		samples_f_.clear();
-	}
+	samples_f_.clear();
+
 	for (size_t n = 0; n < nSamples_; n++)
 	{
 		ECO_FEATS temp;
@@ -46,11 +52,7 @@ void SampleUpdate::init(const std::vector<cv::Size> &filter,
 	}
 
 	// resize prior weights to the same as nSamples_
-	if(first_time_run_flag == false)
-	{
-		prior_weights_.clear();
-		num_training_samples_ = 0;
-	}
+
 	prior_weights_.resize(nSamples_);
 
 	// Show debug.

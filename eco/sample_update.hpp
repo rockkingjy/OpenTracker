@@ -23,8 +23,7 @@ class SampleUpdate
 	void init(const std::vector<cv::Size> &filter,
 			  const std::vector<int> &feature_dim,
 			  const size_t nSamples,
-			  const float learning_rate,
-			  const bool first_time_run_flag);
+			  const float learning_rate);
 
 	void update_sample_space_model(const ECO_FEATS &new_train_sample); 
 

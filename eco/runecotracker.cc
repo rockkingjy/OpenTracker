@@ -282,7 +282,7 @@ int main(int argc, char **argv)
         putText(frameDraw, "FPS: " + os.str(), Point(100, 30), FONT_HERSHEY_SIMPLEX,
                 0.75, Scalar(255, 0, 255), 2);
 
-        if (DEBUG == 0)
+        if (parameters.debug == 0)
         {
             imshow("OpenTracker", frameDraw);
         }

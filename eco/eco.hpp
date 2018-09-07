@@ -108,7 +108,6 @@ class ECO
 	ECO_FEATS 			sample_energy_;
 	ECO_FEATS 			hf_full_;
 
-	bool				first_time_run_flag_ = true;
 #ifdef USE_MULTI_THREAD
 	bool 				thread_flag_train_;
   public:

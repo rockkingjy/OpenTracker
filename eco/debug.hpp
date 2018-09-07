@@ -637,5 +637,18 @@ inline void copyTo_clone_Difference()
 	std::cout << mat1 << std::endl; // it has a new address with new value
 	std::cout << mat2 << std::endl; // it has a old address with old value
 }
+
+void matReferenceTest();
+inline void matReferenceTest()
+{
+	cv::Mat mat;
+	mat.release();
+	debug("%p, %d", mat.data, mat.data==NULL);
+	mat.create(cv::Size(10, 10), CV_32FC2);
+	debug("%p, %d", mat.data, mat.data==NULL);
+	mat.release();
+	debug("%p, %d", mat.data, mat.data==NULL);
+}
+
 }
 #endif

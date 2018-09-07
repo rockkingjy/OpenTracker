@@ -331,5 +331,8 @@ TEST(ffttoolsTest, complexDotMultiplication)
 #endif
 */
 }//TEST
-
+TEST(matReferenceTest, matReferenceTest)
+{
+  eco::matReferenceTest();
+}
 } //namespace

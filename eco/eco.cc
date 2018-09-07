@@ -7,6 +7,36 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters &pa
 	debug("=========================Init================================");
 	double timereco = (double)cv::getTickCount();
 	float fpseco = 0;
+	// 0. Clean all the parameters.
+	pos_.x = 0; 
+	pos_.y = 0;
+	frames_since_last_train_ = 0;
+	output_size_ = 0;
+	output_index_ = 0;
+	base_target_size_.height = 0;
+	base_target_size_.width = 0;
+	img_sample_size_.height = 0;
+	img_sample_size_.width = 0;
+	img_support_size_.height = 0;
+	img_support_size_.width = 0;
+	feature_size_.clear();
+	filter_size_.clear();
+	feature_dim_.clear();
+	compressed_dim_.clear();
+	currentScaleFactor_ = 0;
+	ky_.clear();
+	kx_.clear();
+	yf_.clear();
+	cos_window_.clear();
+	interp1_fs_.clear();
+	interp2_fs_.clear();
+	reg_filter_.clear();
+	projection_matrix_.clear();
+	reg_energy_.clear();
+	scale_factors_.clear();
+	sample_energy_.clear();
+	hf_full_.clear();
+
 	// 1. Initialize all the parameters.
 	/*
 #ifdef USE_CUDA
@@ -39,134 +69,159 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters &pa
 		currentScaleFactor_ = 1.0;
 	debug("currentscale:%f", currentScaleFactor_);
 
-	if (first_time_run_flag_ == true)
+	// target size at the initial scale
+	base_target_size_ = cv::Size2f(rect.size().width / currentScaleFactor_, rect.size().height / currentScaleFactor_);
+	debug("base_target_size_:%f x %f", base_target_size_.height, base_target_size_.width);
+	// window size, taking padding into account
+	float img_sample_size__tmp = sqrt(base_target_size_.area() * std::pow(params_.search_area_scale, 2));
+	//img_sample_size__tmp=((int)img_sample_size__tmp%4==0) ? (int)img_sample_size__tmp : (int)img_sample_size__tmp-((int)img_sample_size__tmp%4)+4;
+	img_sample_size_ = cv::Size2i(img_sample_size__tmp, img_sample_size__tmp);
+	debug("img_sample_size_: %d x %d", img_sample_size_.height, img_sample_size_.width);
+
+	init_features();
+
+	// Number of Fourier coefficients to save for each filter layer. This will be an odd number.
+	output_index_ = 0;
+	output_size_ = 0;
+	// The size of the label function DFT. Equal to the maximum filter size
+	for (size_t i = 0; i != feature_size_.size(); ++i)
 	{
-		// target size at the initial scale
-		base_target_size_ = cv::Size2f(rect.size().width / currentScaleFactor_, rect.size().height / currentScaleFactor_);
-		debug("base_target_size_:%f x %f", base_target_size_.height, base_target_size_.width);
-		// window size, taking padding into account
-		float img_sample_size__tmp = sqrt(base_target_size_.area() * std::pow(params_.search_area_scale, 2));
-		//img_sample_size__tmp=((int)img_sample_size__tmp%4==0) ? (int)img_sample_size__tmp : (int)img_sample_size__tmp-((int)img_sample_size__tmp%4)+4;
-		img_sample_size_ = cv::Size2i(img_sample_size__tmp, img_sample_size__tmp);
-		debug("img_sample_size_: %d x %d", img_sample_size_.height, img_sample_size_.width);
+		size_t size = feature_size_[i].width + (feature_size_[i].width + 1) % 2; //=63, to make it as an odd number;
+		filter_size_.push_back(cv::Size(size, size));
+		debug("filter_size_ %lu: %d x %d", i, filter_size_[i].height, filter_size_[i].width);
+		// get the largest feature and it's index;
+		output_index_ = size > output_size_ ? i : output_index_;
+		output_size_ = std::max(size, output_size_);
+	}
+	debug("output_index_:%lu, output_size_:%lu", output_index_, output_size_);
 
-		init_features();
+	// Compute the 2d Fourier series indices by kx and ky.
+	for (size_t i = 0; i < filter_size_.size(); ++i) // for each filter
+	{
+		cv::Mat_<float> tempy(filter_size_[i].height, 1, CV_32FC1);
+		cv::Mat_<float> tempx(1, filter_size_[i].height / 2 + 1, CV_32FC1);
 
-		// Number of Fourier coefficients to save for each filter layer. This will be an odd number.
-		output_index_ = 0;
-		output_size_ = 0;
-		// The size of the label function DFT. Equal to the maximum filter size
-		for (size_t i = 0; i != feature_size_.size(); ++i)
+		// ky in [-(N-1)/2, (N-1)/2], because N = filter_size_[i].height is odd (check above), N x 1;
+		for (int j = 0; j < tempy.rows; j++)
 		{
-			size_t size = feature_size_[i].width + (feature_size_[i].width + 1) % 2; //=63, to make it as an odd number;
-			filter_size_.push_back(cv::Size(size, size));
-			debug("filter_size_ %lu: %d x %d", i, filter_size_[i].height, filter_size_[i].width);
-			// get the largest feature and it's index;
-			output_index_ = size > output_size_ ? i : output_index_;
-			output_size_ = std::max(size, output_size_);
+			tempy.at<float>(j, 0) = j - (tempy.rows / 2); // y index
 		}
-		debug("output_index_:%lu, output_size_:%lu", output_index_, output_size_);
+		ky_.push_back(tempy);
+		// kx in [-N/2, 0], 1 x (N / 2 + 1)
+		for (int j = 0; j < tempx.cols; j++)
+		{
+			tempx.at<float>(0, j) = j - (filter_size_[i].height / 2);
+		}
+		kx_.push_back(tempx);
+		debug("For filter i: %lu, N: %d, ky:%d x %d, kx:%d x %d", i,
+			  filter_size_[i].height,
+			  ky_[i].size().height, ky_[i].size().width,
+			  kx_[i].size().height, kx_[i].size().width);
+	}
+	// Construct the Gaussian label function using Poisson formula
+	yf_gaussian();
+	// Construct cosine window
+	cos_window();
+	// Compute Fourier series of interpolation function, refer C-COT
+	for (size_t i = 0; i < filter_size_.size(); ++i) // for each feature
+	{
+		cv::Mat interp1_fs1, interp2_fs1;
+		Interpolator::get_interp_fourier(filter_size_[i],
+										 interp1_fs1,
+										 interp2_fs1,
+										 params_.interpolation_bicubic_a);
+		interp1_fs_.push_back(interp1_fs1);
+		interp2_fs_.push_back(interp2_fs1);
+		//imgInfo(interp1_fs1);
+		//imgInfo(interp2_fs1);
+		//showmat2channels(interp1_fs1, 2);
+		//showmat2channels(interp2_fs1, 2);
+	}
+	// Construct spatial regularization filter, refer SRDCF
+	for (size_t i = 0; i < filter_size_.size(); i++) // for each feature
+	{
+		cv::Mat temp_d = get_regularization_filter(img_support_size_,
+												   base_target_size_,
+												   params_);
+		cv::Mat temp_f;
+		temp_d.convertTo(temp_f, CV_32FC1);
+		reg_filter_.push_back(temp_f);
+		debug("reg_filter_ %lu:", i);
+		//imgInfo(temp_f);
+		//showmat1channels(temp_f, 2);
 
-		// Compute the 2d Fourier series indices by kx and ky.
-		for (size_t i = 0; i < filter_size_.size(); ++i) // for each filter
-		{
-			cv::Mat_<float> tempy(filter_size_[i].height, 1, CV_32FC1);
-			cv::Mat_<float> tempx(1, filter_size_[i].height / 2 + 1, CV_32FC1);
+		// Compute the energy of the filter (used for preconditioner)	drone_flip
+		cv::Mat_<double> t = temp_d.mul(temp_d); //element-wise multiply
+		float energy = mat_sum_d(t);			 //sum up all the values of each points of the mat
+		reg_energy_.push_back(energy);
+		debug("reg_energy_ %lu: %f", i, energy);
+	}
 
-			// ky in [-(N-1)/2, (N-1)/2], because N = filter_size_[i].height is odd (check above), N x 1;
-			for (int j = 0; j < tempy.rows; j++)
-			{
-				tempy.at<float>(j, 0) = j - (tempy.rows / 2); // y index
-			}
-			ky_.push_back(tempy);
-			// kx in [-N/2, 0], 1 x (N / 2 + 1)
-			for (int j = 0; j < tempx.cols; j++)
-			{
-				tempx.at<float>(0, j) = j - (filter_size_[i].height / 2);
-			}
-			kx_.push_back(tempx);
-			debug("For filter i: %lu, N: %d, ky:%d x %d, kx:%d x %d", i,
-				  filter_size_[i].height,
-				  ky_[i].size().height, ky_[i].size().width,
-				  kx_[i].size().height, kx_[i].size().width);
-		}
-		// Construct the Gaussian label function using Poisson formula
-		yf_gaussian();
-		// Construct cosine window
-		cos_window();
-		// Compute Fourier series of interpolation function, refer C-COT
-		for (size_t i = 0; i < filter_size_.size(); ++i) // for each feature
-		{
-			cv::Mat interp1_fs1, interp2_fs1;
-			Interpolator::get_interp_fourier(filter_size_[i],
-											 interp1_fs1,
-											 interp2_fs1,
-											 params_.interpolation_bicubic_a);
-			interp1_fs_.push_back(interp1_fs1);
-			interp2_fs_.push_back(interp2_fs1);
-			//imgInfo(interp1_fs1);
-			//imgInfo(interp2_fs1);
-			//showmat2channels(interp1_fs1, 2);
-			//showmat2channels(interp2_fs1, 2);
-		}
-		// Construct spatial regularization filter, refer SRDCF
-		for (size_t i = 0; i < filter_size_.size(); i++) // for each feature
-		{
-			cv::Mat temp_d = get_regularization_filter(img_support_size_,
-													   base_target_size_,
-													   params_);
-			cv::Mat temp_f;
-			temp_d.convertTo(temp_f, CV_32FC1);
-			reg_filter_.push_back(temp_f);
-			debug("reg_filter_ %lu:", i);
-			//imgInfo(temp_f);
-			//showmat1channels(temp_f, 2);
+	// Set conjugate gradient uptions
+	CgOpts init_CG_opts;
+	CgOpts CG_opts;
+	init_CG_opts.CG_use_FR = true;
+	init_CG_opts.tol = 1e-6;
+	init_CG_opts.CG_standard_alpha = true;
+	init_CG_opts.debug = params_.debug;
+	CG_opts.CG_use_FR = params_.CG_use_FR;
+	CG_opts.tol = 1e-6;
+	CG_opts.CG_standard_alpha = params_.CG_standard_alpha;
+	CG_opts.debug = params_.debug;
+	if (params_.CG_forgetting_rate == INF || params_.learning_rate >= 1)
+	{
+		CG_opts.init_forget_factor = 0;
+	}
+	else
+	{
+		CG_opts.init_forget_factor = std::pow(1.0f - params_.learning_rate, params_.CG_forgetting_rate);
+	}
+	if (params_.update_projection_matrix)
+	{
+		init_CG_opts.maxit = std::ceil(params_.init_CG_iter / params_.init_GN_iter);
+	}
+	else
+	{
+		CG_opts.maxit = params_.init_CG_iter;
+	}
 
-			// Compute the energy of the filter (used for preconditioner)	drone_flip
-			cv::Mat_<double> t = temp_d.mul(temp_d); //element-wise multiply
-			float energy = mat_sum_d(t);			 //sum up all the values of each points of the mat
-			reg_energy_.push_back(energy);
-			debug("reg_energy_ %lu: %f", i, energy);
-		}
-
-		// scale factor, 5 scales, refer SAMF
-		if (params_.number_of_scales % 2 == 0)
-		{
-			params_.number_of_scales++;
-		}
-		int scalemin = floor((1.0 - (float)params_.number_of_scales) / 2.0);
-		int scalemax = floor(((float)params_.number_of_scales - 1.0) / 2.0);
-		for (int i = scalemin; i <= scalemax; i++)
-		{
-			scale_factors_.push_back(std::pow(params_.scale_step, i));
-		}
-		if (params_.number_of_scales > 0)
-		{
-			params_.min_scale_factor = //0.01;
-				std::pow(params_.scale_step,
-						 std::ceil(
-							 std::log(
-								 std::fmax(5 / (float)img_support_size_.width,
-										   5 / (float)img_support_size_.height)) /
-							 std::log(params_.scale_step)));
-			params_.max_scale_factor = //10;
-				std::pow(params_.scale_step,
-						 std::floor(
-							 std::log(
-								 std::fmin(im.cols / (float)base_target_size_.width,
-										   im.rows / (float)base_target_size_.height)) /
-							 std::log(params_.scale_step)));
-		}
-		debug("scale: min:%d, max:%d", scalemin, scalemax);
-		debug("scalefactor min: %f max: %f", params_.min_scale_factor, params_.max_scale_factor);
-		debug("scale_factors_:");
-		/*
+	// scale factor, 5 scales, refer SAMF
+	if (params_.number_of_scales % 2 == 0)
+	{
+		params_.number_of_scales++;
+	}
+	int scalemin = floor((1.0 - (float)params_.number_of_scales) / 2.0);
+	int scalemax = floor(((float)params_.number_of_scales - 1.0) / 2.0);
+	for (int i = scalemin; i <= scalemax; i++)
+	{
+		scale_factors_.push_back(std::pow(params_.scale_step, i));
+	}
+	if (params_.number_of_scales > 0)
+	{
+		params_.min_scale_factor = //0.01;
+			std::pow(params_.scale_step,
+					 std::ceil(
+						 std::log(
+							 std::fmax(5 / (float)img_support_size_.width,
+									   5 / (float)img_support_size_.height)) /
+						 std::log(params_.scale_step)));
+		params_.max_scale_factor = //10;
+			std::pow(params_.scale_step,
+					 std::floor(
+						 std::log(
+							 std::fmin(im.cols / (float)base_target_size_.width,
+									   im.rows / (float)base_target_size_.height)) /
+						 std::log(params_.scale_step)));
+	}
+	debug("scale: min:%d, max:%d", scalemin, scalemax);
+	debug("scalefactor min: %f max: %f", params_.min_scale_factor, params_.max_scale_factor);
+	debug("scale_factors_:");
+	/*
 		for (size_t i = 0; i < params_.number_of_scales; i++)
 		{
 			printf("%lu:%f; ", i, scale_factors_[i]);
 		}
 		*/
-	}
 	debug("-------------------------------------------------------------");
 	ECO_FEATS xl, xlf, xlf_porj;
 
@@ -204,7 +259,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters &pa
 	}
 
 	// 8. Initialize and update sample space.
-	sample_update_.init(filter_size_, compressed_dim_, params_.nSamples, params_.learning_rate, first_time_run_flag_);
+	sample_update_.init(filter_size_, compressed_dim_, params_.nSamples, params_.learning_rate);
 	sample_update_.update_sample_space_model(xlf_porj);
 
 	// 9. Calculate sample energy and projection map energy.
@@ -268,19 +323,11 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters &pa
 		debug("hf_full_: %lu, %lu, %d x %d", i, hf_full_[i].size(),
 			  hf_full_[i][0].rows, hf_full_[i][0].cols);
 	}
-	frames_since_last_train_ = 0;
-
 #ifdef USE_MULTI_THREAD
 	thread_flag_train_ = true;
 #endif
 	fpseco = ((double)cv::getTickCount() - timereco) / cv::getTickFrequency();
 	debug("Initialize time: %f", fpseco);
-	if (first_time_run_flag_ == true)
-	{
-		first_time_run_flag_ = false;
-	}
-	//assert(0);
-
 	debug("==================End of Init===============================");
 }
 
@@ -438,7 +485,7 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	//**************************************************************************
 	//*****                       Visualization
 	//**************************************************************************
-	if (DEBUG == 1)
+	if (params_.debug == 1)
 	{
 		cv::Mat resframe = frame.clone();
 		cv::rectangle(resframe, roi, cv::Scalar(0, 255, 0));
@@ -602,7 +649,7 @@ void ECO::init_parameters(const eco::EcoParameters &parameters)
 	params_.init_CG_iter = parameters.init_CG_iter;
 	params_.init_GN_iter = parameters.init_GN_iter;
 	params_.CG_use_FR = parameters.CG_use_FR;
-	params_.pCG_standard_alpha = parameters.pCG_standard_alpha;
+	params_.CG_standard_alpha = parameters.CG_standard_alpha;
 	params_.CG_forgetting_rate = parameters.CG_forgetting_rate;
 	params_.precond_data_param = parameters.precond_data_param;
 	params_.precond_reg_param = parameters.precond_reg_param;
