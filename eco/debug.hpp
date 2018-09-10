@@ -47,12 +47,12 @@ inline void timerExampleCV()
 	debug("time: %f", timedft);
 }
 
-// Show the type of an image
+// Show the type of a Mat
 // Using like this:
 //	string ty =  type2str( im.type() );
 //	printf("im: %s %d x %d \n", ty.c_str(), im.cols, im.rows );
-void imgInfo(cv::Mat mat);
-inline void imgInfo(cv::Mat mat)
+void printMat(cv::Mat mat);
+inline void printMat(cv::Mat mat)
 {
 	int type = mat.type();
 	string r;
@@ -98,7 +98,7 @@ inline void imgInfo(cv::Mat mat)
 void printECO_FEATS(ECO_FEATS a);
 inline void printECO_FEATS(ECO_FEATS a)
 {
-	imgInfo(a[0][0]);
+	printMat(a[0][0]);
 	for (size_t i = 0; i < a.size(); i++)
 	{
 		debug("%lu, %lu, %d x %d", i, a[i].size(), a[i][0].rows, a[i][0].cols);
@@ -108,7 +108,7 @@ inline void printECO_FEATS(ECO_FEATS a)
 void printVector_Mat(std::vector<cv::Mat> a);
 inline void printVector_Mat(std::vector<cv::Mat> a)
 {
-	imgInfo(a[0]);
+	printMat(a[0]);
 	for (size_t i = 0; i < a.size(); i++)
 	{
 		debug("%lu, %lu, %d x %d", i, a.size(), a[i].rows, a[i].cols);
@@ -538,7 +538,7 @@ inline void opencvTest()
 	cv::Mat mat = cv::Mat(cv::Size(3, 4), CV_32FC(2), newdata);
 
 	printf("\nInfo of original mat:");
-	imgInfo(mat);
+	printMat(mat);
 	for (int i = 0; i < 2 * 3 * 4; i++)
 	{
 		printf("%f ", mat.at<float>(0, i));
@@ -549,7 +549,7 @@ inline void opencvTest()
 	cv::split(mat, splitmat);
 
 	printf("\nInfo of splited mat:");
-	imgInfo(splitmat[0]);
+	printMat(splitmat[0]);
 
 	printf("channel 0:\n");
 	for (int j = 0; j < mat.rows; j++)

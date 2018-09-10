@@ -129,7 +129,7 @@ void EcoTrain::train_joint()
 													  init_samplesf_H[i].cols);
 			cv::Mat row = fyf_vec_T.rowRange(lf_ind[i], fyf_vec_T.rows);
 			//31 x 25, 25 x 10
-			//debug("col, row:");imgInfo(col);imgInfo(row);
+			//debug("col, row:");printMat(col);printMat(row);
 			cv::Mat l2 = complexMatrixMultiplication(col, row);
 			cv::Mat temp = real2complex(2 * real(l1 - l2)) -
 						   params_.projection_reg * projection_matrix_[i];
@@ -238,7 +238,7 @@ EcoTrain::ECO_EQ EcoTrain::pcg_eco_joint(const ECO_FEATS &init_samplef_proj,
 				beta = (rho - rho2) / rho1;
 			}
 			if ((beta == 0) || (std::abs(beta) >= INT_MAX) || std::isnan(beta))
-			{	
+			{
 				break;
 			}
 			beta = cv::max(0.0f, beta);
@@ -272,7 +272,7 @@ EcoTrain::ECO_EQ EcoTrain::pcg_eco_joint(const ECO_FEATS &init_samplef_proj,
 		{
 			assert(0 && "GC condition alpha is not matched");
 		}
-		
+
 		// Save old r if not using FR formula for beta
 		if (!params_.CG_opts.CG_use_FR) // Use Polak-Ribiere
 		{
@@ -283,7 +283,9 @@ EcoTrain::ECO_EQ EcoTrain::pcg_eco_joint(const ECO_FEATS &init_samplef_proj,
 		x = x + p * alpha;
 
 		if (ii < (size_t)maxit)
+		{
 			r = r - q * alpha;
+		}
 	}
 	return x;
 }
@@ -293,45 +295,50 @@ EcoTrain::ECO_EQ EcoTrain::lhs_operation_joint(const ECO_EQ &hf,
 											   const ECO_FEATS &samplesf,
 											   const vector<cv::Mat> &reg_filter,
 											   const ECO_FEATS &init_samplef,
-											   const vector<cv::Mat> XH,
+											   const vector<cv::Mat> &XH,
 											   const ECO_FEATS &init_hf)
 {
-	ECO_EQ AX;
-
 	// Extract projection matrix and filter separately
 	ECO_FEATS fAndDel = hf.up_part_;	   // f + delta(f)
 	vector<cv::Mat> deltaP = hf.low_part_; // delta(P)
+	// fAndDel: 0, 10, 25 x 13
+	// deltaP: 0, 1, 31 x 10
+	/*
+	debug("fAndDel:");
+	printECO_FEATS(fAndDel);
+	debug("deltaP:");
+	printVector_Mat(deltaP);*/
 
-	// 1: Get sizes of each feature
+	// 1: Get sizes of each feature----------------------------------------
 	int num_features = fAndDel.size();
 	vector<cv::Size> filter_sz;
 	for (size_t i = 0; i < (size_t)num_features; i++)
 	{
 		filter_sz.push_back(fAndDel[i][0].size());
 	}
-
 	// find the maximum of size and its index
-	vector<cv::Size>::iterator pos =
-		max_element(filter_sz.begin(), filter_sz.end(), SizeCompare);
+	vector<cv::Size>::iterator pos = max_element(filter_sz.begin(), filter_sz.end(), SizeCompare);
 	size_t k1 = pos - filter_sz.begin(); // index
 	cv::Size output_sz = cv::Size(2 * pos->width - 1, pos->height);
 
 	// Compute the operation corresponding to the data term in the optimization
 	// (blockwise matrix multiplications)
 
-	// 2 :sum over all features and feature blocks: A * f
+	// 2 :sum over all features and feature blocks: A * f---------------------
 	vector<cv::Mat> scores = FeatureComputeScores(samplesf, fAndDel);
+
 	cv::Mat sh(cv::Mat::zeros(scores[k1].size(), scores[k1].type()));
 	for (size_t i = 0; i < scores.size(); i++)
 	{
 		int pad = (output_sz.height - scores[i].rows) / 2;
 		cv::Rect roi = cv::Rect(pad, pad, scores[i].cols, scores[i].rows);
-		//cv::Mat temp = scores[i] + sh(roi);
-		//temp.copyTo(sh(roi));
 		sh(roi) = scores[i] + sh(roi);
 	}
+	// sh: 25 x 13
+	//debug("sh:");
+	//printMat(sh);
 
-	// 3: multiply with the transpose : A^H * A * f
+	// 3: multiply with the transpose : A^H * A * f----------------------------
 	ECO_FEATS hf_out1;
 	for (size_t i = 0; i < (size_t)num_features; i++) // for each feature
 	{
@@ -339,14 +346,15 @@ EcoTrain::ECO_EQ EcoTrain::lhs_operation_joint(const ECO_EQ &hf,
 		for (size_t j = 0; j < fAndDel[i].size(); j++) // for each dimension
 		{
 			int pad = (output_sz.height - scores[i].rows) / 2;
-			cv::Mat roi =
-				sh(cv::Rect(pad, pad, scores[i].cols, scores[i].rows));
-			cv::Mat res = complexDotMultiplication(mat_conj(roi),
-												   samplesf[i][j]);
+			cv::Mat roi = sh(cv::Rect(pad, pad, scores[i].cols, scores[i].rows));
+			cv::Mat res = complexDotMultiplication(mat_conj(roi), samplesf[i][j]);
 			tmp.push_back(mat_conj(res));
 		}
 		hf_out1.push_back(tmp);
 	}
+	// hf_out1: 0, 10, 25 x 13
+	//debug("hf_out1:");
+	//printECO_FEATS(hf_out1);
 
 	// 4:compute the operation corresponding to the regularization term(convolve
 	// each feature dimension with the DFT of w, and the tramsposed operation)
@@ -358,13 +366,18 @@ EcoTrain::ECO_EQ EcoTrain::lhs_operation_joint(const ECO_EQ &hf,
 		{
 			// add part needed for convolution
 			int c = fAndDel[i][j].cols;
-			cv::Mat hf_conv =
-				fAndDel[i][j].colRange(c - reg_pad - 1, c - 1).clone();
-			rot90(hf_conv, 3);
+			cv::Mat hf_conv;
+			if (reg_pad == 0) // 
+			{
+				hf_conv = fAndDel[i][j];
+			}
+			else
+			{
+				hf_conv = fAndDel[i][j].colRange(c - reg_pad - 1, c - 1).clone();
+				rot90(hf_conv, 3);
+				cv::hconcat(fAndDel[i][j], mat_conj(hf_conv), hf_conv);
+			}
 
-			//printf("debug1_1-----error here!!!!vot\n");
-			cv::hconcat(fAndDel[i][j], mat_conj(hf_conv), hf_conv);
-			//printf("debug1_2\n");
 			// do first convolution: W * f
 			hf_conv = complexConvolution(hf_conv, reg_filter[i]);
 
@@ -374,7 +387,7 @@ EcoTrain::ECO_EQ EcoTrain::lhs_operation_joint(const ECO_EQ &hf,
 								   reg_filter[i], 1);
 
 			// A^H * A * f + W^H * W * f
-			hf_out1[i][j] += hf_conv; // -0.2779
+			hf_out1[i][j] += hf_conv;
 		}
 	}
 
@@ -402,8 +415,7 @@ EcoTrain::ECO_EQ EcoTrain::lhs_operation_joint(const ECO_EQ &hf,
 		for (size_t j = 0; j < hf_out1[i].size(); j++)
 		{
 			int pad = (output_sz.height - hf_out1[i][0].rows) / 2;
-			cv::Rect roi = cv::Rect(pad, pad,
-									hf_out1[i][0].cols, hf_out1[i][0].rows);
+			cv::Rect roi = cv::Rect(pad, pad, hf_out1[i][0].cols, hf_out1[i][0].rows);
 			cv::Mat temp =
 				complexDotMultiplication(BP(roi),
 										 mat_conj(samplesf[i][j].clone()));
@@ -430,20 +442,19 @@ EcoTrain::ECO_EQ EcoTrain::lhs_operation_joint(const ECO_EQ &hf,
 		// B^H * BP
 		int c_len = XH[i].cols;
 		cv::Mat part1 = XH[i] * FeatureVectorization(fBP)[i].t() -
-						XH[i].colRange(fi, c_len) *
-							FeatureVectorization(fBP)[i].colRange(fi, c_len).t();
+						XH[i].colRange(fi, c_len) * FeatureVectorization(fBP)[i].colRange(fi, c_len).t();
 		part1 = 2 * real2complex(real(part1)) +
 				params_.projection_reg * deltaP[i];
 
 		// Compute proj matrix part : B^H * A * f
 		cv::Mat part2 = XH[i] * FeatureVectorization(shBP)[i].t() -
-						XH[i].colRange(fi, c_len) *
-							FeatureVectorization(shBP)[i].colRange(fi, c_len).t();
+						XH[i].colRange(fi, c_len) * FeatureVectorization(shBP)[i].colRange(fi, c_len).t();
 		part2 = 2 * real2complex(real(part2));
 
 		hf_out2.push_back(part1 + part2); // B^H * A * f + B^H * B * dp
 	}
 
+	ECO_EQ AX;
 	AX.up_part_ = hf_out1;
 	AX.low_part_ = hf_out2;
 	return AX;
@@ -514,13 +525,7 @@ ECO_FEATS EcoTrain::pcg_eco_filter(const vector<ECO_FEATS> &samplesf,
 	// Load the CG state
 	ECO_FEATS p, r_prev;
 	float rho = 1, rho1, alpha, beta;
-/*
-	for (size_t i = 0; i < hf.size(); ++i)
-	{
-		r_prev.push_back(vector<cv::Mat>(hf[i].size(),
-										 cv::Mat::zeros(hf[i][0].size(), CV_32FC2)));
-	}
-*/
+
 	if (!state_.p.empty())
 	{
 		p = state_.p;
@@ -574,7 +579,7 @@ ECO_FEATS EcoTrain::pcg_eco_filter(const vector<ECO_FEATS> &samplesf,
 				beta = (rho - rho2) / rho1;
 			}
 			if ((beta == 0) || (std::abs(beta) >= INT_MAX) || std::isnan(beta))
-			{	
+			{
 				break;
 			}
 			beta = cv::max(0.0f, beta);
@@ -616,8 +621,10 @@ ECO_FEATS EcoTrain::pcg_eco_filter(const vector<ECO_FEATS> &samplesf,
 		// form new iterate
 		x = x + p * alpha;
 
-		if (ii < (size_t)maxit - 1)
+		if (ii < (size_t)maxit)
+		{
 			r = r - q * alpha;
+		}
 	}
 
 	state_.p = p;
@@ -634,21 +641,19 @@ ECO_FEATS EcoTrain::lhs_operation_filter(const ECO_FEATS &hf,
 										 const vector<cv::Mat> &reg_filter,
 										 const vector<float> &sample_weights)
 {
+	// 1: Get sizes of each feature----------------------------------------
 	int num_features = hf.size();
 	vector<cv::Size> filter_sz;
 	for (size_t i = 0; i < (size_t)num_features; i++)
 	{
 		filter_sz.push_back(hf[i][0].size());
 	}
-
-	//1: find the maximum of size and its index
-	vector<cv::Size>::iterator pos =
-		max_element(filter_sz.begin(), filter_sz.end(), SizeCompare);
+	// find the maximum of size and its index
+	vector<cv::Size>::iterator pos = max_element(filter_sz.begin(), filter_sz.end(), SizeCompare);
 	size_t k1 = pos - filter_sz.begin(); // index
 	cv::Size output_sz = cv::Size(2 * pos->width - 1, pos->height);
 
 	//2: sum over all features for each sample: A * f  #SLOW#-------------------
-	//  update train time3_1_2: 0.004456
 	// a. FeatureDotMultiply: dot multiply for each mat
 	// b. FeatureComputeScores: sum up all the dimensions for each feature
 	// c. sh: sum up all the features
@@ -667,8 +672,7 @@ ECO_FEATS EcoTrain::lhs_operation_filter(const ECO_FEATS &hf,
 			  hf[i][0].rows, hf[i][0].cols);
 	}
 */
-	vector<cv::Mat> sh; // sum of all the features for each sample
-
+	vector<cv::Mat> sh;							 // sum of all the features for each sample
 	for (size_t s = 0; s < samplesf.size(); s++) // for each sample
 	{
 		vector<cv::Mat> scores = FeatureComputeScores(samplesf[s], hf);
@@ -677,8 +681,6 @@ ECO_FEATS EcoTrain::lhs_operation_filter(const ECO_FEATS &hf,
 		{
 			int pad = (output_sz.height - scores[i].rows) / 2;
 			cv::Rect roi = cv::Rect(pad, pad, scores[i].cols, scores[i].rows);
-			//cv::Mat temp = scores[i] + sh_one(roi);
-			//temp.copyTo(sh_one(roi));
 			sh_one(roi) = scores[i] + sh_one(roi);
 		}
 		sh_one = mat_conj(sh_one * sample_weights[s]);
@@ -700,10 +702,8 @@ ECO_FEATS EcoTrain::lhs_operation_filter(const ECO_FEATS &hf,
 			cv::Mat res(cv::Mat::zeros(hf[i][j].size(), hf[i][j].type()));
 			for (size_t s = 0; s < sh.size(); s++) // for each sample
 			{
-				cv::Mat roi =
-					sh[s](cv::Rect(pad, pad, hf[i][j].cols, hf[i][j].rows));
-				res += complexDotMultiplication(roi,
-												samplesf[s][i][j]);
+				cv::Mat roi = sh[s](cv::Rect(pad, pad, hf[i][j].cols, hf[i][j].rows));
+				res += complexDotMultiplication(roi, samplesf[s][i][j]);
 			}
 			tmp.push_back(mat_conj(res));
 		}
@@ -726,10 +726,17 @@ ECO_FEATS EcoTrain::lhs_operation_filter(const ECO_FEATS &hf,
 		{
 			// add part needed for convolution
 			int c = hf[i][j].cols;
-			cv::Mat hf_conv = hf[i][j].colRange(c - reg_pad - 1, c - 1).clone();
-			rot90(hf_conv, 3);
-			cv::hconcat(hf[i][j], mat_conj(hf_conv), hf_conv);
-
+			cv::Mat hf_conv;
+			if (reg_pad == 0)
+			{
+				hf_conv = hf[i][j];
+			}
+			else
+			{
+				hf_conv = hf[i][j].colRange(c - reg_pad - 1, c - 1).clone();
+				rot90(hf_conv, 3);
+				cv::hconcat(hf[i][j], mat_conj(hf_conv), hf_conv);
+			}
 			// do first convolution: W * f
 			hf_conv = complexConvolution(hf_conv, reg_filter[i]);
 

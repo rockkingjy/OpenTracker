@@ -46,7 +46,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters &pa
 	// don't use opencl to cut the initial build time down
 	cv::ocl::setUseOpenCL(false);
 	// Image infomations
-	imgInfo(im);
+	printMat(im);
 	debug("rect: %f, %f, %f, %f", rect.x, rect.y, rect.width, rect.height);
 
 	// Read in all the parameters
@@ -132,8 +132,8 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters &pa
 										 params_.interpolation_bicubic_a);
 		interp1_fs_.push_back(interp1_fs1);
 		interp2_fs_.push_back(interp2_fs1);
-		//imgInfo(interp1_fs1);
-		//imgInfo(interp2_fs1);
+		//printMat(interp1_fs1);
+		//printMat(interp2_fs1);
 		//showmat2channels(interp1_fs1, 2);
 		//showmat2channels(interp2_fs1, 2);
 	}
@@ -147,8 +147,8 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters &pa
 		temp_d.convertTo(temp_f, CV_32FC1);
 		reg_filter_.push_back(temp_f);
 		debug("reg_filter_ %lu:", i);
-		//imgInfo(temp_f);
-		//showmat1channels(temp_f, 2);
+		printMat(temp_f);
+		showmat1channels(temp_f, 2);
 
 		// Compute the energy of the filter (used for preconditioner)	drone_flip
 		cv::Mat_<double> t = temp_d.mul(temp_d); //element-wise multiply
@@ -879,7 +879,7 @@ void ECO::yf_gaussian() // real part of (9) in paper C-COT
 		}
 		yf_.push_back(temp);
 		debug("yf_:%d", i);
-		imgInfo(yf_[i]);
+		printMat(yf_[i]);
 		//showmat1channels(yf_[i], 2);
 	}
 }
@@ -910,7 +910,7 @@ void ECO::cos_window()
 			}
 		}
 		cos_window_.push_back(temp);
-		//imgInfo(cos_window_[i]);
+		//printMat(cos_window_[i]);
 		//showmat1channels(cos_window_[i],2);
 	}
 }

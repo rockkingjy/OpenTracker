@@ -30,7 +30,7 @@ cv::Mat get_regularization_filter(cv::Size sz,
 		debug("%f %f", reg_scale.height, reg_scale.width);
 		debug("%d %d", sz.height, sz.width);
 		debug("Channels: %d",reg_window.channels());
-		imgInfo(reg_window);
+		printMat(reg_window);
 		//showmat1channels(reg_window, 3);
 		debug("%lf, %lf", reg_window.at<double>(46, 23), reg_window.at<double>(143,89));
 		*/

@@ -54,7 +54,7 @@ TEST(ffttoolsTest, dft_float)
   float timedft = 0;
 
   cv::Mat res = eco::dft(mat_float)/(mat_float.rows * mat_float.cols);
-  //imgInfo(res);
+  //printMat(res);
   //showmat2channels(res, 2);
 
   timedft = ((double)cv::getTickCount() - timer) / cv::getTickFrequency();

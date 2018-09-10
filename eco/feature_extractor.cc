@@ -79,7 +79,7 @@ ECO_FEATS FeatureExtractor::extractor(const cv::Mat image,
 		debug("hog_feat_ind_:%d", hog_feat_ind_);
 		debug("img_samples[hog_feat_ind_] size: %lu",
 			  img_samples[hog_feat_ind_].size());
-		imgInfo(img_samples[hog_feat_ind_][0]);
+		printMat(img_samples[hog_feat_ind_][0]);
 		showmat3ch(img_samples[hog_feat_ind_][0], 0); */
 #ifdef USE_SIMD
 		hog_feat_maps_ = get_hog_features_simd(img_samples[hog_feat_ind_]);
@@ -167,7 +167,7 @@ cv::Mat FeatureExtractor::sample_patch(const cv::Mat im,
 	cv::Mat resized_patch;
 	cv::resize(im_patch, resized_patch, input_sz);
 	/* Debug
-	imgInfo(resized_patch); // 8UC3 150 x 150
+	printMat(resized_patch); // 8UC3 150 x 150
 	showmat3ch(resized_patch, 0);
 	// resized_patch(121,21,1) in matlab RGB, cv: BGR
 	debug("%d", resized_patch.at<cv::Vec3b>(120,20)[2]); 
@@ -446,7 +446,7 @@ ECO_FEATS FeatureExtractor::get_cnn_layers(vector<cv::Mat> im, const cv::Mat &de
 
 	/*
 	debug("im size: %lu", im.size());
-	imgInfo(im[0]);
+	printMat(im[0]);
 	for (unsigned int i = 0; i < im.size(); i++)
 	{
 		cv::imshow("Tracking", im[i]);

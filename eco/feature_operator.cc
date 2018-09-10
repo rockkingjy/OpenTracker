@@ -82,7 +82,7 @@ vector<cv::Mat> init_projection_matrix(const ECO_FEATS &init_sample,
 		}
 		result.push_back(feat_vec);
 	}
-	//imgInfo(result[0]); // 3844 x 31
+	//printMat(result[0]); // 3844 x 31
 
 	vector<cv::Mat> proj_mat;
 	// do SVD and dimension reduction for each feature

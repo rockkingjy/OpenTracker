@@ -69,7 +69,7 @@ class EcoTrain
 								  const ECO_FEATS &samplesf,
 								  const vector<cv::Mat> &reg_filter,
 								  const ECO_FEATS &init_samplef,
-								  const vector<cv::Mat> XH,
+								  const vector<cv::Mat> &XH,
 								  const ECO_FEATS &init_hf);
 	// Only filter training(for tracker update)===============================
 	void train_filter(const vector<ECO_FEATS> &samplesf,

@@ -90,7 +90,7 @@ cv::Mat Interpolator::cubic_spline_fourier(cv::Mat f, float a)
 		}
 	}
 	bf.at<float>(bf.rows / 2, bf.cols / 2) = 1;
-	//imgInfo(bf);
+	//printMat(bf);
 	//showmat1channels(bf, 2);
 
 	return bf;
