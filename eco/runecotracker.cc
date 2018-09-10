@@ -228,17 +228,8 @@ int main(int argc, char **argv)
 
     double timereco = (double)getTickCount();
     ECO ecotracker;
-    
-    Rect2f ecobbox((int)x, (int)y, (int)w, (int)h);
-    //Rect2f ecobbox(x, y, w, h);
+    Rect2f ecobbox(x, y, w, h);
     eco::EcoParameters parameters;
-
-    parameters.learning_rate = 0.01;
-    parameters.projection_reg = 5e-7;
-    parameters.init_CG_iter = 10 * 20;
-    parameters.CG_forgetting_rate = 60;
-    parameters.reg_window_edge = 4e-3;
-    parameters.reg_sparsity_threshold = 0.15;
     //parameters.max_score_threshhold = 0.2;
     ecotracker.init(frame, ecobbox, parameters);
     float fpsecoini = getTickFrequency() / ((double)getTickCount() - timereco);

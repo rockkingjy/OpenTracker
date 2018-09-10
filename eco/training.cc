@@ -41,11 +41,11 @@ void EcoTrain::train_joint()
 		lf_ind.push_back(hf_[i][0].rows * (hf_[i][0].cols - 1));
 	}
 	// debug:
-	for (size_t i = 0; i < lf_ind.size(); i++)
+	/*for (size_t i = 0; i < lf_ind.size(); i++)
 	{
 		debug("lf_ind:%lu, %lu, %d", i, lf_ind.size(), lf_ind[i]);
 	}
-
+	*/
 	// Construct stuff for the proj matrix part
 	ECO_FEATS init_samplesf = xlf_;
 	vector<cv::Mat> init_samplesf_H;
@@ -60,11 +60,11 @@ void EcoTrain::train_joint()
 		init_samplesf_H.push_back(mat_conj(temp));
 	}
 	//debug: init_samplesf_H: 0, 31 x 325
-	for (size_t i = 0; i < init_samplesf_H.size(); i++)
+	/*for (size_t i = 0; i < init_samplesf_H.size(); i++)
 	{
 		debug("init_samplesf_H %lu 's size: %d x %d", i, init_samplesf_H[i].rows, init_samplesf_H[i].cols);
 	}
-
+	*/
 	// Construct preconditioner diag_M
 	ECO_FEATS diag_M1;
 	for (size_t i = 0; i < sample_energy_.size(); i++) // for features
@@ -94,11 +94,11 @@ void EcoTrain::train_joint()
 	// debug:
 	// diag_M1: 0, 10, 25 x 13
 	// diag_M2: 0,  1, 31 x 10
-	debug("diag_M1:");
+	/*debug("diag_M1:");
 	printECO_FEATS(diag_M1);
 	debug("diag_M2:");
 	printVector_Mat(diag_M2);
-
+	*/
 	// 2. Training with Gauss-Newton optimization
 	for (size_t i = 0; i < (size_t)params_.init_GN_iter; i++)
 	{
