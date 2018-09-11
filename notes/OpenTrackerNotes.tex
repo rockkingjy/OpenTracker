@@ -1142,6 +1142,9 @@ The Intel Intrinsics Guide: \url{https://software.intel.com/sites/landingpage/In
 		[0, 3, 1, 4, 2, 5, 6, 9, 7, 10, 8, 11]
 	\end{equation}
 	\item Opencv is quite slow for the start-up because of using OpenCL, if you don't use it, close it in the beginning by: $cv::ocl::setUseOpenCL(false);$
+	\item For timer $double\ timercv = (double)getTickCount();$, it should be double, float is not enough.
+	\item For $cv::merge(mv, dst);$, mv should be 1 channel, if more than 1 channel, it has potential problems.
+	\item In OpenCV, newMat = oldMat will just change the pointer, oldMat.copyTo(newMat) will not change the address of the destination matrix, newMat = oldMat.clone() will allocate a new address. 
 	\item If use FFTW, pay attention that, it computes an unnormalized transform when do inverse FFT, while cv::dft computes a normalized transform.
 	\item When using libcaffe.so, using the BLVC caffe version. I used the Nvidia version and GPU 
 	not working, wasted my days.
@@ -1225,6 +1228,27 @@ void accumulateTest()
 		\end{lstlisting}
 	For the False result, it gave answer 0, while the True result is 0.3.
 \end{itemize}
+
+
+\section{Test on Datasets}
+\subsection{ECO Parameter analysis}
+In eco/parameters.hpp: $search_area_scale = 4.5$, if change to 2.5, ECO will lose the target in $UAV123/person23$. \par
+While, in kcftracker.cpp: padding = 2.5, if change to 4.5, KCF will follow the target in the same data above. \par
+In eco/parameters.hpp: nSamples = 50, if change to 10, ECO will lose the target in $VOT/girl$. \par
+But, in eco/params.h/nSamples = 50, if change to 10, ECO will keep the target in $UAV123/bike1$. \par
+The reason is for $VOT/girl$, it needs more history memory to return back to target. But for $UAV123/bike1$, long history means cannot adapt to the recent changes. There is a dilemma in here.
+
+\subsection{Dataset testing results}
+Dataset that $ECO\_HOG$ get lost, KCF keeps correct:
+
+Dataset that $ECO\_HOG$ get lost, GOTURUN keeps correct:
+
+Dataset that $ECO\_HOG$ get lost, ALL the others keeps correct:
+
+Just $ECO\_HOG$ right:
+
+No one right:
+
 %=======================================
 \renewcommand\refname{Reference}
 \bibliographystyle{ieeetr} %unsrtnat
