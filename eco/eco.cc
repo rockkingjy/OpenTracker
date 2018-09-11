@@ -334,6 +334,7 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	ECO_FEATS xt = feature_extractor_.extractor(frame, sample_pos, samples_scales, params_);
 	if (xt[0].size() == 0)
 	{
+		//print too much will cause VOT_Trax fail.
 		//debug("Feature window is zero.");
 		return false;
 	}

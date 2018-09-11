@@ -1,20 +1,27 @@
+USE_VOT_TRAX=1
 
 CC=gcc
 CXX=g++
 
 LDFLAGS= `pkg-config --libs opencv` -lstdc++ -lm
-
-CXXFLAGS= -Wall `pkg-config --cflags opencv` -std=c++0x -lstdc++ -fPIC
-
-HEADERS = *.h *.hpp
-
+CXXFLAGS= -Wall `pkg-config --cflags opencv` -std=c++0x -lstdc++ -O3 -fPIC
+HEADERS = $(wildcard *.h) $(wildcard *.hpp)
 TARGET_LIB = libkcftracker.so
+OBJS = fhog.o kcftracker.o
 
-OBJ = fhog.o kcftracker.o runkcftracker.o
+ifeq ($(USE_VOT_TRAX), 1)
+CXXFLAGS+= -ltrax
+LDFLAGS+= -ltrax 
+endif
 
-all: runkcftracker.bin $(TARGET_LIB)
+ALL = runkcftracker.bin $(TARGET_LIB)
+ifeq ($(USE_VOT_TRAX), 1)
+	ALL+= vot_kcf.bin 
+endif
 
-runkcftracker.bin: $(OBJ)
+all: $(ALL)
+
+runkcftracker.bin: $(OBJS) runkcftracker.o
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 $(TARGET_LIB): $(OBJS)
@@ -26,12 +33,16 @@ $(TARGET_LIB): $(OBJS)
 %.o: %.cpp $(HEADERS)
 	$(CXX) -c -o $@ $< $(CXXFLAGS)
 
+ifeq ($(USE_VOT_TRAX), 1)
+vot_kcf.bin: $(OBJS) vot_kcf.o 
+	$(CC) -o $@ $^ $(LDFLAGS) 
+endif
+
 
 .PHONY: clean
 
 clean:
 	rm -rf *.o *.bin *.so
-
 
 .PHONY: install
 install: $(TARGET_LIB)
@@ -40,7 +51,6 @@ install: $(TARGET_LIB)
 	cp $(TARGET_LIB) /usr/local/lib
 	mkdir -p /usr/local/include/opentracker/kcf
 	cp *.hpp /usr/local/include/opentracker/kcf
-
 
 .PHONY: uninstall
 uninstall: $(TARGET_LIB)
