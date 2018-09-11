@@ -76,7 +76,7 @@ int main(int argc, char **argv)
     }
     else if (databaseType == "VOT-2017")
     {
-        string folderVOT = "ants3";//"drone1";//"iceskater1";//"road";//"bag";//"helicopter";
+        string folderVOT = "glove";//"ants3";//"drone1";//"iceskater1";//"road";//"bag";//"helicopter";
         path = "/media/elab/sdd/data/VOT/vot2017/" + folderVOT;
         // Read the groundtruth bbox
         groundtruth = new ifstream("/media/elab/sdd/data/VOT/vot2017/" + folderVOT + "/groundtruth.txt");
@@ -230,6 +230,14 @@ int main(int argc, char **argv)
     ECO ecotracker;
     Rect2f ecobbox(x, y, w, h);
     eco::EcoParameters parameters;
+    /*
+    parameters.learning_rate = 0.01;
+    parameters.projection_reg = 5e-7;
+    parameters.init_CG_iter = 10 * 20;
+    parameters.CG_forgetting_rate = 60;
+    parameters.reg_window_edge = 4e-3;
+    parameters.reg_sparsity_threshold = 0.15;
+    */
     //parameters.max_score_threshhold = 0.2;
     ecotracker.init(frame, ecobbox, parameters);
     float fpsecoini = getTickFrequency() / ((double)getTickCount() - timereco);

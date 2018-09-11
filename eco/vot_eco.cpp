@@ -48,7 +48,7 @@ int main(int argc, char **argv)
 {
     VOT vot;
     eco::ECO tracker;
-    cv::Rect initialization;
+    cv::Rect2f initialization;
     initialization << vot.region();
     cv::Mat image = cv::imread(vot.frame());
     eco::EcoParameters parameters;
@@ -73,7 +73,7 @@ int main(int argc, char **argv)
         float confidence = 1;
         cv::Rect2f bbox;
         confidence = tracker.update(image, bbox);
-        cv::Rect rect = cv::Rect(bbox);
+        cv::Rect2f rect = cv::Rect(bbox);
         vot.report(rect, confidence);
     }
 #ifdef USE_MULTI_THREAD

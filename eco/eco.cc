@@ -332,6 +332,11 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 
 	// 1: Extract features at multiple resolutions
 	ECO_FEATS xt = feature_extractor_.extractor(frame, sample_pos, samples_scales, params_);
+	if (xt[0].size()==0)
+	{
+		debug("Feature window is zero.");
+		return false;
+	}
 	//debug("xt size: %lu, %lu, %d x %d", xt.size(), xt[0].size(), xt[0][0].rows, xt[0][0].cols);
 
 	// 2:  project sample

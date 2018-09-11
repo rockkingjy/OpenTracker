@@ -38,6 +38,7 @@ the use of this software, even if advised of the possibility of such damage.
 
 #include <math.h>
 #include <opencv2/opencv.hpp>
+#include "debug.hpp"
 
 namespace eco
 {
@@ -121,18 +122,20 @@ inline cv::Rect getBorder(const cv::Rect_<t> &original, cv::Rect_<t> &limited)
 	assert(res.x >= 0 && res.y >= 0 && res.width >= 0 && res.height >= 0);
 	return res;
 }
-// cut "window" out from "in".
-inline cv::Mat subwindow(const cv::Mat &in, const cv::Rect &window, int borderType = cv::BORDER_CONSTANT)
+// cut "window" out from "input".
+inline cv::Mat subwindow(const cv::Mat &input, const cv::Rect &window, int borderType = cv::BORDER_CONSTANT)
 {
+	cv::Mat res;
 	cv::Rect cutWindow = window;
-	limit(cutWindow, in.cols, in.rows);
+	limit(cutWindow, input.cols, input.rows);
+	//debug("cutWindow: %d x %d", cutWindow.height, cutWindow.width);
 	if (cutWindow.height <= 0 || cutWindow.width <= 0)
 	{
-		assert(0 && "error: cutWindow size error!\n");
-		//return cv::Mat(window.height,window.width,in.type(),0) ;
+		//assert(0 && "error: cutWindow size error!\n");
+		return res;//cv::Mat(window.height,window.width,input.type(),0) ;
 	}
 	cv::Rect border = getBorder(window, cutWindow);
-	cv::Mat res = in(cutWindow);
+	res = input(cutWindow);
 	if (border != cv::Rect(0, 0, 0, 0))
 	{
 		cv::copyMakeBorder(res, res, border.y, border.height, border.x, border.width, borderType);

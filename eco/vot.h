@@ -248,7 +248,7 @@ class VOTRegion
 
 #ifdef VOT_OPENCV
 
-    VOTRegion(const cv::Rect &rectangle)
+    VOTRegion(const cv::Rect2f &rectangle)
     {
 #ifdef VOT_POLYGON
         _region = vot_region_create(4);
@@ -258,7 +258,7 @@ class VOTRegion
         set(rectangle);
     }
 
-    void set(const cv::Rect &rectangle)
+    void set(const cv::Rect2f &rectangle)
     {
 
 #ifdef VOT_POLYGON
@@ -284,7 +284,7 @@ class VOTRegion
 #endif
     }
 
-    void get(cv::Rect &rectangle) const
+    void get(cv::Rect2f &rectangle) const
     {
 
 #ifdef VOT_POLYGON
@@ -316,7 +316,7 @@ class VOTRegion
 #endif
     }
 
-    void operator=(cv::Rect &rectangle)
+    void operator=(cv::Rect2f &rectangle)
     {
         this->get(rectangle);
     }
@@ -329,22 +329,22 @@ class VOTRegion
 
 #ifdef VOT_OPENCV
 
-void operator<<(VOTRegion &source, const cv::Rect &rectangle)
+void operator<<(VOTRegion &source, const cv::Rect2f &rectangle)
 {
     source.set(rectangle);
 }
 
-void operator>>(const VOTRegion &source, cv::Rect &rectangle)
+void operator>>(const VOTRegion &source, cv::Rect2f &rectangle)
 {
     source.get(rectangle);
 }
 
-void operator<<(cv::Rect &rectangle, const VOTRegion &source)
+void operator<<(cv::Rect2f &rectangle, const VOTRegion &source)
 {
     source.get(rectangle);
 }
 
-void operator>>(const cv::Rect &rectangle, VOTRegion &source)
+void operator>>(const cv::Rect2f &rectangle, VOTRegion &source)
 {
     source.set(rectangle);
 }

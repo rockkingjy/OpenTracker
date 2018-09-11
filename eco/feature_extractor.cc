@@ -156,15 +156,17 @@ cv::Mat FeatureExtractor::sample_patch(const cv::Mat im,
 
 	cv::Point pos2(pos.x - floor((sample_sz.width + 1) / 2),
 				   pos.y - floor((sample_sz.height + 1) / 2));
-	//debug("new_im:%d x %d, pos2:%d %d, sample_sz:%f x %f",
-	//	  new_im.rows, new_im.cols, pos2.y, pos2.x,
-	//	  sample_sz.height, sample_sz.width);
+	//debug("new_im:%d x %d, pos2:%d %d, sample_sz:%f x %f", new_im.rows, new_im.cols, pos2.y, pos2.x, sample_sz.height, sample_sz.width);
 
 	cv::Mat im_patch = subwindow(new_im,
 								 cv::Rect(pos2, sample_sz),
 								 IPL_BORDER_REPLICATE);
 
 	cv::Mat resized_patch;
+	if (im_patch.cols == 0 || im_patch.rows == 0)
+	{
+		return resized_patch;
+	}
 	cv::resize(im_patch, resized_patch, input_sz);
 	/* Debug
 	printMat(resized_patch); // 8UC3 150 x 150
@@ -177,7 +179,11 @@ cv::Mat FeatureExtractor::sample_patch(const cv::Mat im,
 #ifdef USE_SIMD
 vector<cv::Mat> FeatureExtractor::get_hog_features_simd(const vector<cv::Mat> ims)
 {
-	if (ims.empty()) return vector<cv::Mat>();
+	if (ims.empty())
+	{
+		return vector<cv::Mat>();
+	}
+
 	vector<cv::Mat> hog_feats;
 	for (unsigned int k = 0; k < ims.size(); k++)
 	{
@@ -187,11 +193,10 @@ vector<cv::Mat> FeatureExtractor::get_hog_features_simd(const vector<cv::Mat> im
 		h = ims[k].rows;
 		w = ims[k].cols;
 		d = ims[k].channels();
-		binSize = params_.hog_features.fparams.cell_size;//6;
+		binSize = params_.hog_features.fparams.cell_size; //6;
 		nOrients = params_.hog_features.fparams.nOrients; //9;
 		softBin = -1;
-		nDim = useHog == 0 ? nOrients : 
-						(useHog == 1 ? nOrients * 4 : nOrients * 3 + 5);
+		nDim = useHog == 0 ? nOrients : (useHog == 1 ? nOrients * 4 : nOrients * 3 + 5);
 		hb = h / binSize;
 		wb = w / binSize;
 		float clipHog = 0.2f;
@@ -200,7 +205,7 @@ vector<cv::Mat> FeatureExtractor::get_hog_features_simd(const vector<cv::Mat> im
 		M = (float *)wrCalloc(h * w, sizeof(float));
 		O = (float *)wrCalloc(h * w, sizeof(float));
 		H = (float *)wrCalloc(hb * wb * nDim, sizeof(float));
-/*
+		/*
 		cv::Mat ims_f;
 		ims[k].convertTo(ims_f, CV_32FC3);
 		std::vector<cv::Mat> channels;
@@ -285,14 +290,17 @@ vector<cv::Mat> FeatureExtractor::get_hog_features_simd(const vector<cv::Mat> im
 		cv::Mat featuresMap = cv::Mat(cv::Size(wb, hb), CV_32FC(nDim - 1));
 		//debug();
 		// cv: ch->row->col; matlab: col->row->ch;
-		for (int i = 0; i < hb; i++) // for each row
-			for (int j = 0; j < wb; j++) // for each col
+		for (int i = 0; i < hb; i++)			   // for each row
+			for (int j = 0; j < wb; j++)		   // for each col
 				for (int l = 0; l < nDim - 1; l++) // for each channel
 				{
-					featuresMap.at<cv::Vec<float,31>>(i, j)[l] = *(H + l * hb * wb + j * hb + i);
+					featuresMap.at<cv::Vec<float, 31>>(i, j)[l] = *(H + l * hb * wb + j * hb + i);
 				}
 		hog_feats.push_back(featuresMap);
-		wrFree(I); wrFree(M); wrFree(O); wrFree(H); 
+		wrFree(I);
+		wrFree(M);
+		wrFree(O);
+		wrFree(H);
 	}
 	//debug();
 	return hog_feats;
@@ -300,24 +308,36 @@ vector<cv::Mat> FeatureExtractor::get_hog_features_simd(const vector<cv::Mat> im
 
 vector<cv::Mat> FeatureExtractor::hog_feature_normalization_simd(vector<cv::Mat> &hog_feat_maps)
 {
+	if (hog_feat_maps.empty())
+	{
+		return vector<cv::Mat>();
+	}
+
 	vector<cv::Mat> hog_maps_vec;
 	for (size_t i = 0; i < hog_feat_maps.size(); i++)
 	{
-		cv::Mat temp = hog_feat_maps[i].mul(hog_feat_maps[i]);
-		// float sum_scales = cv::sum(temp)[0]; // sum can not work when dimension exceeding 3
-		vector<cv::Mat> temp_vec, result_vec;
-		float sum = 0;
-		cv::split(temp, temp_vec);
-		for (int j = 0; j < temp.channels(); j++)
-			sum += cv::sum(temp_vec[j])[0];
-		float para = hog_features_.data_sz_block0.area() *
-					 hog_features_.fparams.nDim;
-		hog_feat_maps[i] *= sqrt(para / sum);
-		//debug("para:%f, sum:%f, sqrt:%f", para, sum, sqrt(para / sum));
-		cv::split(hog_feat_maps[i], result_vec);
-		hog_maps_vec.insert(hog_maps_vec.end(),
-							result_vec.begin(),
-							result_vec.end());
+		if (hog_feat_maps[i].cols == 0 || hog_feat_maps[i].rows == 0)
+		{
+			vector<cv::Mat> emptyMat;
+			hog_maps_vec.insert(hog_maps_vec.end(), emptyMat.begin(), emptyMat.end());
+		}
+		else
+		{
+			cv::Mat temp = hog_feat_maps[i].mul(hog_feat_maps[i]);
+			// float sum_scales = cv::sum(temp)[0]; // sum can not work when dimension exceeding 3
+			vector<cv::Mat> temp_vec, result_vec;
+			float sum = 0;
+			cv::split(temp, temp_vec);
+			for (int j = 0; j < temp.channels(); j++)
+			{
+				sum += cv::sum(temp_vec[j])[0];
+			}
+			float para = hog_features_.data_sz_block0.area() * hog_features_.fparams.nDim;
+			hog_feat_maps[i] *= sqrt(para / sum);
+			//debug("para:%f, sum:%f, sqrt:%f", para, sum, sqrt(para / sum));
+			cv::split(hog_feat_maps[i], result_vec);
+			hog_maps_vec.insert(hog_maps_vec.end(), result_vec.begin(), result_vec.end());
+		}
 	}
 	return hog_maps_vec;
 }
