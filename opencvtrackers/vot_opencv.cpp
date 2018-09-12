@@ -34,12 +34,16 @@
  *
  */
 
+#include <opencv2/opencv.hpp>
+#include <opencv2/tracking.hpp>
+#include <opencv2/core/ocl.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
 #include <iostream>
 #include <stdio.h>
-#include "eco.hpp"
+
+using namespace cv;
+using namespace std;
 
 #define VOT_RECTANGLE
 #include "vot.h"
@@ -47,20 +51,27 @@
 int main(int argc, char **argv)
 {
     VOT vot;
-    eco::ECO tracker;
-    cv::Rect2f initialization;
+    string trackerTypes[6] = {"BOOSTING", "MIL", "KCF", "TLD", "MEDIANFLOW", "GOTURN"};
+    string trackerType = trackerTypes[2];
+    Ptr<Tracker> tracker;
+    if (trackerType == "BOOSTING")
+        tracker = TrackerBoosting::create();
+    if (trackerType == "MIL")
+        tracker = TrackerMIL::create();
+    if (trackerType == "KCF")
+        tracker = TrackerKCF::create();
+    if (trackerType == "TLD")
+        tracker = TrackerTLD::create();
+    if (trackerType == "MEDIANFLOW")
+        tracker = TrackerMedianFlow::create();
+    if (trackerType == "GOTURN")
+        tracker = TrackerGOTURN::create();
+
+    cv::Rect2d initialization;
     initialization << vot.region();
     cv::Mat image = cv::imread(vot.frame());
-    eco::EcoParameters parameters;
-    parameters.learning_rate = 0.01;
-    parameters.projection_reg = 5e-7;
-    parameters.init_CG_iter = 10 * 20;
-    parameters.CG_forgetting_rate = 60;
-    parameters.precond_reg_param = 0.2;
-    parameters.reg_window_edge = 4e-3;
-    //parameters.use_scale_filter = true;
 
-    tracker.init(image, initialization, parameters);
+    tracker->init(image, initialization);
 
     while (!vot.end())
     {
@@ -72,18 +83,11 @@ int main(int argc, char **argv)
         cv::Mat image = cv::imread(imagepath);
 
         float confidence = 1;
-        cv::Rect2f bbox;
-        confidence = tracker.update(image, bbox);
-        cv::Rect2f rect = cv::Rect(bbox);
+        cv::Rect2d bbox;
+        printf("flag3\n");
+        confidence = tracker->update(image, bbox);
+        cv::Rect2d rect = cv::Rect(bbox);
+        printf("%f, %f, %f, %f\n", rect.x, rect.y, rect.width, rect.height);
         vot.report(rect, confidence);
     }
-#ifdef USE_MULTI_THREAD
-    void *status;
-    int rc = pthread_join(tracker.thread_train_, &status);
-    if (rc)
-    {
-        cout << "Error:unable to join!" << rc << std::endl;
-        exit(-1);
-    }
-#endif
 }

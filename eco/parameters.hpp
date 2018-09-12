@@ -21,7 +21,7 @@ namespace eco
 typedef std::vector<std::vector<cv::Mat>> ECO_FEATS;
 typedef cv::Vec<float, 2> COMPLEX; // represent a complex number;
 
-//*** cnn   feature   configuration *****
+// cnn   feature   configuration =========================================
 #ifdef USE_CAFFE
 struct CnnParameters
 {
@@ -55,7 +55,8 @@ struct CnnFeatures
 	cv::Mat mean;
 };
 #endif
-//**** hog parameters cofiguration *****
+
+// hog parameters cofiguration =========================================
 struct HogParameters
 {
 	int cell_size = 6;
@@ -73,6 +74,55 @@ struct HogFeatures
 	cv::Size data_sz_block0;
 };
 
+// CN parameters configuration =========================================
+struct ColorspaceParameters
+{
+	string colorspace = "gray";
+	int cell_size = 1;
+};
+struct ColorspaceFeatures
+{
+	ColorspaceParameters fparams;
+	cv::Size img_input_sz;  
+	cv::Size img_sample_sz;
+	cv::Size data_sz_block0;
+};
+//---------------------------
+struct CnParameters
+{
+	string tablename = "CNnorm";
+	bool useForColor = true;
+	bool useForGray = false;
+	int cell_size = 4;
+	int compressed_dim = 3;
+	size_t nDim = 10; 
+};
+struct CnFeatures
+{
+	CnParameters fparams;
+	cv::Size img_input_sz; 
+	cv::Size img_sample_sz; 
+	cv::Size data_sz_block0;
+};
+//---------------------------
+struct IcParameters
+{
+	string tablename = "intensityChannelNorm6";
+	bool useForColor = false;
+	bool useForGray = true;
+	int cell_size = 4;
+	int compressed_dim = 3;
+	size_t nDim = 5; 
+};
+struct IcFeatures
+{
+	IcParameters fparams;
+	cv::Size img_input_sz;
+	cv::Size img_sample_sz;
+	cv::Size data_sz_block0;
+};
+
+// Cojugate Gradient Options Structure =====================================
 struct CgOpts 
 {
 	bool debug;
@@ -85,17 +135,22 @@ struct CgOpts
 
 struct EcoParameters
 {
+	// Features
+	bool useDeepFeature = false;
+	bool useHogFeature = true;
+	bool useColorspaceFeature = false;// not implemented yet
+	bool useCnFeature = false;
+	bool useIcFeature = false;
+
 #ifdef USE_CAFFE
 	CnnFeatures cnn_features;
 #endif
 	HogFeatures hog_features;
+	ColorspaceFeatures colorspace_feature;
+	CnFeatures cn_features;
+	IcFeatures ic_features;
 
 	CgOpts CG_opts;
-
-	// Features
-	bool useDeepFeature = false;
-	bool useHogFeature = true;
-	bool useCnFeature = false; // Not used yet, add later.......
 
 	float max_score_threshhold = 0.1;
 
@@ -180,7 +235,7 @@ struct EcoParameters
 	bool debug = 0; // to show heatmap or not
 
 	// GPU
-	bool use_gpu = true; // whether Caffe use gpu or not
+	bool use_gpu = false; // whether Caffe use gpu or not
 	int gpu_id = 0;
 };
 } // namespace eco

@@ -4,7 +4,8 @@ namespace eco
 ECO_FEATS FeatureExtractor::extractor(const cv::Mat image,
 									  const cv::Point2f pos,
 									  const vector<float> scales,
-									  const EcoParameters &params)
+									  const EcoParameters &params,
+									  const bool &is_color_image)
 {
 	params_ = params;
 	int num_features = 0, num_scales = scales.size();
@@ -26,11 +27,19 @@ ECO_FEATS FeatureExtractor::extractor(const cv::Mat image,
 		num_features++;
 		hog_features_ = params.hog_features;
 	}
-	if (params.useCnFeature)
+	if (params.useCnFeature && is_color_image)
 	{
+		cn_feat_ind_ = num_features;
+		num_features++;
+		cn_features_ = params.cn_features;
 	}
-
-	// Extract images for different feautures
+	if (params.useIcFeature && !is_color_image)
+	{
+		ic_feat_ind_ = num_features;
+		num_features++;
+		ic_features_ = params.ic_features;
+	}
+	// Extract images for different feautures============================
 	vector<vector<cv::Mat>> img_samples;
 	for (int i = 0; i < num_features; ++i) // for each feature
 	{
@@ -85,17 +94,18 @@ ECO_FEATS FeatureExtractor::extractor(const cv::Mat image,
 		hog_feat_maps_ = get_hog_features_simd(img_samples[hog_feat_ind_]);
 		hog_feat_maps_ = hog_feature_normalization_simd(hog_feat_maps_);
 #else
-		// 0.006697 s
-		// 32FCO 25 x 25
 		hog_feat_maps_ = get_hog_features(img_samples[hog_feat_ind_]);
-		// 0.000125 s
-		// 32FC1 25 x 25
 		hog_feat_maps_ = hog_feature_normalization(hog_feat_maps_);
 #endif
 		sum_features.push_back(hog_feat_maps_);
 	}
-
-	if (params.useCnFeature)
+	if (params.useCnFeature && is_color_image)
+	{
+		cn_feat_maps_ = get_cn_features(img_samples[cn_feat_ind_]);
+		cn_feat_maps_ = cn_feature_normalization(cn_feat_maps_);
+		sum_features.push_back(cn_feat_maps_);
+	}
+	if (params.useIcFeature && !is_color_image)
 	{
 	}
 
@@ -346,8 +356,9 @@ vector<cv::Mat> FeatureExtractor::hog_feature_normalization_simd(vector<cv::Mat>
 vector<cv::Mat> FeatureExtractor::get_hog_features(const vector<cv::Mat> ims)
 {
 	if (ims.empty())
+	{
 		return vector<cv::Mat>();
-
+	}
 	vector<cv::Mat> hog_feats;
 	for (unsigned int i = 0; i < ims.size(); i++)
 	{
@@ -426,6 +437,42 @@ vector<cv::Mat> FeatureExtractor::hog_feature_normalization(vector<cv::Mat> &hog
 	}
 
 	return hog_maps_vec;
+}
+
+//=========================================================================
+vector<cv::Mat> FeatureExtractor::get_cn_features(const vector<cv::Mat> ims)
+{
+	if (ims.empty())
+	{
+		return vector<cv::Mat>();
+	}
+	vector<cv::Mat> cn_feats;
+	return cn_feats;
+}
+
+vector<cv::Mat> FeatureExtractor::cn_feature_normalization(vector<cv::Mat> &cn_feat_maps)
+{
+	vector<cv::Mat> cn_maps_vec;
+	for (size_t i = 0; i < cn_feat_maps.size(); i++)
+	{
+		cv::Mat temp = cn_feat_maps[i];
+		temp = temp.mul(temp);
+		// float sum_scales = cv::sum(temp)[0]; // sum can not work when dimension exceeding 3
+		vector<cv::Mat> temp_vec, result_vec;
+		float sum = 0;
+		cv::split(temp, temp_vec);
+		for (int j = 0; j < temp.channels(); j++)
+			sum += cv::sum(temp_vec[j].mul(temp_vec[j]))[0];
+		float para = cn_features_.data_sz_block0.area() *
+					 cn_features_.fparams.nDim;
+		cn_feat_maps[i] /= sqrt(sum / para);
+
+		cv::split(cn_feat_maps[i], result_vec);
+		cn_maps_vec.insert(cn_maps_vec.end(),
+							result_vec.begin(),
+							result_vec.end());
+	}
+	return cn_maps_vec;
 }
 //=========================================================================
 #ifdef USE_CAFFE

@@ -1,4 +1,4 @@
-USE_VOT_TRAX=1
+USE_VOT_TRAX=0
 
 CC=gcc
 CXX=g++
@@ -24,6 +24,11 @@ all: $(ALL)
 runkcftracker.bin: $(OBJS) runkcftracker.o
 	$(CC) -o $@ $^ $(LDFLAGS)
 
+ifeq ($(USE_VOT_TRAX), 1)
+vot_kcf.bin: $(OBJS) vot_kcf.o 
+	$(CC) -o $@ $^ $(LDFLAGS) 
+endif
+
 $(TARGET_LIB): $(OBJS)
 	$(CC) ${LDFLAGS} -shared -o $@ $^
 
@@ -33,10 +38,6 @@ $(TARGET_LIB): $(OBJS)
 %.o: %.cpp $(HEADERS)
 	$(CXX) -c -o $@ $< $(CXXFLAGS)
 
-ifeq ($(USE_VOT_TRAX), 1)
-vot_kcf.bin: $(OBJS) vot_kcf.o 
-	$(CC) -o $@ $^ $(LDFLAGS) 
-endif
 
 
 .PHONY: clean

@@ -46,8 +46,16 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters &pa
 	// don't use opencl to cut the initial build time down
 	cv::ocl::setUseOpenCL(false);
 	// Image infomations
+	if (im.channels() == 3)
+	{
+		is_color_image_ = true;
+	}
+	else
+	{
+		is_color_image_ = false;
+	}
 	printMat(im);
-	debug("rect: %f, %f, %f, %f", rect.x, rect.y, rect.width, rect.height);
+	debug("is_color_image_: %d, rect: %f, %f, %f, %f", is_color_image_, rect.x, rect.y, rect.width, rect.height);
 
 	// Read in all the parameters
 	init_parameters(paramters);
@@ -213,7 +221,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters &pa
 	ECO_FEATS xl, xlf, xlf_porj;
 
 	// 2. Extract features from the first frame.
-	xl = feature_extractor_.extractor(im, pos_, vector<float>(1, currentScaleFactor_), params_);
+	xl = feature_extractor_.extractor(im, pos_, vector<float>(1, currentScaleFactor_), params_, is_color_image_);
 	debug("xl size: %lu, %lu, %d x %d", xl.size(), xl[0].size(), xl[0][0].rows, xl[0][0].cols);
 
 	// 3. Multiply the features by the cosine window.
@@ -331,7 +339,7 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	}
 
 	// 1: Extract features at multiple resolutions
-	ECO_FEATS xt = feature_extractor_.extractor(frame, sample_pos, samples_scales, params_);
+	ECO_FEATS xt = feature_extractor_.extractor(frame, sample_pos, samples_scales, params_, is_color_image_);
 	if (xt[0].size() == 0)
 	{
 		//print too much will cause VOT_Trax fail.
@@ -628,7 +636,9 @@ void ECO::init_parameters(const eco::EcoParameters &parameters)
 {
 	params_.useDeepFeature = parameters.useDeepFeature;
 	params_.useHogFeature = parameters.useHogFeature;
+	params_.useColorspaceFeature = parameters.useColorspaceFeature;
 	params_.useCnFeature = parameters.useCnFeature;
+	params_.useIcFeature = parameters.useIcFeature;
 
 	params_.max_score_threshhold = parameters.max_score_threshhold;
 	// img sample parameters
@@ -777,8 +787,35 @@ void ECO::init_features()
 		debug("data_sz_block0: %d", params_.hog_features.data_sz_block0.width);
 		debug("Finish------------------------");
 	}
-	if (params_.useCnFeature)
+	if (params_.useCnFeature && is_color_image_)
 	{
+		params_.cn_features.img_input_sz = img_support_size_;
+		params_.cn_features.img_sample_sz = img_support_size_;
+		params_.cn_features.data_sz_block0 = cv::Size(
+			params_.cn_features.img_sample_sz.width /
+				params_.cn_features.fparams.cell_size,
+			params_.cn_features.img_sample_sz.height /
+				params_.cn_features.fparams.cell_size);
+
+		debug("CN parameters---------------:");
+		debug("img_input_sz: %d, img_sample_size_: %d", params_.cn_features.img_input_sz.width, params_.cn_features.img_sample_sz.width);
+		debug("data_sz_block0: %d", params_.cn_features.data_sz_block0.width);
+		debug("Finish------------------------");
+	}
+	if (params_.useIcFeature && !is_color_image_)
+	{
+		params_.ic_features.img_input_sz = img_support_size_;
+		params_.ic_features.img_sample_sz = img_support_size_;
+		params_.ic_features.data_sz_block0 = cv::Size(
+			params_.ic_features.img_sample_sz.width /
+				params_.ic_features.fparams.cell_size,
+			params_.ic_features.img_sample_sz.height /
+				params_.ic_features.fparams.cell_size);
+
+		debug("IC parameters---------------:");
+		debug("img_input_sz: %d, img_sample_size_: %d", params_.ic_features.img_input_sz.width, params_.ic_features.img_sample_sz.width);
+		debug("data_sz_block0: %d", params_.ic_features.data_sz_block0.width);
+		debug("Finish------------------------");
 	}
 	debug("img_support_size_:%d x %d", img_support_size_.width, img_support_size_.height);
 
@@ -794,18 +831,26 @@ void ECO::init_features()
 #endif
 	if (params_.useHogFeature)
 	{
-		feature_size_.push_back(params_.hog_features.data_sz_block0);			//=62x62
-		feature_dim_.push_back(params_.hog_features.fparams.nDim);				//=31
-		compressed_dim_.push_back(params_.hog_features.fparams.compressed_dim); //=10
+		feature_size_.push_back(params_.hog_features.data_sz_block0);	
+		feature_dim_.push_back(params_.hog_features.fparams.nDim);	
+		compressed_dim_.push_back(params_.hog_features.fparams.compressed_dim); 
 	}
-	if (params_.useCnFeature)
+	if (params_.useCnFeature && is_color_image_)
 	{
+		feature_size_.push_back(params_.cn_features.data_sz_block0);		
+		feature_dim_.push_back(params_.cn_features.fparams.nDim);			
+		compressed_dim_.push_back(params_.cn_features.fparams.compressed_dim); 
 	}
+	if (params_.useIcFeature && !is_color_image_)
+	{
+		feature_size_.push_back(params_.ic_features.data_sz_block0);		
+		feature_dim_.push_back(params_.ic_features.fparams.nDim);			
+		compressed_dim_.push_back(params_.ic_features.fparams.compressed_dim); 
+	}
+	// debug
 	for (size_t i = 0; i < feature_size_.size(); i++)
 	{
-		debug("features %lu: %d %d %d x %d", i, feature_dim_[i],
-			  compressed_dim_[i],
-			  feature_size_[i].height, feature_size_[i].width);
+		debug("features %lu: %d %d %d x %d", i, feature_dim_[i], compressed_dim_[i], feature_size_[i].height, feature_size_[i].width);
 	}
 }
 

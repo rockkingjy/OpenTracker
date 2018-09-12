@@ -75,6 +75,7 @@ class ECO
 #endif
 
   private:
+	bool				is_color_image_;
 	EcoParameters 		params_;
 	cv::Point2f 		pos_; 							// final result
 	size_t 				frames_since_last_train_; 	 	// used for update;
