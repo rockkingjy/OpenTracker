@@ -48,7 +48,6 @@ struct CnnParameters
 struct CnnFeatures
 {
 	CnnParameters fparams;
-
 	cv::Size img_input_sz = cv::Size(224, 224); // VGG default input sample size
 	cv::Size img_sample_sz;						// the size of sample
 	cv::Size data_sz_block0, data_sz_block1;
@@ -68,7 +67,6 @@ struct HogParameters
 struct HogFeatures
 {
 	HogParameters fparams;
-
 	cv::Size img_input_sz;  // input sample size
 	cv::Size img_sample_sz; // the size of sample
 	cv::Size data_sz_block0;
@@ -91,6 +89,7 @@ struct ColorspaceFeatures
 struct CnParameters
 {
 	string tablename = "CNnorm";
+	float table[32768][10];
 	bool useForColor = true;
 	bool useForGray = false;
 	int cell_size = 4;
@@ -108,6 +107,7 @@ struct CnFeatures
 struct IcParameters
 {
 	string tablename = "intensityChannelNorm6";
+	float table[256][5];
 	bool useForColor = false;
 	bool useForGray = true;
 	int cell_size = 4;
@@ -140,7 +140,7 @@ struct EcoParameters
 	bool useHogFeature = true;
 	bool useColorspaceFeature = false;// not implemented yet
 	bool useCnFeature = false;
-	bool useIcFeature = false;
+	bool useIcFeature = true;
 
 #ifdef USE_CAFFE
 	CnnFeatures cnn_features;

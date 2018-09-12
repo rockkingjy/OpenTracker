@@ -446,6 +446,13 @@ vector<cv::Mat> FeatureExtractor::get_cn_features(const vector<cv::Mat> ims)
 	{
 		return vector<cv::Mat>();
 	}
+
+
+	for(size_t j = 0; j < 10; j++)
+	{
+		debug("table:%f",params_.cn_features.fparams.table[32767][j]);
+	}
+	assert(0);
 	vector<cv::Mat> cn_feats;
 	return cn_feats;
 }

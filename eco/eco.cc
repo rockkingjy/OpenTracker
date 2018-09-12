@@ -801,6 +801,23 @@ void ECO::init_features()
 		debug("img_input_sz: %d, img_sample_size_: %d", params_.cn_features.img_input_sz.width, params_.cn_features.img_sample_sz.width);
 		debug("data_sz_block0: %d", params_.cn_features.data_sz_block0.width);
 		debug("Finish------------------------");
+
+		std::string s;
+		std::string path = "look_tables/CNnorm.txt";
+		ifstream *read = new ifstream(path);
+		size_t rows =  sizeof(params_.cn_features.fparams.table) / sizeof(params_.cn_features.fparams.table[0]);
+		size_t cols = sizeof(params_.cn_features.fparams.table[0]) / sizeof(float);
+		//debug("rows:%lu,cols:%lu", rows, cols);
+		for(size_t i = 0; i < rows; i++)
+		{
+			for(size_t j = 0; j < cols - 1; j++)
+			{
+				getline(*read, s, '\t');
+				params_.cn_features.fparams.table[i][j] = atof(s.c_str());
+			}
+			getline(*read, s);
+			params_.cn_features.fparams.table[i][cols - 1] = atof(s.c_str());
+		}
 	}
 	if (params_.useIcFeature && !is_color_image_)
 	{
@@ -816,6 +833,28 @@ void ECO::init_features()
 		debug("img_input_sz: %d, img_sample_size_: %d", params_.ic_features.img_input_sz.width, params_.ic_features.img_sample_sz.width);
 		debug("data_sz_block0: %d", params_.ic_features.data_sz_block0.width);
 		debug("Finish------------------------");
+		
+		std::string s;
+		std::string path = "look_tables/intensityChannelNorm6.txt";
+		ifstream *read = new ifstream(path);
+		size_t rows =  sizeof(params_.ic_features.fparams.table) / sizeof(params_.ic_features.fparams.table[0]);
+		size_t cols = sizeof(params_.ic_features.fparams.table[0]) / sizeof(float);
+		for(size_t i = 0; i < rows; i++)
+		{
+			for(size_t j = 0; j < cols - 1; j++)
+			{
+				getline(*read, s, '\t');
+				params_.ic_features.fparams.table[i][j] = atof(s.c_str());
+			}
+			getline(*read, s);
+			params_.ic_features.fparams.table[i][cols - 1] = atof(s.c_str());
+		}
+		/*
+		for(size_t j = 0; j < 5; j++)
+		{
+			debug("table:%f",params_.ic_features.fparams.table[0][j]);
+		}
+		*/
 	}
 	debug("img_support_size_:%d x %d", img_support_size_.width, img_support_size_.height);
 
