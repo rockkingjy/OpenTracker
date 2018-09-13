@@ -86,15 +86,14 @@ struct ColorspaceFeatures
 	cv::Size data_sz_block0;
 };
 //---------------------------
-struct CnParameters
+struct CnParameters // only used for Color image
 {
-	string tablename = "CNnorm";
+	string tablename = "/media/elab/sdd/mycodes/tracker/OpenTracker/eco/look_tables/CNnorm.txt";
 	float table[32768][10];
-	bool useForColor = true;
-	bool useForGray = false;
 	int cell_size = 4;
 	int compressed_dim = 3;
 	size_t nDim = 10; 
+	float penalty = 0;
 };
 struct CnFeatures
 {
@@ -104,15 +103,14 @@ struct CnFeatures
 	cv::Size data_sz_block0;
 };
 //---------------------------
-struct IcParameters
+struct IcParameters // only used for gray image
 {
-	string tablename = "intensityChannelNorm6";
+	string tablename = "/media/elab/sdd/mycodes/tracker/OpenTracker/eco/look_tables/intensityChannelNorm6";
 	float table[256][5];
-	bool useForColor = false;
-	bool useForGray = true;
 	int cell_size = 4;
 	int compressed_dim = 3;
 	size_t nDim = 5; 
+	float penalty = 0;
 };
 struct IcFeatures
 {
@@ -133,13 +131,14 @@ struct CgOpts
 	int maxit;
 };
 
+// Parameters set exactly the same as 'testing_ECO_HC.m'====================
 struct EcoParameters
 {
 	// Features
 	bool useDeepFeature = false;
 	bool useHogFeature = true;
 	bool useColorspaceFeature = false;// not implemented yet
-	bool useCnFeature = false;
+	bool useCnFeature = true;
 	bool useIcFeature = true;
 
 #ifdef USE_CAFFE
@@ -149,10 +148,15 @@ struct EcoParameters
 	ColorspaceFeatures colorspace_feature;
 	CnFeatures cn_features;
 	IcFeatures ic_features;
-
+	
+	// extra parameters
 	CgOpts CG_opts;
-
 	float max_score_threshhold = 0.1;
+
+	// Global feature parameters1s
+	int normalize_power = 2;
+	bool normalize_size = true;
+	bool normalize_dim = true;
 
 	// img sample parameters
 	string search_area_shape = "square"; // The shape of the samples
@@ -235,7 +239,7 @@ struct EcoParameters
 	bool debug = 0; // to show heatmap or not
 
 	// GPU
-	bool use_gpu = false; // whether Caffe use gpu or not
+	bool use_gpu = true; // whether Caffe use gpu or not
 	int gpu_id = 0;
 };
 } // namespace eco

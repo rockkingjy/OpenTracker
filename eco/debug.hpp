@@ -419,19 +419,19 @@ inline void showmatNch(cv::Mat mat, int type)
 	{
 		if (type == 0)
 		{
-			printf("%d ", splitmat[0].at<uchar>(0, j));
+			printf("%d ", splitmat[0].at<uchar>(1, j));
 		}
 		else if (type == 1)
 		{ // first row
-			printf("%d ", splitmat[0].at<int>(0, j));
+			printf("%d ", splitmat[0].at<int>(1, j));
 		}
 		else if (type == 2)
 		{ // first row
-			printf("%f ", splitmat[0].at<float>(0, j));
+			printf("%f ", splitmat[0].at<float>(1, j));
 		}
 		else if (type == 3)
 		{ // first row
-			printf("%lf ", splitmat[0].at<double>(0, j));
+			printf("%lf ", splitmat[0].at<double>(1, j));
 		}
 	}	
 	printf("\n");
@@ -440,23 +440,23 @@ inline void showmatNch(cv::Mat mat, int type)
 	{
 		if (type == 0)
 		{ // first row
-			printf("%d ", splitmat[0].at<uchar>(i, 0));
+			printf("%d ", splitmat[0].at<uchar>(i, 1));
 		}
 		else if (type == 1)
 		{ // first row
-			printf("%d ", splitmat[0].at<int>(i, 0));
+			printf("%d ", splitmat[0].at<int>(i, 1));
 		}
 		else if (type == 2)
 		{ // first row
-			printf("%f ", splitmat[0].at<float>(i, 0));
+			printf("%f ", splitmat[0].at<float>(i, 1));
 		}
 		else if (type == 3)
 		{ // first col
-			printf("%lf ", splitmat[0].at<double>(i, 0));
+			printf("%lf ", splitmat[0].at<double>(i, 1));
 		}
 	}
 	printf("\n");
-	printf("11th row of channel 0: \n");
+	printf("10th row of channel 0: \n");
 	for (int j = 0; j < mat.cols; j += 1)
 	{
 		if (type == 0)
@@ -477,7 +477,7 @@ inline void showmatNch(cv::Mat mat, int type)
 		}
 	}
 	printf("\n");
-	printf("21th col of  channel 0: \n");
+	printf("20th col of  channel 0: \n");
 	for (int i = 0; i < mat.rows; i += 1)
 	{
 		if (type == 0)
@@ -498,7 +498,7 @@ inline void showmatNch(cv::Mat mat, int type)
 		}
 	}
 	printf("\n");
-	printf("25th row of channel -1: \n");
+	printf("24th row of channel -1: \n");
 	for (int j = 0; j < mat.cols; j += 1)
 	{
 		if (type == 0)

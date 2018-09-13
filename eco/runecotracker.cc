@@ -238,7 +238,6 @@ int main(int argc, char **argv)
     parameters.reg_window_edge = 4e-3;
     parameters.reg_sparsity_threshold = 0.15;
     */
-    //parameters.max_score_threshhold = 0.2;
     ecotracker.init(frame, ecobbox, parameters);
     float fpsecoini = getTickFrequency() / ((double)getTickCount() - timereco);
 
@@ -254,8 +253,7 @@ int main(int argc, char **argv)
         }
         else
         {
-            putText(frameDraw, "ECO tracking failure detected", cv::Point(100, 80), FONT_HERSHEY_SIMPLEX,
-                    0.75, Scalar(255, 0, 255), 2);
+            putText(frameDraw, "ECO tracking failure detected", cv::Point(100, 80), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(255, 0, 255), 2);
             //waitKey(0);
         }
 /*

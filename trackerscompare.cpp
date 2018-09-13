@@ -144,8 +144,7 @@ int main(int argc, char **argv)
         }
         else
         {
-            putText(frameDraw, "Opencv tracking failure detected", cv::Point(10, 50), FONT_HERSHEY_SIMPLEX,
-                    0.75, Scalar(255, 0, 0), 2);
+            putText(frameDraw, "Opencv tracking failure detected", cv::Point(10, 50), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(255, 0, 0), 2);
         }
 
         //KCF=========================

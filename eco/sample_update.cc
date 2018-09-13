@@ -161,8 +161,7 @@ void SampleUpdate::update_sample_space_model(const ECO_FEATS &new_train_sample)
 								  std::string("merge"));
 
 				// Update distance matrix and the gram matrix
-				update_distance_matrix(gram_vector, new_train_sample_norm, merged_sample_id_, -1,
-									   prior_weights_[merged_sample_id_], learning_rate_);
+				update_distance_matrix(gram_vector, new_train_sample_norm, merged_sample_id_, -1, prior_weights_[merged_sample_id_], learning_rate_);
 
 				// Update the prior weight of the merged sample
 				prior_weights_[min_sample_id.y] += learning_rate_;
@@ -192,8 +191,7 @@ void SampleUpdate::update_sample_space_model(const ECO_FEATS &new_train_sample)
 								  std::string("merge"));
 
 				// Update distance matrix and the gram matrix
-				update_distance_matrix(gram_vector, new_train_sample_norm, closest_exist_sample_pair.x, closest_exist_sample_pair.y,
-									   prior_weights_[closest_exist_sample_pair.x], prior_weights_[closest_exist_sample_pair.y]);
+				update_distance_matrix(gram_vector, new_train_sample_norm, closest_exist_sample_pair.x, closest_exist_sample_pair.y, prior_weights_[closest_exist_sample_pair.x], prior_weights_[closest_exist_sample_pair.y]);
 
 				// Update prior weights for the merged sample and the new sample
 				prior_weights_[closest_exist_sample_pair.x] +=
@@ -238,7 +236,7 @@ void SampleUpdate::update_distance_matrix(cv::Mat &gram_vector, float new_sample
 {
 	float alpha1 = w1 / (w1 + w2);
 	float alpha2 = 1 - alpha1;
-	//	debug("alpha1: %f, alpha2: %f", alpha1, alpha2);
+	//debug("alpha1: %f, alpha2: %f", alpha1, alpha2);
 	if (id2 < 0) //
 	{
 		COMPLEX norm_id1 = gram_matrix_.at<COMPLEX>(id1, id1);
@@ -282,8 +280,9 @@ void SampleUpdate::update_distance_matrix(cv::Mat &gram_vector, float new_sample
 	else
 	{
 		if (alpha1 == 0 || alpha2 == 0)
+		{
 			assert(0 && "error: alpha1 or alpha2 equals 0");
-
+		}
 		// Two existing samples are merged and the new sample fills the empty
 		COMPLEX norm_id1 = gram_matrix_.at<COMPLEX>(id1, id1);
 		COMPLEX norm_id2 = gram_matrix_.at<COMPLEX>(id2, id2);

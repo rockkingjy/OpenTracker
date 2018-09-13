@@ -43,8 +43,9 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters &pa
 	cv::cuda::setDevice(params_.gpu_id);
 #endif
 */
-	// don't use opencl to cut the initial build time down
+	// Close opencl to cut the init time
 	cv::ocl::setUseOpenCL(false);
+
 	// Image infomations
 	if (im.channels() == 3)
 	{
@@ -57,14 +58,14 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters &pa
 	printMat(im);
 	debug("is_color_image_: %d, rect: %f, %f, %f, %f", is_color_image_, rect.x, rect.y, rect.width, rect.height);
 
-	// Read in all the parameters
-	init_parameters(paramters);
-	printf("max_score_threshhold: %f\n", params_.max_score_threshhold);
-
 	// Get the ini position
 	pos_.x = rect.x + (rect.width - 1.0) / 2.0;
 	pos_.y = rect.y + (rect.height - 1.0) / 2.0;
 	debug("pos_:%f, %f", pos_.y, pos_.x);
+
+	// Read in all the parameters
+	init_parameters(paramters);
+	printf("max_score_threshhold: %f\n", params_.max_score_threshhold);
 
 	// Calculate search area and initial scale factor
 	float search_area = rect.area() * std::pow(params_.search_area_scale, 2);
@@ -80,10 +81,24 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters &pa
 	// target size at the initial scale
 	base_target_size_ = cv::Size2f(rect.size().width / currentScaleFactor_, rect.size().height / currentScaleFactor_);
 	debug("base_target_size_:%f x %f", base_target_size_.height, base_target_size_.width);
+
 	// window size, taking padding into account
-	float img_sample_size__tmp = sqrt(base_target_size_.area() * std::pow(params_.search_area_scale, 2));
-	//img_sample_size__tmp=((int)img_sample_size__tmp%4==0) ? (int)img_sample_size__tmp : (int)img_sample_size__tmp-((int)img_sample_size__tmp%4)+4;
-	img_sample_size_ = cv::Size2i(img_sample_size__tmp, img_sample_size__tmp);
+	if (params_.search_area_shape == "proportional")
+	{
+		img_sample_size_ = base_target_size_ * params_.search_area_scale;
+	}
+	else if (params_.search_area_shape == "square")
+	{
+		float img_sample_size__tmp;
+		img_sample_size__tmp = sqrt(base_target_size_.area() * std::pow(params_.search_area_scale, 2));
+		img_sample_size_ = cv::Size2i(img_sample_size__tmp, img_sample_size__tmp);
+	}
+	else if (params_.search_area_shape == "fix_padding")
+	{
+	}
+	else if (params_.search_area_shape == "custom")
+	{
+	}
 	debug("img_sample_size_: %d x %d", img_sample_size_.height, img_sample_size_.width);
 
 	init_features();
@@ -140,8 +155,9 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters &pa
 										 params_.interpolation_bicubic_a);
 		interp1_fs_.push_back(interp1_fs1);
 		interp2_fs_.push_back(interp2_fs1);
-		//printMat(interp1_fs1);
-		//printMat(interp2_fs1);
+		debug("interp1, interp2 %lu:", i);
+		printMat(interp1_fs1);
+		printMat(interp2_fs1);
 		//showmat2channels(interp1_fs1, 2);
 		//showmat2channels(interp2_fs1, 2);
 	}
@@ -154,6 +170,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters &pa
 		cv::Mat temp_f;
 		temp_d.convertTo(temp_f, CV_32FC1);
 		reg_filter_.push_back(temp_f);
+		// matlab: reg_filter{:,:,1}
 		debug("reg_filter_ %lu:", i);
 		printMat(temp_f);
 		showmat1channels(temp_f, 2);
@@ -163,21 +180,6 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters &pa
 		float energy = mat_sum_d(t);			 //sum up all the values of each points of the mat
 		reg_energy_.push_back(energy);
 		debug("reg_energy_ %lu: %f", i, energy);
-	}
-
-	// Set conjugate gradient uptions
-	params_.CG_opts.CG_use_FR = true;
-	params_.CG_opts.tol = 1e-6;
-	params_.CG_opts.CG_standard_alpha = true;
-	params_.CG_opts.debug = params_.debug;
-	params_.CG_opts.init_forget_factor = 1;
-	if (params_.update_projection_matrix)
-	{
-		params_.CG_opts.maxit = std::ceil(params_.init_CG_iter / params_.init_GN_iter);
-	}
-	else
-	{
-		params_.CG_opts.maxit = params_.init_CG_iter;
 	}
 
 	// scale factor, 5 scales, refer SAMF
@@ -211,12 +213,26 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters &pa
 	debug("scale: min:%d, max:%d", scalemin, scalemax);
 	debug("scalefactor min: %f max: %f", params_.min_scale_factor, params_.max_scale_factor);
 	debug("scale_factors_:");
-	/*
-		for (size_t i = 0; i < params_.number_of_scales; i++)
-		{
-			printf("%lu:%f; ", i, scale_factors_[i]);
-		}
-		*/
+	for (size_t i = 0; i < params_.number_of_scales; i++)
+	{
+		printf("%lu:%f; ", i, scale_factors_[i]);
+	}
+	printf("\n");
+
+	// Set conjugate gradient uptions
+	params_.CG_opts.CG_use_FR = true;
+	params_.CG_opts.tol = 1e-6;
+	params_.CG_opts.CG_standard_alpha = true;
+	params_.CG_opts.debug = params_.debug;
+	params_.CG_opts.init_forget_factor = 1;
+	if (params_.update_projection_matrix)
+	{
+		params_.CG_opts.maxit = std::ceil(params_.init_CG_iter / params_.init_GN_iter);
+	}
+	else
+	{
+		params_.CG_opts.maxit = params_.init_CG_iter;
+	}
 	debug("-------------------------------------------------------------");
 	ECO_FEATS xl, xlf, xlf_porj;
 
@@ -634,36 +650,54 @@ void *ECO::thread_train(void *params)
 
 void ECO::init_parameters(const eco::EcoParameters &parameters)
 {
+	// Features
 	params_.useDeepFeature = parameters.useDeepFeature;
 	params_.useHogFeature = parameters.useHogFeature;
 	params_.useColorspaceFeature = parameters.useColorspaceFeature;
 	params_.useCnFeature = parameters.useCnFeature;
 	params_.useIcFeature = parameters.useIcFeature;
 
+	// Extra parameters
 	params_.max_score_threshhold = parameters.max_score_threshhold;
+
+	// Global feature parameters1s
+	params_.normalize_power = parameters.normalize_power;
+	params_.normalize_size = parameters.normalize_size;
+	params_.normalize_dim = parameters.normalize_dim;
+
 	// img sample parameters
+	params_.search_area_shape = parameters.search_area_shape;
 	params_.search_area_scale = parameters.search_area_scale;
 	params_.min_image_sample_size = parameters.min_image_sample_size;
 	params_.max_image_sample_size = parameters.max_image_sample_size;
+
 	// Detection parameters
 	params_.refinement_iterations = parameters.refinement_iterations;
 	params_.newton_iterations = parameters.newton_iterations;
 	params_.clamp_position = parameters.clamp_position;
+
 	// Learning parameters
 	params_.output_sigma_factor = parameters.output_sigma_factor;
 	params_.learning_rate = parameters.learning_rate;
+	params_.sample_replace_strategy = parameters.sample_replace_strategy;
 	params_.nSamples = parameters.nSamples;
 	params_.lt_size = parameters.lt_size;
 	params_.train_gap = parameters.train_gap;
 	params_.skip_after_frame = parameters.skip_after_frame;
 	params_.use_detection_sample = parameters.use_detection_sample;
+
 	// Factorized convolution parameters
 	params_.use_projection_matrix = parameters.use_projection_matrix;
 	params_.update_projection_matrix = parameters.update_projection_matrix;
+	params_.proj_init_method = parameters.proj_init_method;
 	params_.projection_reg = parameters.projection_reg;
 
+	// Generative sample space model parameters
 	params_.use_sample_merge = parameters.use_sample_merge;
+	params_.sample_merge_type = parameters.sample_merge_type;
+	params_.distance_matrix_update_type = parameters.distance_matrix_update_type;
 
+	// Conjugate Gradient parameters
 	params_.CG_iter = parameters.CG_iter;
 	params_.init_CG_iter = parameters.init_CG_iter;
 	params_.init_GN_iter = parameters.init_GN_iter;
@@ -674,19 +708,42 @@ void ECO::init_parameters(const eco::EcoParameters &parameters)
 	params_.precond_reg_param = parameters.precond_reg_param;
 	params_.precond_proj_param = parameters.precond_proj_param;
 
+	// Regularization window parameters
 	params_.use_reg_window = parameters.use_reg_window;
 	params_.reg_window_min = parameters.reg_window_min;
 	params_.reg_window_edge = parameters.reg_window_edge;
+	params_.reg_window_power = parameters.reg_window_power;
 	params_.reg_sparsity_threshold = parameters.reg_sparsity_threshold;
 
+	// Interpolation parameters
+	params_.interpolation_method = parameters.interpolation_method;
 	params_.interpolation_bicubic_a = parameters.interpolation_bicubic_a;
 	params_.interpolation_centering = parameters.interpolation_centering;
 	params_.interpolation_windowing = parameters.interpolation_windowing;
 
+	// Scale parameters for the translation model
 	params_.number_of_scales = parameters.number_of_scales;
 	params_.scale_step = parameters.scale_step;
 
+	// Scale filter parameters
 	params_.use_scale_filter = parameters.use_scale_filter;
+	params_.scale_sigma_factor = parameters.scale_sigma_factor;
+	params_.scale_learning_rate = parameters.scale_learning_rate;
+	params_.number_of_scales_filter = parameters.number_of_scales_filter;
+	params_.number_of_interp_scales = parameters.number_of_interp_scales;
+	params_.scale_model_factor = parameters.scale_model_factor;
+	params_.scale_step_filter = parameters.scale_step_filter;
+	params_.scale_model_max_area = parameters.scale_model_max_area;
+	params_.scale_feature = parameters.scale_feature;
+	params_.s_num_compressed_dim = parameters.s_num_compressed_dim;
+	params_.lambda = parameters.lambda;
+	params_.do_poly_interp = parameters.do_poly_interp;
+
+	params_.debug = parameters.debug;
+
+	// GPU
+	params_.use_gpu = parameters.use_gpu;
+	params_.gpu_id = parameters.gpu_id;
 }
 
 void ECO::init_features()
@@ -756,8 +813,10 @@ void ECO::init_features()
 		debug("cnn parameters--------------:");
 		debug("img_input_sz: %d, img_sample_size_: %d", params_.cnn_features.img_input_sz.width, params_.cnn_features.img_sample_sz.width);
 		debug("data_sz_block0: %d, data_sz_block1: %d", params_.cnn_features.data_sz_block0.width, params_.cnn_features.data_sz_block1.width);
-		debug("start_ind0: %d, start_ind1: %d, end_ind0: %d, end_ind1: %d", params_.cnn_features.fparams.start_ind[0],
+		debug("start_ind0: %d, start_ind1: %d, end_ind0: %d, end_ind1: %d", 	
+			  params_.cnn_features.fparams.start_ind[0],
 			  params_.cnn_features.fparams.start_ind[2], params_.cnn_features.fparams.end_ind[0], params_.cnn_features.fparams.end_ind[2]);
+		debug("Finish------------------------");
 	}
 	else
 	{
@@ -781,11 +840,15 @@ void ECO::init_features()
 				params_.hog_features.fparams.cell_size,
 			params_.hog_features.img_sample_sz.height /
 				params_.hog_features.fparams.cell_size);
-
+		
 		debug("HOG parameters---------------:");
 		debug("img_input_sz: %d, img_sample_size_: %d", params_.hog_features.img_input_sz.width, params_.hog_features.img_sample_sz.width);
 		debug("data_sz_block0: %d", params_.hog_features.data_sz_block0.width);
 		debug("Finish------------------------");
+
+	}
+	if (params_.useColorspaceFeature)
+	{
 	}
 	if (params_.useCnFeature && is_color_image_)
 	{
@@ -796,21 +859,21 @@ void ECO::init_features()
 				params_.cn_features.fparams.cell_size,
 			params_.cn_features.img_sample_sz.height /
 				params_.cn_features.fparams.cell_size);
-
+		
 		debug("CN parameters---------------:");
 		debug("img_input_sz: %d, img_sample_size_: %d", params_.cn_features.img_input_sz.width, params_.cn_features.img_sample_sz.width);
 		debug("data_sz_block0: %d", params_.cn_features.data_sz_block0.width);
 		debug("Finish------------------------");
 
 		std::string s;
-		std::string path = "look_tables/CNnorm.txt";
+		std::string path = params_.cn_features.fparams.tablename;
 		ifstream *read = new ifstream(path);
-		size_t rows =  sizeof(params_.cn_features.fparams.table) / sizeof(params_.cn_features.fparams.table[0]);
+		size_t rows = sizeof(params_.cn_features.fparams.table) / sizeof(params_.cn_features.fparams.table[0]);
 		size_t cols = sizeof(params_.cn_features.fparams.table[0]) / sizeof(float);
 		//debug("rows:%lu,cols:%lu", rows, cols);
-		for(size_t i = 0; i < rows; i++)
+		for (size_t i = 0; i < rows; i++)
 		{
-			for(size_t j = 0; j < cols - 1; j++)
+			for (size_t j = 0; j < cols - 1; j++)
 			{
 				getline(*read, s, '\t');
 				params_.cn_features.fparams.table[i][j] = atof(s.c_str());
@@ -828,20 +891,20 @@ void ECO::init_features()
 				params_.ic_features.fparams.cell_size,
 			params_.ic_features.img_sample_sz.height /
 				params_.ic_features.fparams.cell_size);
-
+		/*
 		debug("IC parameters---------------:");
 		debug("img_input_sz: %d, img_sample_size_: %d", params_.ic_features.img_input_sz.width, params_.ic_features.img_sample_sz.width);
 		debug("data_sz_block0: %d", params_.ic_features.data_sz_block0.width);
 		debug("Finish------------------------");
-		
+*/
 		std::string s;
-		std::string path = "look_tables/intensityChannelNorm6.txt";
+		std::string path = params_.ic_features.fparams.tablename;
 		ifstream *read = new ifstream(path);
-		size_t rows =  sizeof(params_.ic_features.fparams.table) / sizeof(params_.ic_features.fparams.table[0]);
+		size_t rows = sizeof(params_.ic_features.fparams.table) / sizeof(params_.ic_features.fparams.table[0]);
 		size_t cols = sizeof(params_.ic_features.fparams.table[0]) / sizeof(float);
-		for(size_t i = 0; i < rows; i++)
+		for (size_t i = 0; i < rows; i++)
 		{
-			for(size_t j = 0; j < cols - 1; j++)
+			for (size_t j = 0; j < cols - 1; j++)
 			{
 				getline(*read, s, '\t');
 				params_.ic_features.fparams.table[i][j] = atof(s.c_str());
@@ -849,12 +912,6 @@ void ECO::init_features()
 			getline(*read, s);
 			params_.ic_features.fparams.table[i][cols - 1] = atof(s.c_str());
 		}
-		/*
-		for(size_t j = 0; j < 5; j++)
-		{
-			debug("table:%f",params_.ic_features.fparams.table[0][j]);
-		}
-		*/
 	}
 	debug("img_support_size_:%d x %d", img_support_size_.width, img_support_size_.height);
 
@@ -870,21 +927,24 @@ void ECO::init_features()
 #endif
 	if (params_.useHogFeature)
 	{
-		feature_size_.push_back(params_.hog_features.data_sz_block0);	
-		feature_dim_.push_back(params_.hog_features.fparams.nDim);	
-		compressed_dim_.push_back(params_.hog_features.fparams.compressed_dim); 
+		feature_size_.push_back(params_.hog_features.data_sz_block0);
+		feature_dim_.push_back(params_.hog_features.fparams.nDim);
+		compressed_dim_.push_back(params_.hog_features.fparams.compressed_dim);
+	}
+	if (params_.useColorspaceFeature)
+	{
 	}
 	if (params_.useCnFeature && is_color_image_)
 	{
-		feature_size_.push_back(params_.cn_features.data_sz_block0);		
-		feature_dim_.push_back(params_.cn_features.fparams.nDim);			
-		compressed_dim_.push_back(params_.cn_features.fparams.compressed_dim); 
+		feature_size_.push_back(params_.cn_features.data_sz_block0);
+		feature_dim_.push_back(params_.cn_features.fparams.nDim);
+		compressed_dim_.push_back(params_.cn_features.fparams.compressed_dim);
 	}
 	if (params_.useIcFeature && !is_color_image_)
 	{
-		feature_size_.push_back(params_.ic_features.data_sz_block0);		
-		feature_dim_.push_back(params_.ic_features.fparams.nDim);			
-		compressed_dim_.push_back(params_.ic_features.fparams.compressed_dim); 
+		feature_size_.push_back(params_.ic_features.data_sz_block0);
+		feature_dim_.push_back(params_.ic_features.fparams.nDim);
+		compressed_dim_.push_back(params_.ic_features.fparams.compressed_dim);
 	}
 	// debug
 	for (size_t i = 0; i < feature_size_.size(); i++)
@@ -1000,7 +1060,8 @@ void ECO::cos_window()
 			}
 		}
 		cos_window_.push_back(temp);
-		//printMat(cos_window_[i]);
+		debug("cos_window:%lu", i);
+		printMat(cos_window_[i]);
 		//showmat1channels(cos_window_[i],2);
 	}
 }

@@ -8,7 +8,7 @@ USE_FFTW=0
 #USE_OPENMP=1
 #USE_EIGEN=1
 USE_GTEST=0
-USE_VOT_TRAX=0
+USE_VOT_TRAX=1
 
 CAFFE_PATH=/media/elab/sdd/mycodes/caffe
 CC=gcc

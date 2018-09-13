@@ -94,6 +94,5 @@ cv::Mat Interpolator::cubic_spline_fourier(cv::Mat f, float a)
 	//showmat1channels(bf, 2);
 
 	return bf;
-
 }
 } // namespace eco
