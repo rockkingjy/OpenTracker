@@ -29,6 +29,7 @@ Or, **if you have problems with the implementation of a complicate cutting-edge 
 
 **Attention!** OpenTracker is **NOT** designed just for tracking human beings as the demo images, it can track **everything**, even some special points!
 
+**2018/09/13 -- New features** CN feature added!
 
 **2018/08/30 -- New features** Support Initialize by Object Detection using [Darknet](https://github.com/rockkingjy/darknet) and track.
 
