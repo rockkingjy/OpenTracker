@@ -16,7 +16,7 @@
 
 namespace eco
 {
-#define debug(a, args...) printf("%s(%s:%d) " a "\n", __func__, __FILE__, __LINE__, ##args)
+#define debug(a, args...)// printf("%s(%s:%d) " a "\n", __func__, __FILE__, __LINE__, ##args)
 #define ddebug(a, args...) //printf("%s(%s:%d) " a "\n", __func__, __FILE__, __LINE__, ##args)
 
 using namespace std;
