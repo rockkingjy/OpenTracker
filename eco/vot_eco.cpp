@@ -52,13 +52,6 @@ int main(int argc, char **argv)
     initialization << vot.region();
     cv::Mat image = cv::imread(vot.frame());
     eco::EcoParameters parameters;
-    parameters.learning_rate = 0.01;
-    parameters.projection_reg = 5e-7;
-    parameters.init_CG_iter = 10 * 20;
-    parameters.CG_forgetting_rate = 60;
-    parameters.precond_reg_param = 0.2;
-    parameters.reg_window_edge = 4e-3;
-    //parameters.use_scale_filter = true;
 
     tracker.init(image, initialization, parameters);
 

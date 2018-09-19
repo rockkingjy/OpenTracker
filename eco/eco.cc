@@ -24,6 +24,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters &pa
 	feature_dim_.clear();
 	compressed_dim_.clear();
 	currentScaleFactor_ = 0;
+	nScales_ = 0;
 	ky_.clear();
 	kx_.clear();
 	yf_.clear();
@@ -173,7 +174,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters &pa
 		// matlab: reg_filter{:,:,1}
 		debug("reg_filter_ %lu:", i);
 		printMat(temp_f);
-		showmat1channels(temp_f, 2);
+		//showmat1channels(temp_f, 2);
 
 		// Compute the energy of the filter (used for preconditioner)	drone_flip
 		cv::Mat_<double> t = temp_d.mul(temp_d); //element-wise multiply
@@ -182,57 +183,76 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters &pa
 		debug("reg_energy_ %lu: %f", i, energy);
 	}
 
-	// scale factor, 5 scales, refer SAMF
-	if (params_.number_of_scales % 2 == 0)
+	if (params_.use_scale_filter) // fDSST
 	{
-		params_.number_of_scales++;
+		scale_filter_.init(nScales_, scale_step_, params_);
+		if (params_.scale_model_factor * params_.scale_model_factor * rect.area() > params_.scale_model_max_area)
+		{
+			params_.scale_model_factor = std::sqrt(params_.scale_model_max_area / rect.area());
+		}
+
+		params_.scale_model_sz.height = std::max((int)std::floor(rect.height * params_.scale_model_factor), 8);
+		params_.scale_model_sz.width = std::max((int)std::floor(rect.width * params_.scale_model_factor), 8);
+
+		params_.s_num_compressed_dim = nScales_;
+		scale_factors_.push_back(1.0f);
 	}
-	int scalemin = floor((1.0 - (float)params_.number_of_scales) / 2.0);
-	int scalemax = floor(((float)params_.number_of_scales - 1.0) / 2.0);
-	for (int i = scalemin; i <= scalemax; i++)
+	else // SAMF
 	{
-		scale_factors_.push_back(std::pow(params_.scale_step, i));
+		nScales_ = params_.number_of_scales;
+		scale_step_ = params_.scale_step;
+		if (nScales_ % 2 == 0)
+		{
+			nScales_++;
+		}
+		int scalemin = floor((1.0 - (float)nScales_) / 2.0);
+		int scalemax = floor(((float)nScales_ - 1.0) / 2.0);
+		for (int i = scalemin; i <= scalemax; i++)
+		{
+			scale_factors_.push_back(std::pow(scale_step_, i));
+		}
+		debug("scale: min:%d, max:%d", scalemin, scalemax);
+		debug("scale_factors_:");
+		for (int i = 0; i < nScales_; i++)
+		{
+			printf("%d:%f; ", i, scale_factors_[i]);
+		}
+		printf("\n");
 	}
-	if (params_.number_of_scales > 0)
+	if (nScales_ > 0)
 	{
 		params_.min_scale_factor = //0.01;
-			std::pow(params_.scale_step,
+			std::pow(scale_step_,
 					 std::ceil(
 						 std::log(
 							 std::fmax(5 / (float)img_support_size_.width,
 									   5 / (float)img_support_size_.height)) /
-						 std::log(params_.scale_step)));
+						 std::log(scale_step_)));
 		params_.max_scale_factor = //10;
-			std::pow(params_.scale_step,
+			std::pow(scale_step_,
 					 std::floor(
 						 std::log(
 							 std::fmin(im.cols / (float)base_target_size_.width,
 									   im.rows / (float)base_target_size_.height)) /
-						 std::log(params_.scale_step)));
+						 std::log(scale_step_)));
 	}
-	debug("scale: min:%d, max:%d", scalemin, scalemax);
 	debug("scalefactor min: %f max: %f", params_.min_scale_factor, params_.max_scale_factor);
-	debug("scale_factors_:");
-	for (size_t i = 0; i < params_.number_of_scales; i++)
-	{
-		printf("%lu:%f; ", i, scale_factors_[i]);
-	}
-	printf("\n");
 
 	// Set conjugate gradient uptions
 	params_.CG_opts.CG_use_FR = true;
 	params_.CG_opts.tol = 1e-6;
 	params_.CG_opts.CG_standard_alpha = true;
 	params_.CG_opts.debug = params_.debug;
-	params_.CG_opts.init_forget_factor = 1;
-	if (params_.update_projection_matrix)
+	if (params_.CG_forgetting_rate == INF || params_.learning_rate >= 1)
 	{
-		params_.CG_opts.maxit = std::ceil(params_.init_CG_iter / params_.init_GN_iter);
+		params_.CG_opts.init_forget_factor = 0;
 	}
 	else
 	{
-		params_.CG_opts.maxit = params_.init_CG_iter;
+		params_.CG_opts.init_forget_factor = std::pow(1.0f - params_.learning_rate, params_.CG_forgetting_rate);
 	}
+	//params_.CG_opts.init_forget_factor = 1;
+	params_.CG_opts.maxit = std::ceil(params_.init_CG_iter / params_.init_GN_iter);
 	debug("-------------------------------------------------------------");
 	ECO_FEATS xl, xlf, xlf_porj;
 
@@ -408,8 +428,15 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	float dy = scores.get_disp_row() * resize_scores_height;
 	//debug("scale_change_factor:%d, get_disp_col: %f, get_disp_row: %f, dx: %f, dy: %f", scale_change_factor, scores.get_disp_col(), scores.get_disp_row(), dx, dy);
 
-	// 9: Update position and scale
+	// 9: Update position
 	pos_ = cv::Point2f(sample_pos) + cv::Point2f(dx, dy);
+
+	// Do scale tracking with the scale filtertraffic
+	if (nScales_ > 0 && params_.use_scale_filter)
+	{
+		scale_change_factor = scale_filter_.scale_filter_track(frame, pos_, base_target_size_, currentScaleFactor_, params_);
+	}
+	// Update the scale
 	currentScaleFactor_ = currentScaleFactor_ * scale_factors_[scale_change_factor];
 
 	// Adjust the scale to make sure we are not too large or too small
@@ -472,14 +499,6 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	params_.CG_opts.tol = 1e-6;
 	params_.CG_opts.CG_standard_alpha = params_.CG_standard_alpha;
 	params_.CG_opts.debug = params_.debug;
-	if (params_.CG_forgetting_rate == INF || params_.learning_rate >= 1)
-	{
-		params_.CG_opts.init_forget_factor = 0;
-	}
-	else
-	{
-		params_.CG_opts.init_forget_factor = std::pow(1.0f - params_.learning_rate, params_.CG_forgetting_rate);
-	}
 	params_.CG_opts.maxit = params_.CG_iter;
 
 	if (train_tracker)
@@ -493,10 +512,9 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 		{
 			usleep(10); // sleep to allow change of flag in the thread
 		}
-		int rc = pthread_create(&thread_train_, NULL, thread_train, this);
-		if (rc)
+		if (pthread_create(&thread_train_, NULL, thread_train, this))
 		{
-			cout << "Error:unable to create thread," << rc << endl;
+			cout << "Error:unable to create thread!" << endl;
 			exit(-1);
 		}
 #else
@@ -515,6 +533,13 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 
 	// 6: Update filter f.
 	hf_full_ = full_fourier_coeff(eco_trainer_.get_hf());
+
+	// Update the scale filter
+	if (nScales_ > 0 && params_.use_scale_filter)
+	{
+		//scale_filter = scale_filter_.scale_filter_update();
+	}
+
 	//**************************************************************************
 	//*****                       Visualization
 	//**************************************************************************
@@ -644,6 +669,7 @@ void *ECO::thread_train(void *params)
 								   eco->sample_energy_);
 	//debug("thread end");
 	eco->thread_flag_train_ = true;
+	pthread_detach(pthread_self());
 	pthread_exit(NULL);
 }
 #endif
@@ -656,6 +682,8 @@ void ECO::init_parameters(const eco::EcoParameters &parameters)
 	params_.useColorspaceFeature = parameters.useColorspaceFeature;
 	params_.useCnFeature = parameters.useCnFeature;
 	params_.useIcFeature = parameters.useIcFeature;
+
+	params_.hog_features.fparams.cell_size = parameters.hog_features.fparams.cell_size;
 
 	// Extra parameters
 	params_.max_score_threshhold = parameters.max_score_threshhold;
@@ -813,7 +841,7 @@ void ECO::init_features()
 		debug("cnn parameters--------------:");
 		debug("img_input_sz: %d, img_sample_size_: %d", params_.cnn_features.img_input_sz.width, params_.cnn_features.img_sample_sz.width);
 		debug("data_sz_block0: %d, data_sz_block1: %d", params_.cnn_features.data_sz_block0.width, params_.cnn_features.data_sz_block1.width);
-		debug("start_ind0: %d, start_ind1: %d, end_ind0: %d, end_ind1: %d", 	
+		debug("start_ind0: %d, start_ind1: %d, end_ind0: %d, end_ind1: %d",
 			  params_.cnn_features.fparams.start_ind[0],
 			  params_.cnn_features.fparams.start_ind[2], params_.cnn_features.fparams.end_ind[0], params_.cnn_features.fparams.end_ind[2]);
 		debug("Finish------------------------");
@@ -840,12 +868,11 @@ void ECO::init_features()
 				params_.hog_features.fparams.cell_size,
 			params_.hog_features.img_sample_sz.height /
 				params_.hog_features.fparams.cell_size);
-		
+
 		debug("HOG parameters---------------:");
 		debug("img_input_sz: %d, img_sample_size_: %d", params_.hog_features.img_input_sz.width, params_.hog_features.img_sample_sz.width);
 		debug("data_sz_block0: %d", params_.hog_features.data_sz_block0.width);
 		debug("Finish------------------------");
-
 	}
 	if (params_.useColorspaceFeature)
 	{
@@ -859,7 +886,7 @@ void ECO::init_features()
 				params_.cn_features.fparams.cell_size,
 			params_.cn_features.img_sample_sz.height /
 				params_.cn_features.fparams.cell_size);
-		
+
 		debug("CN parameters---------------:");
 		debug("img_input_sz: %d, img_sample_size_: %d", params_.cn_features.img_input_sz.width, params_.cn_features.img_sample_sz.width);
 		debug("data_sz_block0: %d", params_.cn_features.data_sz_block0.width);

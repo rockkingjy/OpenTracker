@@ -230,13 +230,56 @@ int main(int argc, char **argv)
     ECO ecotracker;
     Rect2f ecobbox(x, y, w, h);
     eco::EcoParameters parameters;
-    /*
+    /* VOT2016_HC_settings */
+    parameters.useDeepFeature = false;
+    parameters.useHogFeature = true;
+    parameters.useColorspaceFeature = false;
+    parameters.useCnFeature = false;
+    parameters.useIcFeature = true;
     parameters.learning_rate = 0.01;
     parameters.projection_reg = 5e-7;
     parameters.init_CG_iter = 10 * 20;
     parameters.CG_forgetting_rate = 60;
+    parameters.precond_reg_param = 0.2;
     parameters.reg_window_edge = 4e-3;
-    parameters.reg_sparsity_threshold = 0.15;
+    parameters.use_scale_filter = false;
+
+    /* VOT2016_DEEP_settings
+    parameters.useDeepFeature = true;
+    parameters.useHogFeature = true;
+    parameters.useColorspaceFeature = false;
+    parameters.useCnFeature = true;
+    parameters.useIcFeature = true;
+    parameters.hog_features.fparams.cell_size = 4;
+    parameters.output_sigma_factor = 1.0f / 12.0f;
+    parameters.learning_rate = 0.012;
+    parameters.nSamples = 50;
+    parameters.skip_after_frame = 1;
+    parameters.projection_reg = 2e-7;
+    parameters.init_CG_iter = 10 * 20;
+    parameters.CG_forgetting_rate = 75;
+    parameters.precond_data_param = 0.7;
+    parameters.precond_reg_param = 0.1;
+    parameters.precond_proj_param = 30;
+    parameters.reg_sparsity_threshold = 0.12;
+    parameters.reg_window_edge = 4e-3;
+    */
+    /* SRDCF_settings - not implemented yet
+    parameters.useDeepFeature = false;
+    parameters.useHogFeature = true;
+    parameters.useColorspaceFeature = false;
+    parameters.useCnFeature = true;
+    parameters.useIcFeature = true;
+    parameters.hog_features.fparams.cell_size = 4;
+    parameters.learning_rate = 0.010;
+    parameters.nSamples = 300;
+    parameters.train_gap = 0;
+    parameters.skip_after_frame = 0;
+    parameters.use_detection_sample = false;
+    parameters.use_projection_matrix = false;
+    parameters.use_sample_merge = false;
+    parameters.init_CG_iter = 50;
+    parameters.interpolation_centering = false;
     */
     ecotracker.init(frame, ecobbox, parameters);
     float fpsecoini = getTickFrequency() / ((double)getTickCount() - timereco);
@@ -435,10 +478,9 @@ int main(int argc, char **argv)
     }
 #ifdef USE_MULTI_THREAD
     void *status;
-    int rc = pthread_join(ecotracker.thread_train_, &status);
-    if (rc)
+    if (pthread_join(ecotracker.thread_train_, &status))
     {
-         cout << "Error:unable to join!" << rc << std::endl;
+         cout << "Error:unable to join!"  << std::endl;
          exit(-1);
     }
 #endif

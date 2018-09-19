@@ -241,19 +241,22 @@ Download a pretrained [[VGG_CNN_M_2048.caffemodel (370 MB)](https://drive.google
 
 If you could not download through the link above (especially for the people from Mainland China), check this [[link](https://gist.github.com/ksimonyan/78047f3591446d1d7b91#file-readme-md)] and download. 
 
-For ECO_Deep, means using Deep features and HOG feature, in **eco/parameters.cc**, change to:
+In **eco/parameters.hpp**, change the path to your path:
 ```
-	bool 	useDeepFeature 		 = true;
-	bool	useHogFeature		 = true;	
-```
-
-For ECO_HC, means just HOG feature, in **eco/parameters.cc**, change to:
-```
-	bool 	useDeepFeature 		 = false;
-	bool	useHogFeature		 = true;	
+struct CnnParameters
+{
+	string proto = "<YOUR_PATH>/OpenTracker/eco/model/imagenet-vgg-m-2048.prototxt";
+	string model = "<YOUR_PATH>/OpenTracker/eco/model/VGG_CNN_M_2048.caffemodel";
+	string mean_file = "<YOUR_PATH>/OpenTracker/eco/model/VGG_mean.binaryproto";
 ```
 
-CN feature not implemented yet, comes later.
+### Use CN feature
+In **eco/parameters.hpp**, change the path:
+```
+struct CnParameters
+{
+	string tablename =  "<YOUR_PATH>/OpenTracker/eco/look_tables/CNnorm.txt";
+```
 
 ### Speed-up with SIMD
 If you are using Intel computer, in `eco\makefile`, set:

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <math.h>
+#include <algorithm>
 #include <opencv2/core.hpp>
 #include <opencv2/core/ocl.hpp>
 
@@ -31,6 +32,7 @@
 #include "optimize_scores.hpp"
 #include "training.hpp"
 #include "ffttools.hpp"
+#include "scale_filter.hpp"
 #include "debug.hpp"
 
 namespace eco
@@ -90,23 +92,29 @@ class ECO
 	vector<cv::Size> 	feature_size_, filter_size_;
 	vector<int> 		feature_dim_, compressed_dim_;
 
-	float 				currentScaleFactor_; 			// current img scale 
+	ScaleFilter 		scale_filter_;
+	int 				nScales_;				// number of scales;
+	float 				scale_step_;
+	vector<float>		scale_factors_;
+	float 				currentScaleFactor_; 	// current img scale 
 
 	// Compute the Fourier series indices 
 	// kx_, ky_ is the k in (9) of C-COT paper, yf_ is the left part of (9);
-	vector<cv::Mat> 	ky_, kx_, yf_, cos_window_; 
-	vector<cv::Mat> 	interp1_fs_, interp2_fs_; 		// interpl fourier series
+	vector<cv::Mat> 	ky_, kx_, yf_; 
+	vector<cv::Mat> 	interp1_fs_, interp2_fs_; 
+	vector<cv::Mat> 	cos_window_;
+	vector<cv::Mat> 	projection_matrix_;
 
-	vector<cv::Mat> 	reg_filter_, projection_matrix_;// spatial filter
-	vector<float> 		reg_energy_, scale_factors_;
+	vector<cv::Mat> 	reg_filter_;
+	vector<float> 		reg_energy_;
 
 	FeatureExtractor 	feature_extractor_;
 
 	SampleUpdate 		sample_update_;
+	ECO_FEATS 			sample_energy_;
 
 	EcoTrain 			eco_trainer_;
 
-	ECO_FEATS 			sample_energy_;
 	ECO_FEATS 			hf_full_;
 
 #ifdef USE_MULTI_THREAD

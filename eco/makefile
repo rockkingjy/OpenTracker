@@ -23,9 +23,9 @@ LDFLAGS= `pkg-config --libs opencv` -lstdc++ -lm
 CXXFLAGS = -g -Wall `pkg-config --cflags opencv` -lstdc++ -lm -std=c++0x -O3 -fPIC 
 HEADERS = $(wildcard *.h) $(wildcard *.hpp)
 TARGET_LIB = libecotracker.so
-OBJS = ffttools.o fhog.o interpolator.o optimize_scores.o \
+OBJS = ffttools.o fhog.o interpolator.o optimize_scores.o scale_filter.o \
 		regularization_filter.o feature_extractor.o feature_operator.o  \
-		training.o sample_update.o eco.o metrics.o 
+		training.o sample_update.o eco.o metrics.o
 
 ifeq ($(USE_CAFFE), 1)
 CXXFLAGS+= -DUSE_CAFFE

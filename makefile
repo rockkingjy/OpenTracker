@@ -23,6 +23,7 @@ OBJS=kcf/fhog.o \
 	eco/feature_operator.o  \
 	eco/training.o \
 	eco/sample_update.o \
+	eco/scale_filter.o \
 	eco/eco.o \
 	inputs/readdatasets.o inputs/readvideo.o
 TARGET_LIB = libopentracker.so

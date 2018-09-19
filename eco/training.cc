@@ -532,7 +532,7 @@ ECO_FEATS EcoTrain::pcg_eco_filter(const vector<ECO_FEATS> &samplesf,
 		rho = state_.rho / params_.CG_opts.init_forget_factor;
 		if (!params_.CG_opts.CG_use_FR) // Use Polak-Ribiere
 		{
-			state_.r_prev = r_prev;
+			r_prev = state_.r_prev;
 		}
 	}
 
