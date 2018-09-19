@@ -105,6 +105,22 @@ Included                | Method(single thread)   | FPS(scale=1) | FPS(scale=7)
 :ballot_box_with_check: | NEON(Raspberrypi)       | ~24:cherries:| ~7.5
 :hammer:                | GPU                     | :hammer:     | :hammer:
 
+## Performance Analysis
+<p align="center">
+    <img src="images/vot2017.png", width="">
+</p>
+"ECOHC" is the original matlab version ECO.
+
+"ECOHCSCALE7" is the matlab version without fDSST scale filter.
+
+"ECOCPPCN" is the c++ ECO tracker in OpenTracker, fDSST scale filter not implemented yet.
+
+"KCFCPP" is the c++ KCF tracker in OpenTracker.
+
+"NCC" is a demo tracker in vot-toolkit.
+
+The test is on dataset VOT2017, and parameters are set exactly the same as "VOT2016_HC_settings" in matlab version, except `bool use_scale_filter = false;` (fDSST not used). This is just for proof of validity of c++ version, thus the parameters are not tuned for VOT2017.
+
 ## Speed Analysis
 <p align="center">
     <img src="images/speedanalysis.png", width="">
