@@ -120,7 +120,6 @@ float ScaleFilter::scale_filter_track(const cv::Mat &im, const cv::Point2f &pos,
 
 cv::Mat ScaleFilter::extract_scale_sample(const cv::Mat &im, const cv::Point2f &posf, const cv::Size2f &base_target_sz, vector<float> &scaleFactors, const cv::Size &scale_model_sz)
 {
-
     //printMat(new_im);
     //showmat3channels(new_im, 0);
     //debug("pos: %f %f", posf.x, posf.y);

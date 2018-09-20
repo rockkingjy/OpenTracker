@@ -230,11 +230,11 @@ int main(int argc, char **argv)
     ECO ecotracker;
     Rect2f ecobbox(x, y, w, h);
     eco::EcoParameters parameters;
-    /* VOT2016_HC_settings */
+    /* VOT2016_HC_settings 
     parameters.useDeepFeature = false;
     parameters.useHogFeature = true;
     parameters.useColorspaceFeature = false;
-    parameters.useCnFeature = false;
+    parameters.useCnFeature = true;
     parameters.useIcFeature = true;
     parameters.learning_rate = 0.01;
     parameters.projection_reg = 5e-7;
@@ -243,7 +243,7 @@ int main(int argc, char **argv)
     parameters.precond_reg_param = 0.2;
     parameters.reg_window_edge = 4e-3;
     parameters.use_scale_filter = false;
-
+    */
     /* VOT2016_DEEP_settings
     parameters.useDeepFeature = true;
     parameters.useHogFeature = true;

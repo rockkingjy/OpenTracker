@@ -139,7 +139,7 @@ struct EcoParameters
 	bool useDeepFeature = false;
 	bool useHogFeature = true;
 	bool useColorspaceFeature = false;// not implemented yet
-	bool useCnFeature = true;
+	bool useCnFeature = false;
 	bool useIcFeature = true;
 
 #ifdef USE_CAFFE

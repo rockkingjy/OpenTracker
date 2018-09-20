@@ -28,7 +28,6 @@ OBJS=kcf/fhog.o \
 	inputs/readdatasets.o inputs/readvideo.o
 TARGET_LIB = libopentracker.so
 
-
 ifeq ($(USE_CAFFE), 1)
 CXXFLAGS+= -DUSE_CAFFE
 LDFLAGS+= -L$(CAFFE_PATH)/build/lib -lcaffe -lglog 

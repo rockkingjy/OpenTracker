@@ -29,6 +29,9 @@ Or, **if you have problems with the implementation of a complicate cutting-edge 
 
 **Attention!** OpenTracker is **NOT** designed just for tracking human beings as the demo images, it can track **everything**, even some special points!
 
+
+**2018/09/19 -- New features** Performance tested on VOT2017 dataset!
+
 **2018/09/13 -- New features** CN feature added!
 
 **2018/08/30 -- New features** Support Initialize by Object Detection using [Darknet](https://github.com/rockkingjy/darknet) and track.
@@ -64,9 +67,6 @@ Included                                   | Tracker
 :ballot_box_with_check:                    | DSST          
 :ballot_box_with_check:                    | GOTURN         
  :hammer:                    | ECO         
- :hammer:                    | C-COT
- :hammer:                    | SRDCF
- :hammer:                    | SRDCF-Deep                           
 
 ## Supported Dataset (more in progressing):
 
@@ -82,8 +82,8 @@ Included                                   | Dataset    | Reference
 -------------------------------------------|--------------|-----------
 :ballot_box_with_check:                    | OpenPose     | [Web](https://github.com/CMU-Perceptual-Computing-Lab/openpose)
 
-## Tested Operating Systems
-Included                   | OS    
+## Tested Operating Systems / Platform
+Included                   | OS / Platform   
 ---------------------------|-------------
 :ballot_box_with_check:    | Ubuntu 16.04
 :ballot_box_with_check:    | macOS Sierra
@@ -91,7 +91,24 @@ Included                   | OS
 :ballot_box_with_check:    | Rasperberry PI 3 
  :hammer:                  | Windows10
 
-## Speed-up
+## Performance Analysis
+<p align="center">
+    <img src="images/vot2017.png", width="">
+</p>
+
+"ECOHC" is the original matlab full version ECO-HC.
+
+"ECOHCSCALE7" is the matlab version without fDSST scale filter.
+
+"ECOCPPCN" is the c++ ECO tracker in OpenTracker without fDSST scale filter.
+
+"KCFCPP" is the c++ KCF tracker in OpenTracker.
+
+"NCC" is a demo tracker in vot-toolkit.
+
+The test is on dataset VOT2017, and parameters are set exactly the same as "VOT2016_HC_settings" in matlab version, except `bool use_scale_filter = false;` (fDSST not used). This is just for proof of validity of c++ version, thus the parameters are not tuned for VOT2017.
+
+## Speed-up(without CN feature)
 Included                | Method(single thread)   | FPS(scale=1) | FPS(scale=7)
 ------------------------|-------------------------|--------------|-------------
 :ballot_box_with_check: | Matlab ECO-HOG(Intel i9)| ~73          | ~45
@@ -105,24 +122,7 @@ Included                | Method(single thread)   | FPS(scale=1) | FPS(scale=7)
 :ballot_box_with_check: | NEON(Raspberrypi)       | ~24:cherries:| ~7.5
 :hammer:                | GPU                     | :hammer:     | :hammer:
 
-## Performance Analysis
-<p align="center">
-    <img src="images/vot2017.png", width="">
-</p>
-
-"ECOHC" is the original matlab version ECO.
-
-"ECOHCSCALE7" is the matlab version without fDSST scale filter.
-
-"ECOCPPCN" is the c++ ECO tracker in OpenTracker, fDSST scale filter not implemented yet.
-
-"KCFCPP" is the c++ KCF tracker in OpenTracker.
-
-"NCC" is a demo tracker in vot-toolkit.
-
-The test is on dataset VOT2017, and parameters are set exactly the same as "VOT2016_HC_settings" in matlab version, except `bool use_scale_filter = false;` (fDSST not used). This is just for proof of validity of c++ version, thus the parameters are not tuned for VOT2017.
-
-## Speed Analysis
+## Speed Analysis(without CN feature)
 <p align="center">
     <img src="images/speedanalysis.png", width="">
 </p>
