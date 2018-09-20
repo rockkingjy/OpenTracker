@@ -96,17 +96,23 @@ Included                   | OS / Platform
     <img src="images/vot2017.png", width="">
 </p>
 
-"ECOHC" is the original matlab full version ECO-HC.
+"ECOHCMATLAB" is the original matlab full version ECO-HC.
 
-"ECOHCSCALE7" is the matlab version without fDSST scale filter.
+"ECOHCMATLABHOGCN" is the matlab version ECO-HC without fDSST scale filter.
 
-"ECOCPPCN" is the c++ ECO tracker in OpenTracker without fDSST scale filter.
+"ECOHCMATLABHOG" is the matlab version ECO-HC without fDSST scale filter and CN feature.
+
+"ECOCPPHOGCN" is the c++ ECO tracker in OpenTracker without fDSST scale filter.
+
+"ECOCPPHOG" is the c++ ECO tracker in OpenTracker without CN feature and fDSST scale filter.
 
 "KCFCPP" is the c++ KCF tracker in OpenTracker.
 
 "NCC" is a demo tracker in vot-toolkit.
 
-The test is on dataset VOT2017, and parameters are set exactly the same as "VOT2016_HC_settings" in matlab version, except `bool use_scale_filter = false;` (fDSST not used). This is just for proof of validity of c++ version, thus the parameters are not tuned for VOT2017.
+The test is on dataset VOT2017, and parameters are set exactly the same as "VOT2016_HC_settings" in matlab version. This is just for proof of validation of c++ version code, thus the parameters are not tuned for VOT2017.
+
+You can see from the plot that, full-featured "ECOHCMATLAB" has the highest performance, "ECOCPPHOGCN" has almost the same performance with "ECOHCMATLABHOGCN", and "ECOCPPHOG" quite similar to "ECOHCMATLABHOG". And "KCFCPP" perform even better than the HOG-only ECO version, so it seems that CN feature matters.
 
 ## Speed-up(without CN feature)
 Included                | Method(single thread)   | FPS(scale=1) | FPS(scale=7)
