@@ -669,7 +669,7 @@ void *ECO::thread_train(void *params)
 								   eco->sample_energy_);
 	//debug("thread end");
 	eco->thread_flag_train_ = true;
-	pthread_detach(pthread_self());
+	//pthread_detach(pthread_self());
 	pthread_exit(NULL);
 }
 #endif
@@ -683,7 +683,14 @@ void ECO::init_parameters(const eco::EcoParameters &parameters)
 	params_.useCnFeature = parameters.useCnFeature;
 	params_.useIcFeature = parameters.useIcFeature;
 
+#ifdef USE_CAFFE
+	params_.cnn_features.fparams.proto = parameters.cnn_features.fparams.proto;
+	params_.cnn_features.fparams.model = parameters.cnn_features.fparams.model;
+	params_.cnn_features.fparams.mean_file = parameters.cnn_features.fparams.mean_file;
+#endif	
 	params_.hog_features.fparams.cell_size = parameters.hog_features.fparams.cell_size;
+	params_.cn_features.fparams.tablename = parameters.cn_features.fparams.tablename;
+	params_.ic_features.fparams.tablename = parameters.ic_features.fparams.tablename;
 
 	// Extra parameters
 	params_.max_score_threshhold = parameters.max_score_threshhold;

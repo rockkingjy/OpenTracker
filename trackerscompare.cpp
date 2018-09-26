@@ -128,6 +128,9 @@ int main(int argc, char **argv)
     Rect2f ecobbox(bboxGroundtruth.x, bboxGroundtruth.y, bboxGroundtruth.width, bboxGroundtruth.height);
     eco::EcoParameters parameters;
     //parameters.max_score_threshhold = 0.1;
+    // when use cn feature:
+    parameters.useCnFeature = true;
+    parameters.cn_features.fparams.tablename = "/usr/local/include/opentracker/eco/look_tables/CNnorm.txt";
     ecotracker.init(frame, ecobbox, parameters);
 
     while (frame.data)

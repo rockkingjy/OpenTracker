@@ -26,9 +26,9 @@ typedef cv::Vec<float, 2> COMPLEX; // represent a complex number;
 #ifdef USE_CAFFE
 struct CnnParameters
 {
-	string proto = "/media/elab/sdd/mycodes/tracker/OpenTracker/eco/model/imagenet-vgg-m-2048.prototxt";
-	string model = "/media/elab/sdd/mycodes/tracker/OpenTracker/eco/model/VGG_CNN_M_2048.caffemodel";
-	string mean_file = "/media/elab/sdd/mycodes/tracker/OpenTracker/eco/model/VGG_mean.binaryproto";
+	string proto = "model/imagenet-vgg-m-2048.prototxt";
+	string model = "model/VGG_CNN_M_2048.caffemodel";
+	string mean_file = "model/VGG_mean.binaryproto";
 
 	boost::shared_ptr<caffe::Net<float>> net;
 	cv::Mat deep_mean_mat, deep_mean_mean_mat;
@@ -89,7 +89,7 @@ struct ColorspaceFeatures
 //---------------------------
 struct CnParameters // only used for Color image
 {
-	string tablename = "/media/elab/sdd/mycodes/tracker/OpenTracker/eco/look_tables/CNnorm.txt";
+	string tablename = "look_tables/CNnorm.txt";
 	float table[32768][10];
 	int cell_size = 4;
 	int compressed_dim = 3;
@@ -106,7 +106,7 @@ struct CnFeatures
 //---------------------------
 struct IcParameters // only used for gray image
 {
-	string tablename = "/media/elab/sdd/mycodes/tracker/OpenTracker/eco/look_tables/intensityChannelNorm6";
+	string tablename = "look_tables/intensityChannelNorm6";
 	float table[256][5];
 	int cell_size = 4;
 	int compressed_dim = 3;

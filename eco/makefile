@@ -161,9 +161,11 @@ clean:
 install: $(TARGET_LIB)
 	mkdir -p /usr/local/include/opentracker
 	mkdir -p /usr/local/include/opentracker/eco
+	mkdir -p /usr/local/include/opentracker/eco/look_tables
 	cp $(TARGET_LIB) /usr/local/lib
 	cp *.hpp /usr/local/include/opentracker/eco
 	cp *.h /usr/local/include/opentracker/eco
+	cp -a look_tables/. /usr/local/include/opentracker/eco/look_tables
 
 .PHONY: uninstall
 uninstall: $(TARGET_LIB)

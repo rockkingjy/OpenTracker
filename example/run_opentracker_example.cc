@@ -74,7 +74,10 @@ int main(int argc, char **argv)
     ECO ecotracker;
     Rect2f ecobbox(x, y, w, h);
     eco::EcoParameters parameters;
-    parameters.max_score_threshhold = 0.15;
+    //parameters.max_score_threshhold = 0.15;
+    // if you use cn feature, need to add these two lines:
+    parameters.useCnFeature = true;
+    parameters.cn_features.fparams.tablename = "/usr/local/include/opentracker/eco/look_tables/CNnorm.txt";
     ecotracker.init(frame, ecobbox, parameters);
     // Initialize KCF tracker========================================  
     bool HOG = true, FIXEDWINDOW = true, MULTISCALE = true, LAB = true, DSST = false; //LAB color space features
