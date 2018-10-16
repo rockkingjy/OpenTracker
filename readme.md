@@ -188,6 +188,7 @@ make
 git clone https://github.com/rockkingjy/OpenTracker
 cd OpenTracker
 make 
+sudo make install
 ./trackerscompare.bin
 ```
 
