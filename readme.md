@@ -139,8 +139,31 @@ With quick start, you can have a quick first taste of this repository, without a
 
 OpenCV 3.0 Install on Ubuntu check this [[Tutorial](https://www.learnopencv.com/install-opencv3-on-ubuntu/)].
 
+## Quick Run ECO Tracker:
+In `eco/runecotracker.cc`, make sure to choose the dataset `Demo`:
+``` 
+    string databaseType = databaseTypes[0];
+```
+### Quick start -- Ubuntu
+```
+git clone https://github.com/rockkingjy/OpenTracker
+cd OpenTracker/eco
+make -j`nproc`
+sudo make install
+./runecotracker.bin
+```
+### Quick start -- macOS
+```
+brew install tesseract
+git clone https://github.com/rockkingjy/OpenTracker
+cd OpenTracker/eco
+make  -j`nproc`
+sudo make install
+./runecotracker.bin
+```
+
 ## Quick Run KCF and DSST Tracker:
-In file `eco/runecotracker.cc`, make sure to choose the dataset `Demo`:
+In file `kcf/runkcftracker.cc`, make sure to choose the dataset `Demo`:
 ``` 
     string databaseType = databaseTypes[0];
 ```
@@ -158,58 +181,6 @@ git clone https://github.com/rockkingjy/OpenTracker
 cd OpenTracker/kcf
 make
 ./runkcftracker.bin
-```
-### Quick start -- Raspberry PI 3
-```
-git clone https://github.com/rockkingjy/OpenTracker
-cd OpenTracker/kcf
-make
-./runkcftracker.bin
-```
-
-## Quick Run ECO Tracker:
-In `makefile`, make sure change to:
-```
-USE_CAFFE=0
-USE_CUDA=0
-USE_SIMD=0
-USE_MULTI_THREAD=0
-USE_FFTW=0
-USE_GTEST=0
-USE_VOT_TRAX=0
-```
-and in `eco/runecotracker.cc`, make sure to choose the dataset `Demo`:
-``` 
-    string databaseType = databaseTypes[0];
-```
-and in `eco/parameters.hpp`, change like this to make it high-speed:
-```
-    bool useDeepFeature = false;
-    size_t number_of_scales = 1;
-    bool use_scale_filter = false;
-```
-
-### Quick start -- Ubuntu
-```
-git clone https://github.com/rockkingjy/OpenTracker
-cd OpenTracker/eco
-make -j`nproc`
-./runecotracker.bin
-```
-### Quick start -- macOS
-```
-brew install tesseract
-git clone https://github.com/rockkingjy/OpenTracker
-cd OpenTracker/eco
-make  -j`nproc`
-./runecotracker.bin
-```
-### Quick start -- Raspberry PI 3
-```
-git clone https://github.com/rockkingjy/OpenTracker
-cd OpenTracker/eco
-make
-./runecotracker.bin
 ```
 
 ## Quick Run (almost) all the tracker:
@@ -245,6 +216,7 @@ By raising your two arms higher than your nose, it will atomatically detect the 
 ## Run to compare all the trackers at the same time
 ```
 make all
+sudo make install
 ./trackerscompare.bin
 ```
 
@@ -274,11 +246,10 @@ struct CnnParameters
 ```
 
 ### Use CN feature
-In **eco/parameters.hpp**, change the path:
+In **eco/runecotracker.cc**, change the path:
 ```
-struct CnParameters
-{
-	string tablename =  "<YOUR_PATH>/OpenTracker/eco/look_tables/CNnorm.txt";
+    parameters.useCnFeature = true;
+    parameters.cn_features.fparams.tablename = "<YOUR_PATH>/OpenTracker/eco/look_tables/CNnorm.txt"
 ```
 
 ### Speed-up with SIMD
