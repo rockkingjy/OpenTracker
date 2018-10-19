@@ -208,7 +208,7 @@ int main(int argc, char **argv)
         line(frameDraw, cv::Point(x4, y4), cv::Point(x1, y1), Scalar(0, 0, 0), 2, 1);
     }
 
-    //imshow("Tracking", frame);
+    //imshow("OpenTracker", frameDraw);
     //waitKey(0);
     // Create KCFTracker:
     bool HOG = true, FIXEDWINDOW = true, MULTISCALE = true, LAB = true, DSST = false; //LAB color space features
