@@ -17,7 +17,7 @@ int main(int argc, char **argv)
 {
     // Database settings
     string databaseTypes[3] = {"Demo", "MOT16", "2D_MOT_2015"};
-    string databaseType = databaseTypes[2];
+    string databaseType = databaseTypes[0];
     // Read from the images ====================================================
     int f, fileNow = 1, isLost;
     float x, y, w, h, confidence, confidenceThreshhold = 0;
@@ -28,7 +28,48 @@ int main(int argc, char **argv)
     ifstream *groundtruth;
     ostringstream osfile;
 
-    if (databaseType == "MOT16")
+    if (databaseType == "Demo")
+    {
+        path = "../sequences/Crossing";
+        // some of the dataset has '\t' as the delimiter, change it to ','.
+        fstream gt(path + "/groundtruth_rect.txt");
+        string tmp;
+        size_t index = 1;
+        while (gt >> tmp)
+        {
+            if(tmp.find(',')<10)
+            {
+                break;
+            }
+            if (index%4 == 0)
+            {
+            }
+            else
+            {
+                gt << ",";
+            }
+            index++;
+        }
+        gt.close();
+        // Read the groundtruth bbox
+        groundtruth = new ifstream(path + "/groundtruth_rect.txt");
+        f = 1;
+        getline(*groundtruth, s, ',');
+        x = atof(s.c_str());
+        getline(*groundtruth, s, ',');
+        y = atof(s.c_str());
+        getline(*groundtruth, s, ',');
+        w = atof(s.c_str());
+        getline(*groundtruth, s);
+        h = atof(s.c_str());
+        f = 1;
+        bboxGroundtruth.push_back(Rect2f(x, y, w, h));
+        cout << f << " " << x << " " << y << " " << w << " " << h << " " << endl;
+        // Read images in a folder
+        osfile << path << "/img/" << setw(4) << setfill('0') << f << ".jpg";
+        cout << osfile.str() << endl;
+    }
+    else if (databaseType == "MOT16")
     {
         string folderMOT = "MOT16-01";
         path = "/media/elab/sdd/data/MOT16/test/" + folderMOT;
@@ -116,40 +157,24 @@ int main(int argc, char **argv)
 
     imshow("OpenTracker", frameDraw);
     waitKey(0);
-    /*
-    // Create KCFTracker:
-    bool HOG = true, FIXEDWINDOW = true, MULTISCALE = true, LAB = true, DSST = false; //LAB color space features
-    KCFTracker kcftracker(HOG, FIXEDWINDOW, MULTISCALE, LAB, DSST);
-    Rect2d kcfbbox((int)bboxGroundtruth.x, (int)bboxGroundtruth.y, (int)bboxGroundtruth.width, (int)bboxGroundtruth.height);
-    kcftracker.init(frame, kcfbbox);
-*/
+
+    // Create KalmanTracker
+    cv::Rect2f kalmanbbox;
+    KalmanTracker kalmantracker;
+    kalmantracker.init(bboxGroundtruth[0]);
+
     while (frame.data)
     {
-        /*
-        //KCF=========================
-        double timerkcf = (double)getTickCount();
-        bool okkcf = kcftracker.update(frame, kcfbbox);
-        float fpskcf = getTickFrequency() / ((double)getTickCount() - timerkcf);
-        if (okkcf)
-        {
-            rectangle(frameDraw, kcfbbox, Scalar(0, 255, 0), 2, 1);
-        }
-        else
-        {
-            putText(frameDraw, "Kcf tracking failure detected", cv::Point(10, 80), FONT_HERSHEY_SIMPLEX,
-                    0.75, Scalar(0, 255, 0), 2);
-        }
+        // KalmanTracker
+        kalmantracker.predict();
+        kalmanbbox = kalmantracker.get_state();
+        debug("bbox: %f, %f, %f, %f", kalmanbbox.x, kalmanbbox.y, kalmanbbox.width, kalmanbbox.height);
+        rectangle(frameDraw, kalmanbbox, Scalar(0, 255, 0), 2, 1);
 
-        // Display FPS on frameDraw
-        ostringstream os; 
-        os << float(fpskcf); 
-        putText(frameDraw, "FPS: " + os.str(), Point(100, 30), FONT_HERSHEY_SIMPLEX,
-                0.75, Scalar(0, 225, 0), 2);
-*/
         // Show the image
         imshow("OpenTracker", frameDraw);
 
-        int c = cvWaitKey(1);
+        int c = cvWaitKey(0);
         if (c != -1)
             c = c % 256;
         if (c == 27)
@@ -161,7 +186,25 @@ int main(int argc, char **argv)
         // Read next image======================================================
         fileNow++;
         osfile.str("");
-        if (databaseType == "MOT16" || databaseType == "2D_MOT_2015")
+        if (databaseType == "Demo")
+        {
+            bboxGroundtruth.clear();
+            getline(*groundtruth, s, ',');
+            x = atof(s.c_str());
+            getline(*groundtruth, s, ',');
+            y = atof(s.c_str());
+            getline(*groundtruth, s, ',');
+            w = atof(s.c_str());
+            getline(*groundtruth, s);
+            h = atof(s.c_str());
+            //cout << f << " " << x << " " << y << " " << w << " " << h << " " << isLost << endl;
+            // Read images in a folder
+            f++;
+            bboxGroundtruth.push_back(Rect2f(x, y, w, h));
+            osfile << path << "/img/" << setw(4) << setfill('0') << f << ".jpg";
+            //cout << osfile.str() << endl;
+        }
+        else if (databaseType == "MOT16" || databaseType == "2D_MOT_2015")
         {
             bboxGroundtruth.clear();
             while (f == fileNow)
@@ -199,7 +242,7 @@ int main(int argc, char **argv)
         }
         frame.copyTo(frameDraw);
         // Draw gt;
-        if (databaseType == "MOT16" || databaseType == "2D_MOT_2015")
+        if (databaseType == "Demo" || databaseType == "MOT16" || databaseType == "2D_MOT_2015")
         {
             for (int i = 0; i < bboxGroundtruth.size(); i++)
             {
@@ -207,6 +250,9 @@ int main(int argc, char **argv)
                 rectangle(frameDraw, bboxGroundtruth[i], Scalar(0, 0, 0), 2, 1);
             }
         }
+
+        // KalmanTracker update
+        kalmantracker.update(bboxGroundtruth[0]);
     }
     return 0;
 }

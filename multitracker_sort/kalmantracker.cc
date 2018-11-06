@@ -11,6 +11,18 @@ void KalmanTracker::init(cv::Rect2f bbox)
     state_ = cv::Mat(stateSize_, 1, type_);  // [u,v,s,r,du,dv,ds]
     measure_ = cv::Mat(measSize_, 1, type_); // [u,v,s,r]
 
+    // state 
+    state_.at<float>(0) = bbox.x + bbox.width / 2.0f;
+    state_.at<float>(1) = bbox.y + bbox.height / 2.0f;
+    state_.at<float>(2) = (float)bbox.width * (float)bbox.height;
+    state_.at<float>(3) = (float)bbox.width / (float)bbox.height;
+    state_.at<float>(4) = 0.0f;
+    state_.at<float>(5) = 0.0f;
+    state_.at<float>(6) = 0.0f;
+
+    // measure
+    measure_.setTo(cv::Scalar(0));
+
     // State Transition Matrix A
     // Note: set dT at each processing step!
     // [ 1 0 0 0 1 0 0 ]
@@ -46,13 +58,13 @@ void KalmanTracker::init(cv::Rect2f bbox)
     kf_.measurementNoiseCov.at<float>(15) = 10.0f;
 
     // Posteriori error estimate covariance matrix (P(k))
-    kf_.errorCovPre.at<float>(0) = 10.0f;
-    kf_.errorCovPre.at<float>(8) = 10.0f; 
-    kf_.errorCovPre.at<float>(16) = 10.0f;
-    kf_.errorCovPre.at<float>(24) = 10.0f;
-    kf_.errorCovPre.at<float>(32) = 10000.0f; 
-    kf_.errorCovPre.at<float>(40) = 10000.0f; 
-    kf_.errorCovPre.at<float>(48) = 10000.0f;
+    kf_.errorCovPost.at<float>(0) = 10.0f;
+    kf_.errorCovPost.at<float>(8) = 10.0f; 
+    kf_.errorCovPost.at<float>(16) = 10.0f;
+    kf_.errorCovPost.at<float>(24) = 10.0f;
+    kf_.errorCovPost.at<float>(32) = 10000.0f; 
+    kf_.errorCovPost.at<float>(40) = 10000.0f; 
+    kf_.errorCovPost.at<float>(48) = 10000.0f;
 
     // Process Noise Covariance Matrix Q 
     kf_.processNoiseCov.at<float>(0) = 1.0f;
@@ -63,14 +75,6 @@ void KalmanTracker::init(cv::Rect2f bbox)
     kf_.processNoiseCov.at<float>(40) = 1e-2;
     kf_.processNoiseCov.at<float>(48) = 1e-4;
 
-    // state 
-    state_.at<float>(0) = bbox.x + bbox.width / 2.0f;
-    state_.at<float>(1) = bbox.y + bbox.height / 2.0f;
-    state_.at<float>(2) = (float)bbox.width * (float)bbox.height;
-    state_.at<float>(3) = (float)bbox.width / (float)bbox.height;
-    state_.at<float>(4) = 0.0f;
-    state_.at<float>(5) = 0.0f;
-    state_.at<float>(6) = 0.0f;
 
     kf_.statePost = state_;
 }
@@ -83,7 +87,7 @@ void KalmanTracker::update(cv::Rect2f bbox)
     measure_.at<float>(3) = (float)bbox.width / (float)bbox.height;
 
     kf_.correct(measure_); // Kalman Correction
-    cout << "Measure matrix:" << endl << measure_ << endl;
+    //cout << "Measure matrix:" << endl << measure_ << endl;
 }
 
 void KalmanTracker::predict()
@@ -93,13 +97,13 @@ void KalmanTracker::predict()
         state_.at<float>(6) = 0.0f;
     }
     state_ = kf_.predict();
-    cout << "State post:" << endl << state_ << endl;
+    //cout << "State post:" << endl << state_ << endl;
 }
 
 cv::Rect KalmanTracker::get_state()
 {
-    cv::Rect res;
-    res.width = state_.at<float>(2) * state_.at<float>(3);
+    cv::Rect2f res;
+    res.width = std::sqrt(state_.at<float>(2) * state_.at<float>(3));
     res.height = state_.at<float>(2) / res.width;
     res.x = state_.at<float>(0) - res.width / 2.0f;
     res.y = state_.at<float>(1) - res.height / 2.0f;
