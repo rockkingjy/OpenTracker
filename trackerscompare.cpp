@@ -129,7 +129,7 @@ int main(int argc, char **argv)
     eco::EcoParameters parameters;
     //parameters.max_score_threshhold = 0.1;
     // when use cn feature:
-    parameters.useCnFeature = true;
+    parameters.useCnFeature = false;
     parameters.cn_features.fparams.tablename = "/usr/local/include/opentracker/eco/look_tables/CNnorm.txt";
     ecotracker.init(frame, ecobbox, parameters);
 

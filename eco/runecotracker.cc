@@ -231,7 +231,7 @@ int main(int argc, char **argv)
     Rect2f ecobbox(x, y, w, h);
     eco::EcoParameters parameters;
 
-    parameters.useCnFeature = true;
+    parameters.useCnFeature = false;
     parameters.cn_features.fparams.tablename = "/usr/local/include/opentracker/eco/look_tables/CNnorm.txt";
     /* VOT2016_HC_settings 
     parameters.useDeepFeature = false;
