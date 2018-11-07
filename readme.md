@@ -30,6 +30,8 @@ Or, **if you have problems with the implementation of a complicate cutting-edge 
 **Attention!** OpenTracker is **NOT** designed just for tracking human beings as the demo images, it can track **everything**, even some special points!
 
 
+**2018/11/06 -- New features** add CMake compile support for ECO tracker. (Thanks to [ou-zhi-hui](https://github.com/ou-zhi-hui/OpenTracker))
+
 **2018/09/19 -- New features** Performance tested on VOT2017 dataset!
 
 **2018/09/13 -- New features** CN feature added!
