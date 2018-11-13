@@ -29,6 +29,8 @@ Or, **if you have problems with the implementation of a complicate cutting-edge 
 
 **Attention!** OpenTracker is **NOT** designed just for tracking human beings as the demo images, it can track **everything**, even some special points!
 
+**For Multiple Object Tracker**, check: [OpenMultiTracker](https://github.com/rockkingjy/OpenMultiTracker).
+
 
 **2018/11/06 -- New features** add CMake compile support for ECO tracker. (Thanks to [ou-zhi-hui](https://github.com/ou-zhi-hui/OpenTracker))
 
