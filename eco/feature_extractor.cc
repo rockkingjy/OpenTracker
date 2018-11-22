@@ -224,12 +224,21 @@ vector<cv::Mat> FeatureExtractor::get_hog_features_simd(const vector<cv::Mat> im
 		memcpy(I + h * w, channels[1].ptr(), h * w * sizeof(float));
 		memcpy(I + 2 * h * w, channels[0].ptr(), h * w * sizeof(float));
 		*/
+		/*
 		for (int i = 0; i < h; i++)
 			for (int j = 0; j < w; j++)
 			{
 				*(I + i * w + j) = (float)ims[k].at<cv::Vec3b>(j, i)[2];
 				*(I + h * w + i * w + j) = (float)ims[k].at<cv::Vec3b>(j, i)[1];
 				*(I + 2 * h * w + i * w + j) = (float)ims[k].at<cv::Vec3b>(j, i)[0];
+			}
+			*/
+		for (int i = 0; i < h; i++)
+			for (int j = 0; j < w; j++)
+			{
+				*(I + j * h + i) = (float)ims[k].at<cv::Vec3b>(i, j)[2];
+				*(I + h * w + j * h + i) = (float)ims[k].at<cv::Vec3b>(i, j)[1];
+				*(I + 2 * h * w + j * h + i) = (float)ims[k].at<cv::Vec3b>(i, j)[0];
 			}
 
 		gradMag(I, M, O, h, w, d, 1);
@@ -446,9 +455,9 @@ vector<cv::Mat> FeatureExtractor::get_cn_features(const vector<cv::Mat> ims)
 			ims_f /= den;
 			for (int i = 0; i < ims_f.rows; i++)
 				for (int j = 0; j < ims_f.cols; j++)
-					{
-						ims_f.at<float>(i, j) = std::floor(ims_f.at<float>(i, j));
-					}
+				{
+					ims_f.at<float>(i, j) = std::floor(ims_f.at<float>(i, j));
+				}
 			index_im = ims_f;
 		}
 
