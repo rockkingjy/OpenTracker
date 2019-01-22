@@ -4,7 +4,7 @@
 </p>
 
 # What is OpenTracker?
-OpenTracker is a open sourced repository for Visual Tracking. It's written in C++, high speed, easy to use, and easy to be implemented in embedded system.
+OpenTracker is an open sourced repository for Visual Tracking. It's written in C++, high speed, easy to use, and easy to be implemented in embedded system.
 ```diff
 - AND this is not only boring Codes, 
 + It also has Maths and Implement Notes!
