@@ -254,7 +254,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters &pa
 	//params_.CG_opts.init_forget_factor = 1;
 	params_.CG_opts.maxit = std::ceil(params_.init_CG_iter / params_.init_GN_iter);
 	debug("-------------------------------------------------------------");
-	ECO_FEATS xl, xlf, xlf_porj;
+	ECO_FEATS xl, xlf, xlf_proj;
 
 	// 2. Extract features from the first frame.
 	xl = feature_extractor_.extractor(im, pos_, vector<float>(1, currentScaleFactor_), params_, is_color_image_);
@@ -283,18 +283,18 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters &pa
 	}
 
 	// 7. Do the feature reduction for each feature.
-	xlf_porj = FeatureProjection(xlf, projection_matrix_);
+	xlf_proj = FeatureProjection(xlf, projection_matrix_);
 	for (size_t i = 0; i < xlf.size(); i++)
 	{
-		debug("xlf_porj feature %lu 's size: %lu, %d x %d", i, xlf_porj[i].size(), xlf_porj[i][0].rows, xlf_porj[i][0].cols);
+		debug("xlf_proj feature %lu 's size: %lu, %d x %d", i, xlf_proj[i].size(), xlf_proj[i][0].rows, xlf_proj[i][0].cols);
 	}
 
 	// 8. Initialize and update sample space.
 	sample_update_.init(filter_size_, compressed_dim_, params_.nSamples, params_.learning_rate);
-	sample_update_.update_sample_space_model(xlf_porj);
+	sample_update_.update_sample_space_model(xlf_proj);
 
 	// 9. Calculate sample energy and projection map energy.
-	sample_energy_ = FeautreComputePower2(xlf_porj);
+	sample_energy_ = FeautreComputePower2(xlf_proj);
 	vector<cv::Mat> proj_energy = project_mat_energy(projection_matrix_, yf_);
 	for (size_t i = 0; i < sample_energy_.size(); i++)
 	{
@@ -307,10 +307,10 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters &pa
 
 	// 10. Initialize filter and it's derivative.
 	ECO_FEATS hf, hf_inc;
-	for (size_t i = 0; i < xlf_porj.size(); i++) // for each feature
+	for (size_t i = 0; i < xlf_proj.size(); i++) // for each feature
 	{
-		hf.push_back(vector<cv::Mat>(xlf_porj[i].size(), cv::Mat::zeros(xlf_porj[i][0].size(), CV_32FC2)));
-		hf_inc.push_back(vector<cv::Mat>(xlf_porj[i].size(), cv::Mat::zeros(xlf_porj[i][0].size(), CV_32FC2)));
+		hf.push_back(vector<cv::Mat>(xlf_proj[i].size(), cv::Mat::zeros(xlf_proj[i][0].size(), CV_32FC2)));
+		hf_inc.push_back(vector<cv::Mat>(xlf_proj[i].size(), cv::Mat::zeros(xlf_proj[i][0].size(), CV_32FC2)));
 	}
 	for (size_t i = 0; i < hf.size(); i++)
 	{
@@ -338,12 +338,12 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters &pa
 		debug("projection_matrix_ %lu: value: %lf %lf", i, minValue, maxValue);
 	}
 	// 13. Re-project the sample and update the sample space.
-	xlf_porj = FeatureProjection(xlf, projection_matrix_);
-	debug("xlf_porj size: %lu, %lu, %d x %d", xlf_porj.size(), xlf_porj[0].size(), xlf_porj[0][0].rows, xlf_porj[0][0].cols);
-	sample_update_.replace_sample(xlf_porj, 0); // put xlf_proj to the smaples_f_[0].
+	xlf_proj = FeatureProjection(xlf, projection_matrix_);
+	debug("xlf_proj size: %lu, %lu, %d x %d", xlf_proj.size(), xlf_proj[0].size(), xlf_proj[0][0].rows, xlf_proj[0][0].cols);
+	sample_update_.replace_sample(xlf_proj, 0); // put xlf_proj to the smaples_f_[0].
 
 	// 14. Update distance matrix of sample space. Find the norm of the reprojected sample
-	float new_sample_norm = FeatureComputeEnergy(xlf_porj);
+	float new_sample_norm = FeatureComputeEnergy(xlf_proj);
 	sample_update_.set_gram_matrix(0, 0, 2 * new_sample_norm);
 
 	// 15. Update filter f.
