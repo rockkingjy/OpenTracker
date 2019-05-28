@@ -238,7 +238,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters &pa
 	}
 	debug("scalefactor min: %f max: %f", params_.min_scale_factor, params_.max_scale_factor);
 
-	// Set conjugate gradient uptions
+	// Set conjugate gradient options
 	params_.CG_opts.CG_use_FR = true;
 	params_.CG_opts.tol = 1e-6;
 	params_.CG_opts.CG_standard_alpha = true;
@@ -494,7 +494,7 @@ bool ECO::update(const cv::Mat &frame, cv::Rect2f &roi)
 	// 4: Train the tracker every Nsth frame, Ns in ECO paper
 	bool train_tracker = frames_since_last_train_ >= (size_t)params_.train_gap;
 
-	// Set conjugate gradient uptions
+	// Set conjugate gradient options
 	params_.CG_opts.CG_use_FR = params_.CG_use_FR;
 	params_.CG_opts.tol = 1e-6;
 	params_.CG_opts.CG_standard_alpha = params_.CG_standard_alpha;
