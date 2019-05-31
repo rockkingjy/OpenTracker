@@ -78,7 +78,7 @@ vector<cv::Mat> init_projection_matrix(const ECO_FEATS &init_sample,
 			float mean = cv::mean(init_sample[i][j])[0]; // get the mean value of the mat;
 			for (size_t r = 0; r < (size_t)init_sample[i][j].rows; r++)
 				for (size_t c = 0; c < (size_t)init_sample[i][j].cols; c++)
-					feat_vec.at<float>(c * init_sample[i][j].rows + r, j) = init_sample[i][j].at<float>(r, c) - mean;
+					feat_vec.at<float>(r * init_sample[i][j].cols + c, j) = init_sample[i][j].at<float>(r, c) - mean;
 		}
 		result.push_back(feat_vec);
 	}
