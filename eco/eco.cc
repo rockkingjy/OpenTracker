@@ -123,7 +123,7 @@ void ECO::init(cv::Mat &im, const cv::Rect2f &rect, const eco::EcoParameters &pa
 	for (size_t i = 0; i < filter_size_.size(); ++i) // for each filter
 	{
 		cv::Mat_<float> tempy(filter_size_[i].height, 1, CV_32FC1);
-		cv::Mat_<float> tempx(1, filter_size_[i].height / 2 + 1, CV_32FC1);
+		cv::Mat_<float> tempx(1, filter_size_[i].width / 2 + 1, CV_32FC1);
 
 		// ky in [-(N-1)/2, (N-1)/2], because N = filter_size_[i].height is odd (check above), N x 1;
 		for (int j = 0; j < tempy.rows; j++)
